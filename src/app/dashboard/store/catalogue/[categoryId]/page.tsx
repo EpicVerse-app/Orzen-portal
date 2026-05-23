@@ -13,11 +13,15 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
 
   const { data: profile } = await supabase
     .from('users')
-    .select('id, full_name, role, company_id, branch_id, company:companies(id, name), branch:branches(id, name, city)')
+    .select('id, full_name, role, company_id, branch_id, company:companies(id, name, primary_color, sidebar_color), branch:branches(id, name, city)')
     .eq('id', user.id)
     .single()
 
   if (!profile || profile.role !== 'store_manager') redirect('/login')
+
+  const company      = Array.isArray(profile.company) ? profile.company[0] : profile.company as any
+  const primaryColor = company?.primary_color || '#1a1a1a'
+  const sidebarColor = company?.sidebar_color || '#111111'
 
   const { data: category } = await supabase
     .from('categories')
@@ -39,7 +43,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   }))
 
   return (
-    <AppShell user={profile as any}>
+    <AppShell user={profile as any} primaryColor={primaryColor} sidebarColor={sidebarColor}>
       <div className="mb-6">
         <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-1">Catalogue</p>
         <h1 className="text-2xl font-bold text-gray-900">{category?.name}</h1>

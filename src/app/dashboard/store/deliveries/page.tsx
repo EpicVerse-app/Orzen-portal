@@ -12,11 +12,15 @@ export default async function DeliveriesPage() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('id, full_name, role, company_id, branch_id, company:companies(id, name), branch:branches(id, name, city, address)')
+    .select('id, full_name, role, company_id, branch_id, company:companies(id, name, primary_color, sidebar_color), branch:branches(id, name, city, address)')
     .eq('id', user.id)
     .single()
 
   if (!profile || profile.role !== 'store_manager') redirect('/login')
+
+  const company      = Array.isArray(profile.company) ? profile.company[0] : profile.company as any
+  const primaryColor = company?.primary_color || '#1a1a1a'
+  const sidebarColor = company?.sidebar_color || '#111111'
 
   // All orders that have been shipped or delivered
   const { data: orders } = await supabase
@@ -40,7 +44,7 @@ export default async function DeliveriesPage() {
   const branch = Array.isArray(profile.branch) ? profile.branch[0] : profile.branch as any
 
   return (
-    <AppShell user={profile as any}>
+    <AppShell user={profile as any} primaryColor={primaryColor} sidebarColor={sidebarColor}>
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Deliveries</h1>
