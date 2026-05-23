@@ -16,7 +16,7 @@ export const getStoreProfile = cache(async () => {
     .from('users')
     .select(`
       id, full_name, role, company_id, branch_id,
-      company:companies(id, name, primary_color, sidebar_color, background_image_url),
+      company:companies(id, name, primary_color, sidebar_color, background_image_url, logo_url),
       branch:branches(id, name, city, address, state, region)
     `)
     .eq('id', user.id)
@@ -31,5 +31,6 @@ export function getThemeColors(profile: Awaited<ReturnType<typeof getStoreProfil
   const primaryColor      = company?.primary_color        || '#1a1a1a'
   const sidebarColor      = company?.sidebar_color        || '#111111'
   const backgroundImage   = company?.background_image_url || null
-  return { primaryColor, sidebarColor, backgroundImage }
+  const logoUrl           = company?.logo_url             || null
+  return { primaryColor, sidebarColor, backgroundImage, logoUrl }
 }

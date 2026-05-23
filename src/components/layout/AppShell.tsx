@@ -18,9 +18,10 @@ interface Props {
   primaryColor?: string
   sidebarColor?: string
   backgroundImage?: string | null
+  logoUrl?: string | null
 }
 
-export default function AppShell({ user, children, primaryColor, sidebarColor, backgroundImage }: Props) {
+export default function AppShell({ user, children, primaryColor, sidebarColor, backgroundImage, logoUrl }: Props) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { items } = useCartStore()
@@ -93,6 +94,7 @@ export default function AppShell({ user, children, primaryColor, sidebarColor, b
         user={user}
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         headerColor={primary}
+        logoUrl={logoUrl}
       />
 
       <div className="flex flex-1 pt-14">

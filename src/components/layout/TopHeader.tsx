@@ -12,9 +12,10 @@ interface Props {
   user: AppUser
   onMenuToggle: () => void
   headerColor?: string
+  logoUrl?: string | null
 }
 
-export default function TopHeader({ user, onMenuToggle, headerColor }: Props) {
+export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: Props) {
   const router = useRouter()
   const [showProfile, setShowProfile] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
@@ -75,18 +76,28 @@ export default function TopHeader({ user, onMenuToggle, headerColor }: Props) {
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Company name / logo */}
-        <Link
-          href="/dashboard/store"
-          className="shrink-0 hover:opacity-80 transition-opacity leading-tight"
-        >
-          <p className="text-sm font-extrabold tracking-widest uppercase leading-none" style={{ color: gold }}>
-            {line1}
-          </p>
-          {line2 && (
-            <p className="text-sm font-extrabold tracking-widest uppercase leading-none mt-0.5" style={{ color: '#ffffff' }}>
-              {line2}
-            </p>
+        {/* Company logo / name */}
+        <Link href="/dashboard/store" className="shrink-0 hover:opacity-80 transition-opacity leading-tight">
+          {logoUrl ? (
+            /* Logo image — inverted to white so it shows on any colored header */
+            <img
+              src={logoUrl}
+              alt={companyName}
+              className="h-9 w-auto object-contain"
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
+          ) : (
+            /* Fallback: text */
+            <>
+              <p className="text-sm font-extrabold tracking-widest uppercase leading-none" style={{ color: gold }}>
+                {line1}
+              </p>
+              {line2 && (
+                <p className="text-sm font-extrabold tracking-widest uppercase leading-none mt-0.5" style={{ color: '#ffffff' }}>
+                  {line2}
+                </p>
+              )}
+            </>
           )}
         </Link>
 
