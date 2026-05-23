@@ -84,7 +84,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor }: Props) {
             {line1}
           </p>
           {line2 && (
-            <p className="text-sm font-extrabold tracking-widest uppercase leading-none mt-0.5 text-white">
+            <p className="text-sm font-extrabold tracking-widest uppercase leading-none mt-0.5" style={{ color: '#ffffff' }}>
               {line2}
             </p>
           )}
