@@ -67,7 +67,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor }: Props) {
   return (
     <>
       <header
-        className="text-white h-14 flex items-center px-4 gap-3 fixed top-0 left-0 right-0 z-50"
+        className="text-white h-14 flex items-center px-4 gap-3 fixed top-0 left-0 right-0 z-50 relative"
         style={{ backgroundColor: headerBg }}
       >
         {/* Mobile menu toggle */}
@@ -90,10 +90,10 @@ export default function TopHeader({ user, onMenuToggle, headerColor }: Props) {
           )}
         </Link>
 
-        {/* Global search — desktop */}
+        {/* Global search — centered absolutely on desktop */}
         <form
           onSubmit={handleSearch}
-          className="flex-1 max-w-xl hidden sm:flex items-center rounded-lg px-3 gap-2"
+          className="absolute left-1/2 -translate-x-1/2 w-[380px] hidden sm:flex items-center rounded-lg px-3 gap-2 pointer-events-auto"
           style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
         >
           <Search className="w-4 h-4 text-gray-400 shrink-0" />
