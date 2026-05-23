@@ -20,7 +20,12 @@ export default async function StoreDashboardPage() {
 
   if (!profile || profile.role !== 'store_manager') redirect('/login')
 
-  const branch = Array.isArray(profile.branch) ? profile.branch[0] : profile.branch
+  const branch  = Array.isArray(profile.branch)  ? profile.branch[0]  : profile.branch  as any
+  const company = Array.isArray(profile.company) ? profile.company[0] : profile.company as any
+
+  // Extract colors on the SERVER — avoids any client-side parsing issues
+  const primaryColor = company?.primary_color || '#1a1a1a'
+  const sidebarColor = company?.sidebar_color || '#111111'
 
   // Recent orders
   const { data: orders } = await supabase
@@ -29,7 +34,7 @@ export default async function StoreDashboardPage() {
       id, status, created_at,
       items:order_items(id, quantity, product:products(id, name))
     `)
-    .eq('branch_id', branch?.id)
+    .eq('branch_id', (branch as any)?.id)
     .order('created_at', { ascending: false })
     .limit(20)
 
@@ -40,7 +45,6 @@ export default async function StoreDashboardPage() {
     .eq('company_id', profile.company_id)
     .limit(6)
 
-  // Get product count per category
   const categories = await Promise.all(
     (rawCategories || []).map(async (cat) => {
       const { count } = await supabase
@@ -56,6 +60,8 @@ export default async function StoreDashboardPage() {
       profile={profile as any}
       orders={(orders || []) as any}
       categories={categories}
+      primaryColor={primaryColor}
+      sidebarColor={sidebarColor}
     />
   )
 }

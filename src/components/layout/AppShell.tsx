@@ -17,18 +17,19 @@ interface Props {
   user: AppUser
   children: React.ReactNode
   onCreateOrder?: () => void
+  primaryColor?: string
+  sidebarColor?: string
 }
 
-export default function AppShell({ user, children, onCreateOrder }: Props) {
+export default function AppShell({ user, children, onCreateOrder, primaryColor, sidebarColor }: Props) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { items } = useCartStore()
   const cartCount = items.length
 
-  const company    = Array.isArray(user.company) ? (user.company as any)[0] : user.company as any
-  const sidebarBg  = company?.sidebar_color  || '#111111'
-  const primary    = company?.primary_color  || '#1a1a1a'
-  const gold       = '#c9a84c'
+  const sidebarBg = sidebarColor || '#111111'
+  const primary   = primaryColor || '#1a1a1a'
+  const gold      = '#c9a84c'
 
   function navClass(href: string, exact = true) {
     const active = exact ? pathname === href : pathname.startsWith(href)
@@ -48,6 +49,7 @@ export default function AppShell({ user, children, onCreateOrder }: Props) {
         user={user}
         onCreateOrder={onCreateOrder}
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
+        headerColor={primary}
       />
 
       <div className="flex flex-1 pt-14">

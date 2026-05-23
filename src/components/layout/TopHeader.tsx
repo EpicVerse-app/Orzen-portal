@@ -12,9 +12,10 @@ interface Props {
   user: AppUser
   onCreateOrder?: () => void
   onMenuToggle: () => void
+  headerColor?: string
 }
 
-export default function TopHeader({ user, onCreateOrder, onMenuToggle }: Props) {
+export default function TopHeader({ user, onCreateOrder, onMenuToggle, headerColor }: Props) {
   const router = useRouter()
   const [showProfile, setShowProfile] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
@@ -56,10 +57,9 @@ export default function TopHeader({ user, onCreateOrder, onMenuToggle }: Props) 
     setSearchQuery('')
   }
 
-  const initials  = user.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
-  const company   = Array.isArray(user.company) ? (user.company as any)[0] : user.company as any
-  const headerBg  = company?.primary_color || '#1a1a1a'
-  const gold      = '#c9a84c'
+  const initials = user.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+  const headerBg = headerColor || '#1a1a1a'
+  const gold     = '#c9a84c'
 
   return (
     <>

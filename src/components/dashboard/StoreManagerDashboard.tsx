@@ -11,14 +11,15 @@ interface Props {
   profile: AppUser
   orders: Order[]
   categories: CategoryWithCount[]
+  primaryColor: string
+  sidebarColor: string
 }
 
-export default function StoreManagerDashboard({ profile, orders, categories }: Props) {
+export default function StoreManagerDashboard({ profile, orders, categories, primaryColor, sidebarColor }: Props) {
   const router = useRouter()
-  const company = Array.isArray(profile.company) ? profile.company[0] : profile.company as any
-  const branch  = Array.isArray(profile.branch)  ? profile.branch[0]  : profile.branch  as any
+  const branch = Array.isArray(profile.branch) ? profile.branch[0] : profile.branch as any
 
-  const primary = company?.primary_color || '#1a1a1a'
+  const primary = primaryColor
   const gold    = '#c9a84c'
 
   const openOrders  = orders.filter(o => ['submitted','approved','packing','loaded'].includes(o.status))
@@ -30,14 +31,14 @@ export default function StoreManagerDashboard({ profile, orders, categories }: P
   })
 
   return (
-    <AppShell user={profile} onCreateOrder={() => router.push('/dashboard/store/catalogue')}>
+    <AppShell user={profile} onCreateOrder={() => router.push('/dashboard/store/catalogue')} primaryColor={primaryColor} sidebarColor={sidebarColor}>
 
       {/* ── Page header + stats ─────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Store Dashboard</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {company?.name} — {branch?.name}, {branch?.city} &nbsp;·&nbsp; {today}
+            {(Array.isArray(profile.company) ? (profile.company as any)[0] : profile.company as any)?.name} — {(branch as any)?.name}, {(branch as any)?.city} &nbsp;·&nbsp; {today}
           </p>
         </div>
 
