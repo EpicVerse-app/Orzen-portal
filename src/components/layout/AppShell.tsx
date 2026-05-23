@@ -5,11 +5,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, ClipboardList, Truck,
-  ShoppingCart, Headphones
+  ShoppingCart, Headphones, ShoppingBag
 } from 'lucide-react'
 import { AppUser } from '@/types'
 import LogoutButton from '@/components/ui/LogoutButton'
-import CatalogueNav from '@/components/layout/CatalogueNav'
 import TopHeader from '@/components/layout/TopHeader'
 import { useCartStore } from '@/store/cartStore'
 
@@ -113,15 +112,7 @@ export default function AppShell({ user, children, onCreateOrder, primaryColor, 
               <NavItem href="/dashboard/store/orders"  icon={ClipboardList}   label="My Orders"       exact={false} />
               <NavItem href="/dashboard/store/deliveries" icon={Truck}        label="Delivery Status" exact={false} />
 
-              {/* Order Materials (catalogue) */}
-              <CatalogueNavWrapper
-                companyId={user.company_id}
-                onNavigate={() => setSidebarOpen(false)}
-                gold={gold}
-                activeColor={gold}
-                isActive={pathname.startsWith('/dashboard/store/catalogue')}
-                sidebarBg={sidebarBg}
-              />
+              <NavItem href="/dashboard/store/catalogue" icon={ShoppingBag} label="Order Materials" exact={false} />
 
               <NavItem href="/dashboard/store/view-order" icon={ShoppingCart} label="View Order" exact={false} badge={cartCount} />
             </div>
@@ -194,33 +185,3 @@ export default function AppShell({ user, children, onCreateOrder, primaryColor, 
   )
 }
 
-/* ── CatalogueNav wrapper that uses the same left-bar active style ── */
-function CatalogueNavWrapper({
-  companyId, onNavigate, gold, activeColor, isActive, sidebarBg,
-}: {
-  companyId: string
-  onNavigate?: () => void
-  gold: string
-  activeColor: string
-  isActive: boolean
-  sidebarBg: string
-}) {
-  return (
-    <div className="relative">
-      {isActive && (
-        <span
-          className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full"
-          style={{ backgroundColor: gold }}
-        />
-      )}
-      <div className="pl-2">
-        <CatalogueNav
-          companyId={companyId}
-          onNavigate={onNavigate}
-          gold={gold}
-          activeColor={activeColor}
-        />
-      </div>
-    </div>
-  )
-}
