@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import AppShell from '@/components/layout/AppShell'
 import ProductGrid from '@/components/catalogue/ProductGrid'
 import CartBar from '@/components/catalogue/CartBar'
+import Link from 'next/link'
+import { ChevronLeft } from 'lucide-react'
 
 export default async function CategoryPage({ params }: { params: Promise<{ categoryId: string }> }) {
   const { categoryId } = await params
@@ -45,7 +47,15 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   return (
     <AppShell user={profile as any} primaryColor={primaryColor} sidebarColor={sidebarColor}>
       <div className="mb-6">
-        <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-1">Catalogue</p>
+        {/* Back link */}
+        <Link
+          href="/dashboard/store/catalogue"
+          className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors mb-3"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Order Materials
+        </Link>
+
         <h1 className="text-2xl font-bold text-gray-900">{category?.name}</h1>
         <p className="text-sm text-gray-500 mt-1">{products?.length || 0} products</p>
       </div>

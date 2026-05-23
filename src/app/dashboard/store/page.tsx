@@ -27,38 +27,39 @@ export default async function StoreDashboardPage() {
   const primaryColor = company?.primary_color || '#1a1a1a'
   const sidebarColor = company?.sidebar_color || '#111111'
 
-  // Recent orders
-  const { data: orders } = await supabase
-    .from('orders')
-    .select(`
-      id, status, created_at,
-      items:order_items(id, quantity, product:products(id, name))
-    `)
-    .eq('branch_id', (branch as any)?.id)
-    .order('created_at', { ascending: false })
-    .limit(20)
+  // Run orders + categories in parallel (cuts load time roughly in half)
+  const [ordersResult, categoriesResult] = await Promise.all([
+    supabase
+      .from('orders')
+      .select(`
+        id, status, created_at,
+        items:order_items(id, quantity, product:products(id, name))
+      `)
+      .eq('branch_id', (branch as any)?.id)
+      .order('created_at', { ascending: false })
+      .limit(20),
 
-  // Categories with product count
-  const { data: rawCategories } = await supabase
-    .from('categories')
-    .select('id, name, description')
-    .eq('company_id', profile.company_id)
-    .limit(6)
+    // Single query: embedded product count per category (no N+1)
+    supabase
+      .from('categories')
+      .select('id, name, description, products:products(count)')
+      .eq('company_id', profile.company_id)
+      .limit(6),
+  ])
 
-  const categories = await Promise.all(
-    (rawCategories || []).map(async (cat) => {
-      const { count } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true })
-        .eq('category_id', cat.id)
-      return { ...cat, product_count: count || 0 }
-    })
-  )
+  const orders = ordersResult.data || []
+
+  const categories = (categoriesResult.data || []).map((cat: any) => ({
+    id:            cat.id,
+    name:          cat.name,
+    description:   cat.description,
+    product_count: Array.isArray(cat.products) ? (cat.products[0]?.count ?? 0) : 0,
+  }))
 
   return (
     <StoreManagerDashboard
       profile={profile as any}
-      orders={(orders || []) as any}
+      orders={orders as any}
       categories={categories}
       primaryColor={primaryColor}
       sidebarColor={sidebarColor}
