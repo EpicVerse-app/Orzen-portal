@@ -11,7 +11,7 @@ export default async function StoreDashboardPage() {
   const { data: profile } = await supabase
     .from('users')
     .select(`
-      id, full_name, role, scope_region, scope_state,
+      id, full_name, role, scope_region, scope_state, company_id,
       company:companies(id, name, logo_url, slug),
       branch:branches(id, name, address, city, state, region)
     `)

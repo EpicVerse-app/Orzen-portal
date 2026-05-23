@@ -1,24 +1,48 @@
 {
-  "name": "Kriyora",
-  "short_name": "Kriyora",
+  "name": "Orzen Flow",
+  "short_name": "Orzen",
   "description": "B2B Product Booking App",
-  "start_url": "/",
+  "start_url": "/dashboard",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#f9fafb",
-  "theme_color": "#2563eb",
   "orientation": "portrait-primary",
+  "background_color": "#1a1a1a",
+  "theme_color": "#c9a84c",
+  "categories": ["business", "productivity"],
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "description": "Go to Store Dashboard",
+      "url": "/dashboard/store",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "New Order",
+      "short_name": "Order",
+      "description": "Browse catalogue and place an order",
+      "url": "/dashboard/store/catalogue",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
     }
   ]
 }

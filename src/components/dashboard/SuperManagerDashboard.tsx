@@ -5,6 +5,7 @@ import { CheckCircle, XCircle, Clock, ChevronRight, AlertTriangle } from 'lucide
 import { createClient } from '@/lib/supabase/client'
 import { AppUser, Order } from '@/types'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
+import LogoutButton from '@/components/ui/LogoutButton'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 
@@ -57,10 +58,13 @@ export default function SuperManagerDashboard({ profile, pendingOrders, otherOrd
             <h1 className="text-lg font-semibold text-gray-900">{profile.full_name}</h1>
             <p className="text-xs text-gray-400">{profile.scope_state} · Super Manager</p>
           </div>
-          <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center">
-            <span className="text-green-600 text-sm font-semibold">
-              {profile.full_name?.charAt(0)}
-            </span>
+          <div className="flex items-center gap-3">
+            <LogoutButton />
+            <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center">
+              <span className="text-green-600 text-sm font-semibold">
+                {profile.full_name?.charAt(0)}
+              </span>
+            </div>
           </div>
         </div>
       </div>

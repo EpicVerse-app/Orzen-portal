@@ -19,6 +19,8 @@ export default async function SuperDashboardPage() {
 
   if (!profile || profile.role !== 'super_manager') redirect('/login')
 
+  const company = Array.isArray(profile.company) ? profile.company[0] : profile.company
+
   const { data: orders } = await supabase
     .from('orders')
     .select(`
@@ -26,7 +28,7 @@ export default async function SuperDashboardPage() {
       branch:branches(id, name, city, state),
       items:order_items(id)
     `)
-    .eq('company_id', (profile.company as any).id)
+    .eq('company_id', company?.id)
     .in('status', ['submitted', 'approved', 'rejected', 'packing', 'loaded', 'shipped'])
     .order('created_at', { ascending: true })
 

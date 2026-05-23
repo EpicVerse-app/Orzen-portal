@@ -5,6 +5,7 @@ import { Package, Clock, MapPin, Upload, CheckCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { AppUser, Order, OrderStatus } from '@/types'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
+import LogoutButton from '@/components/ui/LogoutButton'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -77,10 +78,13 @@ export default function VendorDashboard({ profile, approvedOrders, holdOrders }:
             <h1 className="text-lg font-semibold text-gray-900">{profile.full_name}</h1>
             <p className="text-xs text-gray-400">Vendor</p>
           </div>
-          <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center">
-            <span className="text-purple-600 text-sm font-semibold">
-              {profile.full_name?.charAt(0)}
-            </span>
+          <div className="flex items-center gap-3">
+            <LogoutButton />
+            <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center">
+              <span className="text-purple-600 text-sm font-semibold">
+                {profile.full_name?.charAt(0)}
+              </span>
+            </div>
           </div>
         </div>
       </div>
