@@ -239,10 +239,7 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
 /* ── Stat chip ─────────────────────────────────────────────── */
 function StatChip({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div
-      className="bg-white rounded-xl shadow-sm px-5 py-3.5 flex items-center gap-4 min-w-[130px]"
-      style={{ border: `2px solid ${color}` }}
-    >
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-3.5 flex items-center gap-4 min-w-[130px]">
       <p className="text-3xl font-bold leading-none" style={{ color }}>{value}</p>
       <p className="text-xs text-gray-500 font-medium leading-tight">{label}</p>
     </div>

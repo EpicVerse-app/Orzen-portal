@@ -25,7 +25,6 @@ export default function TopHeader({ user, onCreateOrder, onMenuToggle, headerCol
   const profileRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
-  // Close profile dropdown on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
@@ -36,7 +35,6 @@ export default function TopHeader({ user, onCreateOrder, onMenuToggle, headerCol
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  // Focus search input when opened
   useEffect(() => {
     if (showSearch) searchRef.current?.focus()
   }, [showSearch])
@@ -57,37 +55,54 @@ export default function TopHeader({ user, onCreateOrder, onMenuToggle, headerCol
     setSearchQuery('')
   }
 
-  const initials = user.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
-  const headerBg = headerColor || '#1a1a1a'
-  const gold     = '#c9a84c'
+  const companyName = (Array.isArray(user.company) ? (user.company as any)[0] : user.company as any)?.name || 'Orzen Flow'
+  // Split company name into up to 2 lines for display
+  const words       = companyName.trim().split(' ')
+  const line1       = words[0] || ''
+  const line2       = words.slice(1).join(' ')
+
+  const initials  = user.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+  const headerBg  = headerColor || '#1a1a1a'
+  const gold      = '#c9a84c'
 
   return (
     <>
-      <header className="text-white h-14 flex items-center px-4 gap-3 fixed top-0 left-0 right-0 z-50"
-        style={{ backgroundColor: headerBg }}>
-
+      <header
+        className="text-white h-14 flex items-center px-4 gap-3 fixed top-0 left-0 right-0 z-50"
+        style={{ backgroundColor: headerBg }}
+      >
         {/* Mobile menu toggle */}
-        <button className="lg:hidden text-gray-400 hover:text-white" onClick={onMenuToggle}>
+        <button className="lg:hidden text-gray-300 hover:text-white" onClick={onMenuToggle}>
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* 1. Logo / Home */}
+        {/* Company name / logo */}
         <Link
           href="/dashboard/store"
-          className="text-sm font-bold tracking-wide shrink-0 hover:opacity-80 transition-opacity"
+          className="shrink-0 hover:opacity-80 transition-opacity leading-tight"
         >
-          <span className="text-[#c9a84c]">ORZEN</span>
-          <span className="text-white ml-1 font-light">FLOW</span>
+          <p className="text-sm font-extrabold tracking-wide uppercase text-white leading-none">
+            {line1}
+          </p>
+          {line2 && (
+            <p className="text-xs font-bold tracking-wide uppercase leading-none mt-0.5" style={{ color: gold }}>
+              {line2}
+            </p>
+          )}
         </Link>
 
-        {/* 2. Global Search — desktop */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-md hidden sm:flex items-center rounded-lg px-3 gap-2" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
+        {/* Global search — desktop */}
+        <form
+          onSubmit={handleSearch}
+          className="flex-1 max-w-xl hidden sm:flex items-center rounded-lg px-3 gap-2"
+          style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
+        >
           <Search className="w-4 h-4 text-gray-400 shrink-0" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search orders, catalogue..."
+            placeholder="Search orders & materials..."
             className="bg-transparent text-sm text-white placeholder-gray-500 outline-none w-full py-2"
           />
           {searchQuery && (
@@ -104,53 +119,44 @@ export default function TopHeader({ user, onCreateOrder, onMenuToggle, headerCol
 
         <div className="flex-1" />
 
-        {/* 3. Create Order */}
+        {/* New Order */}
         {onCreateOrder && (
           <button
             onClick={onCreateOrder}
-            className="flex items-center gap-1.5 bg-[#c9a84c] hover:bg-[#b8973b] text-black text-xs font-semibold px-4 py-2 rounded-lg transition-colors shrink-0"
+            className="flex items-center gap-1.5 text-black text-xs font-bold px-4 py-2 rounded-lg transition-colors shrink-0 hover:opacity-90"
+            style={{ backgroundColor: gold }}
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Create Order</span>
+            <span className="hidden sm:inline">New Order</span>
           </button>
         )}
 
-        {/* 4. Notifications */}
+        {/* Notifications */}
         <button className="relative text-gray-400 hover:text-white transition-colors p-1">
-          <Bell className="w-4 h-4" />
-          {/* Unread badge — will be dynamic later */}
+          <Bell className="w-5 h-5" />
           <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
             3
           </span>
         </button>
 
-        {/* 5. Help & Support */}
-        <button
-          onClick={() => setShowHelp(true)}
-          className="text-gray-400 hover:text-white transition-colors p-1"
-        >
-          <HelpCircle className="w-4 h-4" />
-        </button>
-
-        {/* 6. Profile */}
+        {/* Profile */}
         <div ref={profileRef} className="relative">
           <button
             onClick={() => setShowProfile(!showProfile)}
-            className="w-8 h-8 rounded-full bg-[#c9a84c] flex items-center justify-center text-black text-xs font-bold hover:opacity-80 transition-opacity"
+            className="w-8 h-8 rounded-full border-2 border-white/30 flex items-center justify-center hover:border-white/60 transition-colors"
+            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
           >
-            {initials}
+            <User className="w-4 h-4 text-white" />
           </button>
 
           {showProfile && (
             <div className="absolute right-0 top-10 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
-              {/* User info */}
               <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
                 <p className="text-sm font-semibold text-gray-800">{user.full_name}</p>
                 <p className="text-xs text-gray-500 capitalize">{user.role?.replace('_', ' ')}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{(user.company as any)?.name}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{companyName}</p>
               </div>
 
-              {/* Menu items */}
               <div className="py-1">
                 <Link
                   href="/dashboard/store/profile"
@@ -178,7 +184,6 @@ export default function TopHeader({ user, onCreateOrder, onMenuToggle, headerCol
                 </Link>
               </div>
 
-              {/* Logout */}
               <div className="border-t border-gray-100 py-1">
                 <button
                   onClick={handleLogout}
@@ -196,8 +201,8 @@ export default function TopHeader({ user, onCreateOrder, onMenuToggle, headerCol
 
       {/* Mobile search bar */}
       {showSearch && (
-        <div className="fixed top-14 left-0 right-0 z-40 bg-[#1a1a1a] px-4 py-3 sm:hidden">
-          <form onSubmit={handleSearch} className="flex items-center bg-[#2a2a2a] rounded-lg px-3 gap-2">
+        <div className="fixed top-14 left-0 right-0 z-40 px-4 py-3 sm:hidden" style={{ backgroundColor: headerBg }}>
+          <form onSubmit={handleSearch} className="flex items-center rounded-lg px-3 gap-2" style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
             <Search className="w-4 h-4 text-gray-400 shrink-0" />
             <input
               ref={searchRef}
@@ -226,7 +231,7 @@ export default function TopHeader({ user, onCreateOrder, onMenuToggle, headerCol
             </div>
             <div className="space-y-3">
               <a href="mailto:support@kriyora.com" className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                <div className="w-8 h-8 bg-[#c9a84c] rounded-lg flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: gold }}>
                   <HelpCircle className="w-4 h-4 text-black" />
                 </div>
                 <div>
@@ -235,12 +240,12 @@ export default function TopHeader({ user, onCreateOrder, onMenuToggle, headerCol
                 </div>
               </a>
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                <div className="w-8 h-8 bg-[#c9a84c] rounded-lg flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: gold }}>
                   <User className="w-4 h-4 text-black" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-800">Your Account</p>
-                  <p className="text-xs text-gray-400">{user.full_name} · {(user.company as any)?.name}</p>
+                  <p className="text-xs text-gray-400">{user.full_name} · {companyName}</p>
                 </div>
               </div>
             </div>

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, ClipboardList, Truck,
-  ShoppingBag, ShoppingCart, Headphones
+  ShoppingCart, Headphones
 } from 'lucide-react'
 import { AppUser } from '@/types'
 import LogoutButton from '@/components/ui/LogoutButton'
@@ -31,16 +31,53 @@ export default function AppShell({ user, children, onCreateOrder, primaryColor, 
   const primary   = primaryColor || '#1a1a1a'
   const gold      = '#c9a84c'
 
-  function navClass(href: string, exact = true) {
-    const active = exact ? pathname === href : pathname.startsWith(href)
-    return active
-      ? 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors text-black'
-      : 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-white/60 hover:text-white hover:bg-white/10'
+  function isActive(href: string, exact = true) {
+    return exact ? pathname === href : pathname.startsWith(href)
   }
 
-  function navStyle(href: string, exact = true) {
-    const active = exact ? pathname === href : pathname.startsWith(href)
-    return active ? { backgroundColor: gold } : {}
+  function NavItem({
+    href,
+    icon: Icon,
+    label,
+    exact = true,
+    badge,
+  }: {
+    href: string
+    icon: React.ElementType
+    label: string
+    exact?: boolean
+    badge?: number
+  }) {
+    const active = isActive(href, exact)
+    return (
+      <div className="relative">
+        {/* Gold left-bar indicator */}
+        {active && (
+          <span
+            className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full"
+            style={{ backgroundColor: gold }}
+          />
+        )}
+        <Link
+          href={href}
+          onClick={() => setSidebarOpen(false)}
+          className="flex items-center gap-3 pl-5 pr-3 py-2.5 rounded-lg text-sm transition-colors"
+          style={
+            active
+              ? { color: '#fff', fontWeight: 600, backgroundColor: 'rgba(255,255,255,0.08)' }
+              : { color: 'rgba(255,255,255,0.55)', fontWeight: 500 }
+          }
+        >
+          <Icon className="w-4 h-4 shrink-0" style={active ? { color: gold } : {}} />
+          <span className="flex-1">{label}</span>
+          {badge != null && badge > 0 && (
+            <span className="text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-white/20 text-white">
+              {badge}
+            </span>
+          )}
+        </Link>
+      </div>
+    )
   }
 
   return (
@@ -62,71 +99,61 @@ export default function AppShell({ user, children, onCreateOrder, primaryColor, 
           `}
           style={{ backgroundColor: sidebarBg }}
         >
-          <nav className="flex-1 px-3 py-5 overflow-y-auto">
-            <p className="text-[10px] font-bold tracking-widest uppercase px-3 mb-3"
-               style={{ color: 'rgba(255,255,255,0.35)' }}>
+          {/* Nav links */}
+          <nav className="flex-1 px-2 py-5 overflow-y-auto">
+            <p
+              className="text-[10px] font-bold tracking-widest uppercase px-3 mb-3"
+              style={{ color: 'rgba(255,255,255,0.35)' }}
+            >
               Menu
             </p>
 
             <div className="space-y-0.5">
-              {/* Dashboard */}
-              <Link href="/dashboard/store" onClick={() => setSidebarOpen(false)}
-                className={navClass('/dashboard/store')} style={navStyle('/dashboard/store')}>
-                <LayoutDashboard className="w-4 h-4 shrink-0" />
-                Dashboard
-              </Link>
-
-              {/* My Orders */}
-              <Link href="/dashboard/store/orders" onClick={() => setSidebarOpen(false)}
-                className={navClass('/dashboard/store/orders')} style={navStyle('/dashboard/store/orders')}>
-                <ClipboardList className="w-4 h-4 shrink-0" />
-                My Orders
-              </Link>
-
-              {/* Delivery Status */}
-              <Link href="/dashboard/store/deliveries" onClick={() => setSidebarOpen(false)}
-                className={navClass('/dashboard/store/deliveries')} style={navStyle('/dashboard/store/deliveries')}>
-                <Truck className="w-4 h-4 shrink-0" />
-                Delivery Status
-              </Link>
+              <NavItem href="/dashboard/store"         icon={LayoutDashboard} label="Dashboard"       exact={true} />
+              <NavItem href="/dashboard/store/orders"  icon={ClipboardList}   label="My Orders"       exact={false} />
+              <NavItem href="/dashboard/store/deliveries" icon={Truck}        label="Delivery Status" exact={false} />
 
               {/* Order Materials (catalogue) */}
-              <CatalogueNav
+              <CatalogueNavWrapper
                 companyId={user.company_id}
                 onNavigate={() => setSidebarOpen(false)}
                 gold={gold}
                 activeColor={gold}
+                isActive={pathname.startsWith('/dashboard/store/catalogue')}
+                sidebarBg={sidebarBg}
               />
 
-              {/* View Order with cart badge */}
-              <Link href="/dashboard/store/view-order" onClick={() => setSidebarOpen(false)}
-                className={navClass('/dashboard/store/view-order')} style={navStyle('/dashboard/store/view-order')}>
-                <ShoppingCart className="w-4 h-4 shrink-0" />
-                <span className="flex-1">View Order</span>
-                {cartCount > 0 && (
-                  <span className="text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-white/20 text-white">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
+              <NavItem href="/dashboard/store/view-order" icon={ShoppingCart} label="View Order" exact={false} badge={cartCount} />
             </div>
           </nav>
 
-          {/* Support + user ───────────────────────────────── */}
-          <div className="px-3 py-4 space-y-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-            {/* Need help */}
-            <button
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+          {/* ── Need help card ─────────────────────────────── */}
+          <div className="px-3 pb-2">
+            <div
+              className="rounded-xl px-4 py-3"
+              style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}
             >
-              <Headphones className="w-4 h-4 shrink-0" />
-              Support
-            </button>
+              <div className="flex items-center gap-2 mb-0.5">
+                <Headphones className="w-4 h-4 shrink-0" style={{ color: gold }} />
+                <p className="text-sm font-bold text-white">Need help?</p>
+              </div>
+              <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                Tap Support any time
+              </p>
+            </div>
+          </div>
 
-            {/* User info */}
-            <div className="flex items-center gap-3 px-3 py-2">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-black"
-                style={{ backgroundColor: gold }}>
-                {user.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+          {/* ── User + logout ──────────────────────────────── */}
+          <div
+            className="px-3 py-3 space-y-2"
+            style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <div className="flex items-center gap-3 px-2 py-1">
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-black"
+                style={{ backgroundColor: gold }}
+              >
+                {user.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
               </div>
               <div className="min-w-0">
                 <p className="text-white text-xs font-semibold truncate">{user.full_name}</p>
@@ -137,17 +164,62 @@ export default function AppShell({ user, children, onCreateOrder, primaryColor, 
             </div>
             <LogoutButton />
           </div>
+
+          {/* ── Powered by ─────────────────────────────────── */}
+          <div
+            className="px-4 py-2 text-center"
+            style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+          >
+            <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
+              Powered by&nbsp;
+              <span style={{ color: gold }} className="font-semibold">Orzen Flow</span>
+            </p>
+          </div>
         </aside>
 
         {/* Mobile overlay */}
         {sidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />
+          <div
+            className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
         )}
 
         {/* Main content */}
         <main className="flex-1 lg:ml-56 p-4 sm:p-6 min-w-0 overflow-x-hidden">
           {children}
         </main>
+      </div>
+    </div>
+  )
+}
+
+/* ── CatalogueNav wrapper that uses the same left-bar active style ── */
+function CatalogueNavWrapper({
+  companyId, onNavigate, gold, activeColor, isActive, sidebarBg,
+}: {
+  companyId: string
+  onNavigate?: () => void
+  gold: string
+  activeColor: string
+  isActive: boolean
+  sidebarBg: string
+}) {
+  return (
+    <div className="relative">
+      {isActive && (
+        <span
+          className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full"
+          style={{ backgroundColor: gold }}
+        />
+      )}
+      <div className="pl-2">
+        <CatalogueNav
+          companyId={companyId}
+          onNavigate={onNavigate}
+          gold={gold}
+          activeColor={activeColor}
+        />
       </div>
     </div>
   )
