@@ -15,12 +15,11 @@ import { useCartStore } from '@/store/cartStore'
 interface Props {
   user: AppUser
   children: React.ReactNode
-  onCreateOrder?: () => void
   primaryColor?: string
   sidebarColor?: string
 }
 
-export default function AppShell({ user, children, onCreateOrder, primaryColor, sidebarColor }: Props) {
+export default function AppShell({ user, children, primaryColor, sidebarColor }: Props) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { items } = useCartStore()
@@ -83,7 +82,6 @@ export default function AppShell({ user, children, onCreateOrder, primaryColor, 
     <div className="min-h-screen bg-[#f0ede8] flex flex-col">
       <TopHeader
         user={user}
-        onCreateOrder={onCreateOrder}
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         headerColor={primary}
       />

@@ -10,12 +10,11 @@ import Link from 'next/link'
 
 interface Props {
   user: AppUser
-  onCreateOrder?: () => void
   onMenuToggle: () => void
   headerColor?: string
 }
 
-export default function TopHeader({ user, onCreateOrder, onMenuToggle, headerColor }: Props) {
+export default function TopHeader({ user, onMenuToggle, headerColor }: Props) {
   const router = useRouter()
   const [showProfile, setShowProfile] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
@@ -120,16 +119,14 @@ export default function TopHeader({ user, onCreateOrder, onMenuToggle, headerCol
         <div className="flex-1" />
 
         {/* New Order */}
-        {onCreateOrder && (
-          <button
-            onClick={onCreateOrder}
-            className="flex items-center gap-1.5 text-black text-xs font-bold px-4 py-2 rounded-lg transition-colors shrink-0 hover:opacity-90"
-            style={{ backgroundColor: gold }}
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">New Order</span>
-          </button>
-        )}
+        <Link
+          href="/dashboard/store/catalogue"
+          className="flex items-center gap-1.5 text-black text-xs font-bold px-4 py-2 rounded-lg transition-opacity shrink-0 hover:opacity-90"
+          style={{ backgroundColor: gold }}
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">New Order</span>
+        </Link>
 
         {/* Notifications */}
         <button className="relative text-gray-400 hover:text-white transition-colors p-1">

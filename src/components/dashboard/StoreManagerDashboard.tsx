@@ -1,13 +1,9 @@
-'use client'
-
 import { AppUser, Order, CategoryWithCount } from '@/types'
-import AppShell from '@/components/layout/AppShell'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 import {
   Diamond, Monitor, Package, PenLine, BellRing,
   BookOpen, Tag, Layers, Archive, Gem, Headphones
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import React from 'react'
 
@@ -23,7 +19,6 @@ interface Props {
 const CAT_ICONS = [Diamond, Package, Monitor, PenLine, BellRing, BookOpen, Layers, Archive, Gem, Tag]
 
 export default function StoreManagerDashboard({ profile, orders, categories, primaryColor, sidebarColor }: Props) {
-  const router = useRouter()
   const branch  = Array.isArray(profile.branch)  ? profile.branch[0]  : profile.branch  as any
   const company = Array.isArray(profile.company) ? profile.company[0] : profile.company as any
 
@@ -38,7 +33,7 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
   })
 
   return (
-    <AppShell user={profile} onCreateOrder={() => router.push('/dashboard/store/catalogue')} primaryColor={primaryColor} sidebarColor={sidebarColor}>
+    <>
 
       {/* ── Page header + stats ─────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
@@ -232,7 +227,7 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
 
         </div>
       </div>
-    </AppShell>
+    </>
   )
 }
 

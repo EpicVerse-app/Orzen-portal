@@ -1,27 +1,14 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import AppShell from '@/components/layout/AppShell'
+import { createClient } from '@/lib/supabase/server'
+import { getStoreProfile } from '@/lib/auth/getStoreProfile'
 import Link from 'next/link'
 import { Tag, ChevronRight } from 'lucide-react'
 
 export default async function CataloguePage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('users')
-    .select('id, full_name, role, company_id, branch_id, company:companies(id, name, primary_color, sidebar_color), branch:branches(id, name, city)')
-    .eq('id', user.id)
-    .single()
-
+  const profile = await getStoreProfile()
   if (!profile || profile.role !== 'store_manager') redirect('/login')
 
-  const company      = Array.isArray(profile.company) ? profile.company[0] : profile.company as any
-  const primaryColor = company?.primary_color || '#1a1a1a'
-  const sidebarColor = company?.sidebar_color || '#111111'
-
+  const supabase = await createClient()
   const { data: categories } = await supabase
     .from('categories')
     .select('id, name')
@@ -29,9 +16,9 @@ export default async function CataloguePage() {
     .order('name')
 
   return (
-    <AppShell user={profile as any} primaryColor={primaryColor} sidebarColor={sidebarColor}>
+    <>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Catalogue</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Order Materials</h1>
         <p className="text-sm text-gray-500 mt-1">Select a category to browse products</p>
       </div>
 
@@ -59,6 +46,6 @@ export default async function CataloguePage() {
           ))}
         </div>
       )}
-    </AppShell>
+    </>
   )
 }
