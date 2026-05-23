@@ -3,9 +3,13 @@
 import { AppUser, Order, CategoryWithCount } from '@/types'
 import AppShell from '@/components/layout/AppShell'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
-import { ShoppingCart, Truck, CheckSquare, Grid3x3, Headphones } from 'lucide-react'
+import {
+  Diamond, Monitor, Package, PenLine, BellRing,
+  BookOpen, Tag, Layers, Archive, Gem, Headphones
+} from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import React from 'react'
 
 interface Props {
   profile: AppUser
@@ -15,19 +19,22 @@ interface Props {
   sidebarColor: string
 }
 
+// Cycle through a set of category icons
+const CAT_ICONS = [Diamond, Package, Monitor, PenLine, BellRing, BookOpen, Layers, Archive, Gem, Tag]
+
 export default function StoreManagerDashboard({ profile, orders, categories, primaryColor, sidebarColor }: Props) {
   const router = useRouter()
-  const branch = Array.isArray(profile.branch) ? profile.branch[0] : profile.branch as any
+  const branch  = Array.isArray(profile.branch)  ? profile.branch[0]  : profile.branch  as any
+  const company = Array.isArray(profile.company) ? profile.company[0] : profile.company as any
 
-  const primary = primaryColor
-  const gold    = '#c9a84c'
+  const gold = '#c9a84c'
 
-  const openOrders  = orders.filter(o => ['submitted','approved','packing','loaded'].includes(o.status))
-  const inDelivery  = orders.filter(o => o.status === 'shipped')
-  const toReceive   = orders.filter(o => o.status === 'delivered')
+  const openOrders = orders.filter(o => ['submitted', 'approved', 'packing', 'loaded'].includes(o.status))
+  const inDelivery = orders.filter(o => o.status === 'shipped')
+  const toReceive  = orders.filter(o => o.status === 'delivered')
 
   const today = new Date().toLocaleDateString('en-IN', {
-    weekday: 'long', month: 'long', day: 'numeric'
+    weekday: 'long', month: 'long', day: 'numeric',
   })
 
   return (
@@ -38,65 +45,72 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Store Dashboard</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {(Array.isArray(profile.company) ? (profile.company as any)[0] : profile.company as any)?.name} — {(branch as any)?.name}, {(branch as any)?.city} &nbsp;·&nbsp; {today}
+            {company?.name} — {branch?.name}, {branch?.city} &nbsp;·&nbsp; {today}
           </p>
         </div>
 
         {/* Stats chips */}
         <div className="flex gap-3 shrink-0">
-          <StatChip label="Open Orders"  value={openOrders.length}  color={primary} />
-          <StatChip label="In Delivery"  value={inDelivery.length}  color={primary} />
-          <StatChip label="To Receive"   value={toReceive.length}   color={primary} />
+          <StatChip label="Open Orders" value={openOrders.length} color={primaryColor} />
+          <StatChip label="In Delivery" value={inDelivery.length} color={primaryColor} />
+          <StatChip label="To Receive"  value={toReceive.length}  color={primaryColor} />
         </div>
       </div>
 
       {/* ── Order Materials ─────────────────────────────────────── */}
       {categories.length > 0 && (
         <section className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-xs font-bold tracking-widest uppercase" style={{ color: gold }}>
-                Order Materials
-              </p>
-              <p className="text-sm text-gray-500">
-                Everything your store needs — pick a category to start an order.
-              </p>
-            </div>
+          {/* Section header */}
+          <div className="flex items-center gap-4 mb-4">
+            <p className="text-xs font-bold tracking-widest uppercase shrink-0" style={{ color: gold }}>
+              Order Materials
+            </p>
+            <p className="text-sm text-gray-500 flex-1 hidden sm:block">
+              Everything your store needs — pick a category to start an order.
+            </p>
             <Link
               href="/dashboard/store/catalogue"
-              className="text-sm font-medium hover:opacity-80 transition-opacity shrink-0"
-              style={{ color: gold }}
+              className="text-sm font-semibold hover:opacity-80 transition-opacity shrink-0"
+              style={{ color: primaryColor }}
             >
               Browse all →
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {categories.map((cat) => (
-              <Link
-                key={cat.id}
-                href={`/dashboard/store/catalogue/${cat.id}`}
-                className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-start gap-3 hover:shadow-md transition-shadow group"
-                style={{ borderTop: `3px solid ${gold}` }}
-              >
-                {/* Icon box */}
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: primary }}
+          {/* Category cards grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {categories.map((cat, idx) => {
+              const Icon = CAT_ICONS[idx % CAT_ICONS.length]
+              return (
+                <Link
+                  key={cat.id}
+                  href={`/dashboard/store/catalogue/${cat.id}`}
+                  className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition-shadow"
+                  style={{ borderLeft: `4px solid ${gold}` }}
                 >
-                  <Grid3x3 className="w-5 h-5" style={{ color: gold }} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-gray-900 truncate">{cat.name}</p>
-                  {cat.description && (
-                    <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{cat.description}</p>
-                  )}
-                  <p className="text-xs font-semibold mt-1" style={{ color: gold }}>
-                    {cat.product_count} items
-                  </p>
-                </div>
-              </Link>
-            ))}
+                  {/* Icon box */}
+                  <div
+                    className="w-16 h-16 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    <Icon className="w-8 h-8" style={{ color: gold }} />
+                  </div>
+
+                  {/* Text */}
+                  <div className="min-w-0">
+                    <p className="text-base font-bold text-gray-900 truncate">{cat.name}</p>
+                    {cat.description && (
+                      <p className="text-xs text-gray-400 mt-0.5 line-clamp-2 leading-relaxed">
+                        {cat.description}
+                      </p>
+                    )}
+                    <p className="text-sm font-semibold mt-1.5" style={{ color: gold }}>
+                      {cat.product_count} items
+                    </p>
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         </section>
       )}
@@ -104,16 +118,16 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
       {/* ── Bottom: My Orders + Delivery Status ─────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-        {/* My Orders */}
+        {/* My Orders — takes 2/3 */}
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm">
-          <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <p className="text-xs font-bold tracking-widest uppercase" style={{ color: gold }}>
               My Orders
             </p>
             <Link
               href="/dashboard/store/orders"
-              className="text-xs font-medium hover:opacity-70 transition-opacity"
-              style={{ color: gold }}
+              className="text-xs font-semibold hover:opacity-70 transition-opacity"
+              style={{ color: primaryColor }}
             >
               View all →
             </Link>
@@ -125,28 +139,42 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
             </div>
           ) : (
             <div className="divide-y divide-gray-50">
-              {orders.slice(0, 5).map((order) => (
-                <div key={order.id} className="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-700">
+              {orders.slice(0, 6).map((order) => {
+                const firstItem = (order.items as any)?.[0]
+                const extraCount = ((order.items as any)?.length || 1) - 1
+                const itemLabel = firstItem
+                  ? `${firstItem.product?.name}${firstItem.quantity > 1 ? ` ×${firstItem.quantity}` : ''}${extraCount > 0 ? ` +${extraCount} more` : ''}`
+                  : 'Order'
+
+                return (
+                  <div key={order.id} className="px-5 py-3.5 flex items-center gap-4 hover:bg-gray-50 transition-colors">
+                    {/* Order number */}
+                    <p className="text-sm font-bold text-gray-700 shrink-0 w-20">
                       #MO-{order.id.slice(-4).toUpperCase()}
                     </p>
-                    <p className="text-xs text-gray-400 truncate">
-                      {(order.items as any)?.[0]?.product?.name || 'Order'}
-                      {(order.items as any)?.length > 1 ? ` +${(order.items as any).length - 1} more` : ''}
+
+                    {/* Item description */}
+                    <p className="text-sm text-gray-500 flex-1 truncate min-w-0">
+                      {itemLabel}
                     </p>
+
+                    {/* Status */}
+                    <div className="shrink-0">
+                      <OrderStatusBadge status={order.status} />
+                    </div>
                   </div>
-                  <OrderStatusBadge status={order.status} />
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
 
-        {/* Delivery Status */}
+        {/* Right column: Delivery Status + Need a hand */}
         <div className="flex flex-col gap-4">
+
+          {/* Delivery Status */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm flex-1">
-            <div className="px-5 py-4 border-b border-gray-50">
+            <div className="px-5 py-4 border-b border-gray-100">
               <p className="text-xs font-bold tracking-widest uppercase" style={{ color: gold }}>
                 Delivery Status
               </p>
@@ -158,61 +186,65 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
               </div>
             ) : (
               <div className="divide-y divide-gray-50">
-                {inDelivery.slice(0, 4).map((order, i) => (
-                  <div key={order.id} className="px-5 py-3 flex items-start gap-3">
-                    <span
-                      className="w-2 h-2 rounded-full mt-1.5 shrink-0"
-                      style={{ backgroundColor: i === 0 ? '#f97316' : gold }}
-                    />
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-800">
-                        #MO-{order.id.slice(-4).toUpperCase()} &nbsp;
-                        <span className="font-normal text-gray-500 text-xs truncate">
-                          {(order.items as any)?.[0]?.product?.name}
-                        </span>
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {i === 0 ? 'Out for delivery — today' : 'In transit'}
-                      </p>
+                {inDelivery.slice(0, 4).map((order, i) => {
+                  const firstItem = (order.items as any)?.[0]
+                  return (
+                    <div key={order.id} className="px-5 py-3.5 flex items-start gap-3">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full mt-1.5 shrink-0"
+                        style={{ backgroundColor: i === 0 ? '#f97316' : primaryColor }}
+                      />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-800">
+                          #MO-{order.id.slice(-4).toUpperCase()}&nbsp;
+                          <span className="font-normal text-gray-500 text-xs">
+                            {firstItem?.product?.name}
+                          </span>
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {i === 0 ? 'Out for delivery — today' : 'In transit'}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
 
-          {/* Need a hand card */}
-          <div
-            className="rounded-xl p-4 text-white"
-            style={{ backgroundColor: primary }}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <Headphones className="w-4 h-4" style={{ color: gold }} />
-              <p className="text-sm font-bold">Need a hand?</p>
+          {/* Need a hand */}
+          <div className="rounded-xl p-5 text-white" style={{ backgroundColor: primaryColor }}>
+            <div className="flex items-center gap-2 mb-1.5">
+              <Headphones className="w-5 h-5" style={{ color: gold }} />
+              <p className="text-base font-bold">Need a hand?</p>
             </div>
-            <p className="text-xs opacity-75 mb-3">
+            <p className="text-sm opacity-75 mb-4 leading-relaxed">
               Order help, returns or anything else — support is one tap away.
             </p>
             <a
-              href="mailto:support@orzenflow.com"
-              className="inline-block text-xs font-semibold px-4 py-2 rounded-lg transition-opacity hover:opacity-90"
+              href="mailto:support@kriyora.com"
+              className="inline-block text-sm font-bold px-5 py-2 rounded-lg transition-opacity hover:opacity-90"
               style={{ backgroundColor: gold, color: '#000' }}
             >
               Get Support
             </a>
           </div>
-        </div>
 
+        </div>
       </div>
     </AppShell>
   )
 }
 
+/* ── Stat chip ─────────────────────────────────────────────── */
 function StatChip({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 text-center min-w-[80px]">
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-      <p className="text-[10px] text-gray-400 font-medium mt-0.5 leading-tight">{label}</p>
+    <div
+      className="bg-white rounded-xl shadow-sm px-5 py-3.5 flex items-center gap-4 min-w-[130px]"
+      style={{ border: `2px solid ${color}` }}
+    >
+      <p className="text-3xl font-bold leading-none" style={{ color }}>{value}</p>
+      <p className="text-xs text-gray-500 font-medium leading-tight">{label}</p>
     </div>
   )
 }
