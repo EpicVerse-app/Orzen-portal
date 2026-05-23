@@ -12,7 +12,7 @@ export default async function StoreDashboardPage() {
     .from('users')
     .select(`
       id, full_name, role, scope_region, scope_state, company_id,
-      company:companies(id, name, logo_url, slug, primary_color, sidebar_color),
+      company:companies(id, name, primary_color, sidebar_color),
       branch:branches(id, name, address, city, state, region)
     `)
     .eq('id', user.id)
