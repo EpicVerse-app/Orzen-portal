@@ -7,13 +7,14 @@ export default async function StoreLayout({ children }: { children: React.ReactN
 
   if (!profile || profile.role !== 'store_manager') redirect('/login')
 
-  const { primaryColor, sidebarColor } = getThemeColors(profile)
+  const { primaryColor, sidebarColor, backgroundImage } = getThemeColors(profile)
 
   return (
     <AppShell
       user={profile as any}
       primaryColor={primaryColor}
       sidebarColor={sidebarColor}
+      backgroundImage={backgroundImage}
     >
       {children}
     </AppShell>

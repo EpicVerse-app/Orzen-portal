@@ -17,9 +17,10 @@ interface Props {
   children: React.ReactNode
   primaryColor?: string
   sidebarColor?: string
+  backgroundImage?: string | null
 }
 
-export default function AppShell({ user, children, primaryColor, sidebarColor }: Props) {
+export default function AppShell({ user, children, primaryColor, sidebarColor, backgroundImage }: Props) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { items } = useCartStore()
@@ -79,7 +80,15 @@ export default function AppShell({ user, children, primaryColor, sidebarColor }:
   }
 
   return (
-    <div className="min-h-screen bg-[#f0ede8] flex flex-col">
+    <div
+      className="min-h-screen flex flex-col"
+      style={backgroundImage ? {
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      } : { backgroundColor: '#f0ede8' }}
+    >
       <TopHeader
         user={user}
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
@@ -180,7 +189,13 @@ export default function AppShell({ user, children, primaryColor, sidebarColor }:
 
         {/* Main content */}
         <main className="flex-1 lg:ml-56 p-4 sm:p-6 min-w-0 overflow-x-hidden">
-          {children}
+          {/* Frosted overlay when background image is set */}
+          {backgroundImage && (
+            <div className="fixed inset-0 z-0 pointer-events-none" style={{ backgroundColor: 'rgba(255,255,255,0.55)' }} />
+          )}
+          <div className="relative z-10">
+            {children}
+          </div>
         </main>
       </div>
     </div>
