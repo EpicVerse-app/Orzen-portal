@@ -56,11 +56,15 @@ export default function TopHeader({ user, onCreateOrder, onMenuToggle }: Props) 
     setSearchQuery('')
   }
 
-  const initials = user.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+  const initials  = user.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+  const company   = Array.isArray(user.company) ? (user.company as any)[0] : user.company as any
+  const headerBg  = company?.primary_color || '#1a1a1a'
+  const gold      = '#c9a84c'
 
   return (
     <>
-      <header className="bg-[#1a1a1a] text-white h-14 flex items-center px-4 gap-3 fixed top-0 left-0 right-0 z-50">
+      <header className="text-white h-14 flex items-center px-4 gap-3 fixed top-0 left-0 right-0 z-50"
+        style={{ backgroundColor: headerBg }}>
 
         {/* Mobile menu toggle */}
         <button className="lg:hidden text-gray-400 hover:text-white" onClick={onMenuToggle}>
@@ -77,7 +81,7 @@ export default function TopHeader({ user, onCreateOrder, onMenuToggle }: Props) 
         </Link>
 
         {/* 2. Global Search — desktop */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-md hidden sm:flex items-center bg-[#2a2a2a] rounded-lg px-3 gap-2">
+        <form onSubmit={handleSearch} className="flex-1 max-w-md hidden sm:flex items-center rounded-lg px-3 gap-2" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
           <Search className="w-4 h-4 text-gray-400 shrink-0" />
           <input
             type="text"

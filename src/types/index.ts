@@ -5,6 +5,15 @@ export interface Company {
   name: string
   logo_url: string | null
   slug: string
+  primary_color: string | null
+  sidebar_color: string | null
+}
+
+export interface CategoryWithCount {
+  id: string
+  name: string
+  description: string | null
+  product_count: number
 }
 
 export interface Branch {

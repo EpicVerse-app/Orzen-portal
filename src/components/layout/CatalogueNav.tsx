@@ -2,16 +2,22 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { BookOpen, ChevronDown, ChevronRight, Tag } from 'lucide-react'
+import { ShoppingBag, ChevronDown, ChevronRight, Tag } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Category } from '@/types'
 
 interface Props {
   companyId: string
   onNavigate?: () => void
+  gold?: string
+  activeColor?: string
 }
 
-export default function CatalogueNav({ companyId, onNavigate }: Props) {
+export default function CatalogueNav({
+  companyId, onNavigate,
+  gold = '#c9a84c',
+  activeColor = '#c9a84c',
+}: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -39,49 +45,43 @@ export default function CatalogueNav({ companyId, onNavigate }: Props) {
     if (open && categories.length === 0) loadCategories()
   }, [open, companyId])
 
-  function handleCategoryClick(categoryId: string) {
-    router.push(`/dashboard/store/catalogue/${categoryId}`)
-    onNavigate?.()
-  }
-
   return (
     <div>
-      {/* Catalogue toggle */}
       <button
         onClick={() => setOpen(!open)}
-        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-          isCataloguePage
-            ? 'bg-[#c9a84c] text-black'
-            : 'text-gray-400 hover:bg-[#2a2a2a] hover:text-white'
-        }`}
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+        style={isCataloguePage
+          ? { backgroundColor: activeColor, color: '#000' }
+          : { color: 'rgba(255,255,255,0.6)' }
+        }
       >
-        <BookOpen className="w-4 h-4 shrink-0" />
-        <span className="flex-1 text-left">Catalogue</span>
+        <ShoppingBag className="w-4 h-4 shrink-0" />
+        <span className="flex-1 text-left">Order Materials</span>
         {open
           ? <ChevronDown className="w-3.5 h-3.5 shrink-0" />
           : <ChevronRight className="w-3.5 h-3.5 shrink-0" />
         }
       </button>
 
-      {/* Categories dropdown */}
       {open && (
-        <div className="mt-0.5 ml-4 pl-3 border-l border-[#3a3a3a] space-y-0.5">
+        <div className="mt-0.5 ml-4 pl-3 space-y-0.5"
+             style={{ borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
           {loading ? (
-            <p className="text-xs text-gray-600 px-3 py-2">Loading...</p>
+            <p className="text-xs px-3 py-2" style={{ color: 'rgba(255,255,255,0.3)' }}>Loading...</p>
           ) : categories.length === 0 ? (
-            <p className="text-xs text-gray-600 px-3 py-2">No categories</p>
+            <p className="text-xs px-3 py-2" style={{ color: 'rgba(255,255,255,0.3)' }}>No categories</p>
           ) : (
             categories.map((cat) => {
               const isActive = pathname === `/dashboard/store/catalogue/${cat.id}`
               return (
                 <button
                   key={cat.id}
-                  onClick={() => handleCategoryClick(cat.id)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left ${
-                    isActive
-                      ? 'bg-[#c9a84c]/20 text-[#c9a84c]'
-                      : 'text-gray-500 hover:bg-[#2a2a2a] hover:text-white'
-                  }`}
+                  onClick={() => { router.push(`/dashboard/store/catalogue/${cat.id}`); onNavigate?.() }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left"
+                  style={isActive
+                    ? { color: gold, backgroundColor: 'rgba(255,255,255,0.08)' }
+                    : { color: 'rgba(255,255,255,0.45)' }
+                  }
                 >
                   <Tag className="w-3 h-3 shrink-0" />
                   {cat.name}
