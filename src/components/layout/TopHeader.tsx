@@ -80,11 +80,11 @@ export default function TopHeader({ user, onMenuToggle, headerColor }: Props) {
           href="/dashboard/store"
           className="shrink-0 hover:opacity-80 transition-opacity leading-tight"
         >
-          <p className="text-sm font-extrabold tracking-wide uppercase text-white leading-none">
+          <p className="text-sm font-extrabold tracking-widest uppercase leading-none" style={{ color: gold }}>
             {line1}
           </p>
           {line2 && (
-            <p className="text-xs font-bold tracking-wide uppercase leading-none mt-0.5" style={{ color: gold }}>
+            <p className="text-sm font-extrabold tracking-widest uppercase leading-none mt-0.5 text-white">
               {line2}
             </p>
           )}
