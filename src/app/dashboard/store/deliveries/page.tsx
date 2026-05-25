@@ -79,41 +79,41 @@ export default async function DeliveriesPage() {
 function OrderCard({ order, showDeliveredDate }: { order: any; showDeliveredDate: boolean }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
-        <div>
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-50 flex items-start justify-between gap-2">
+        <div className="min-w-0">
           <p className="text-sm font-bold text-gray-800">#MO-{order.id.slice(-4).toUpperCase()}</p>
-          <div className="flex items-center gap-3 mt-0.5">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5">
             <div className="flex items-center gap-1 text-xs text-gray-400">
-              <Calendar className="w-3 h-3" />
-              Ordered: {new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              <Calendar className="w-3 h-3 shrink-0" />
+              {new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
             </div>
             {showDeliveredDate ? (
               <div className="flex items-center gap-1 text-xs text-green-600 font-medium">
-                <CheckCircle2 className="w-3 h-3" />
-                Delivered: {new Date(order.updated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                <CheckCircle2 className="w-3 h-3 shrink-0" />
+                {new Date(order.updated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
               </div>
             ) : (
               <div className="flex items-center gap-1 text-xs text-purple-500 font-medium">
-                <Clock className="w-3 h-3" />
+                <Clock className="w-3 h-3 shrink-0" />
                 On the way
               </div>
             )}
           </div>
         </div>
-        <OrderStatusBadge status={order.status} />
+        <div className="shrink-0"><OrderStatusBadge status={order.status} /></div>
       </div>
 
       <div className="divide-y divide-gray-50">
         {order.items?.map((item: any) => (
-          <div key={item.id} className="px-6 py-3 flex items-center gap-4">
-            <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
+          <div key={item.id} className="px-4 sm:px-6 py-3 flex items-center gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
               {item.product?.image_url
                 ? <img src={item.product.image_url} alt={item.product.name} className="w-full h-full object-cover" />
-                : <Package className="w-5 h-5 text-gray-300" />}
+                : <Package className="w-4 h-4 text-gray-300" />}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-800 truncate">{item.product?.name}</p>
-              <p className="text-xs text-gray-400">{item.product?.category?.name}</p>
+              <p className="text-xs text-gray-400 truncate">{item.product?.category?.name}</p>
             </div>
             <div className="text-right shrink-0">
               <p className="text-sm font-bold text-gray-800">× {item.quantity}</p>
@@ -123,14 +123,14 @@ function OrderCard({ order, showDeliveredDate }: { order: any; showDeliveredDate
         ))}
       </div>
 
-      <div className="px-6 py-3 bg-gray-50 flex items-center justify-between">
+      <div className="px-4 sm:px-6 py-3 bg-gray-50 flex items-center justify-between gap-2 flex-wrap">
         <p className="text-xs text-gray-400">
           {order.items?.length} product{order.items?.length !== 1 ? 's' : ''} &nbsp;·&nbsp;
-          {order.items?.reduce((s: number, i: any) => s + i.quantity, 0)} total items
+          {order.items?.reduce((s: number, i: any) => s + i.quantity, 0)} items
         </p>
         {order.delivery_photo_url && (
           <a href={order.delivery_photo_url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:text-blue-600 font-medium">
-            View delivery photo →
+            View photo →
           </a>
         )}
       </div>

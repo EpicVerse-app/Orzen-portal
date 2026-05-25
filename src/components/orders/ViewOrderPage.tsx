@@ -102,9 +102,9 @@ export default function ViewOrderPage({ branchId, companyId, userId, branch }: P
         <>
           {/* Order items */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4">
-            <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-50 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-gray-700">
-                Order Items ({items.length} product{items.length !== 1 ? 's' : ''})
+                {items.length} product{items.length !== 1 ? 's' : ''}
               </h2>
               <button
                 onClick={clearCart}
@@ -116,9 +116,9 @@ export default function ViewOrderPage({ branchId, companyId, userId, branch }: P
 
             <div className="divide-y divide-gray-50">
               {items.map((item) => (
-                <div key={item.product.id} className="px-6 py-4 flex items-center gap-4">
+                <div key={item.product.id} className="px-4 sm:px-6 py-3 flex items-center gap-3">
                   {/* Product image */}
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg overflow-hidden shrink-0">
                     {item.product.image_url ? (
                       <Image
                         src={item.product.image_url}
@@ -129,7 +129,7 @@ export default function ViewOrderPage({ branchId, companyId, userId, branch }: P
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Package className="w-5 h-5 text-gray-300" />
+                        <Package className="w-4 h-4 text-gray-300" />
                       </div>
                     )}
                   </div>
@@ -137,7 +137,7 @@ export default function ViewOrderPage({ branchId, companyId, userId, branch }: P
                   {/* Product info */}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-800 truncate">{item.product.name}</p>
-                    <p className="text-xs text-gray-400">{item.product.categoryName}</p>
+                    <p className="text-xs text-gray-400 truncate">{item.product.categoryName}</p>
                   </div>
 
                   {/* Qty input */}
@@ -146,13 +146,13 @@ export default function ViewOrderPage({ branchId, companyId, userId, branch }: P
                     min="1"
                     value={item.quantity}
                     onChange={(e) => updateQty(item.product.id, parseInt(e.target.value) || 0)}
-                    className="w-20 border border-gray-200 rounded-lg px-3 py-2 text-sm text-center text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#c9a84c]"
+                    className="w-16 sm:w-20 border border-gray-200 rounded-lg px-2 sm:px-3 py-2 text-sm text-center text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#c9a84c]"
                   />
 
                   {/* Remove */}
                   <button
                     onClick={() => removeItem(item.product.id)}
-                    className="text-gray-300 hover:text-red-400 transition-colors shrink-0"
+                    className="text-gray-300 hover:text-red-400 transition-colors shrink-0 p-1"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -162,7 +162,7 @@ export default function ViewOrderPage({ branchId, companyId, userId, branch }: P
           </div>
 
           {/* Summary card */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-4">
             <div className="flex items-center justify-between text-sm mb-2">
               <span className="text-gray-500">Total products</span>
               <span className="font-semibold text-gray-900">{items.length}</span>

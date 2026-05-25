@@ -36,16 +36,16 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
     <>
 
       {/* ── Page header + stats ─────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Store Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+      <div className="mb-6">
+        <div className="mb-4">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Store Dashboard</h1>
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5 leading-relaxed">
             {company?.name} — {branch?.name}, {branch?.city} &nbsp;·&nbsp; {today}
           </p>
         </div>
 
-        {/* Stats chips */}
-        <div className="flex gap-3 shrink-0">
+        {/* Stats chips — 3 equal columns on all sizes */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           <StatChip label="Open Orders" value={openOrders.length} color={primaryColor} />
           <StatChip label="In Delivery" value={inDelivery.length} color={primaryColor} />
           <StatChip label="To Receive"  value={toReceive.length}  color={primaryColor} />
@@ -73,33 +73,33 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
           </div>
 
           {/* Category cards grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
             {categories.map((cat, idx) => {
               const Icon = CAT_ICONS[idx % CAT_ICONS.length]
               return (
                 <Link
                   key={cat.id}
                   href={`/dashboard/store/catalogue/${cat.id}`}
-                  className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition-shadow"
+                  className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 sm:p-5 flex items-center gap-3 sm:gap-4 hover:shadow-md transition-shadow"
                   style={{ borderLeft: `4px solid ${gold}` }}
                 >
                   {/* Icon box */}
                   <div
-                    className="w-16 h-16 rounded-xl flex items-center justify-center shrink-0"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center shrink-0"
                     style={{ backgroundColor: primaryColor }}
                   >
-                    <Icon className="w-8 h-8" style={{ color: gold }} />
+                    <Icon className="w-6 h-6 sm:w-8 sm:h-8" style={{ color: gold }} />
                   </div>
 
                   {/* Text */}
                   <div className="min-w-0">
-                    <p className="text-base font-bold text-gray-900 truncate">{cat.name}</p>
+                    <p className="text-sm sm:text-base font-bold text-gray-900 truncate">{cat.name}</p>
                     {cat.description && (
-                      <p className="text-xs text-gray-400 mt-0.5 line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-gray-400 mt-0.5 line-clamp-2 leading-relaxed hidden sm:block">
                         {cat.description}
                       </p>
                     )}
-                    <p className="text-sm font-semibold mt-1.5" style={{ color: gold }}>
+                    <p className="text-xs sm:text-sm font-semibold mt-1" style={{ color: gold }}>
                       {cat.product_count} items
                     </p>
                   </div>
@@ -142,14 +142,14 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
                   : 'Order'
 
                 return (
-                  <div key={order.id} className="px-5 py-3.5 flex items-center gap-4 hover:bg-gray-50 transition-colors">
+                  <div key={order.id} className="px-4 sm:px-5 py-3 flex items-center gap-2 sm:gap-4 hover:bg-gray-50 transition-colors">
                     {/* Order number */}
-                    <p className="text-sm font-bold text-gray-700 shrink-0 w-20">
+                    <p className="text-xs sm:text-sm font-bold text-gray-700 shrink-0">
                       #MO-{order.id.slice(-4).toUpperCase()}
                     </p>
 
                     {/* Item description */}
-                    <p className="text-sm text-gray-500 flex-1 truncate min-w-0">
+                    <p className="text-xs sm:text-sm text-gray-500 flex-1 truncate min-w-0">
                       {itemLabel}
                     </p>
 
@@ -234,9 +234,9 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
 /* ── Stat chip ─────────────────────────────────────────────── */
 function StatChip({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-3.5 flex items-center gap-4 min-w-[130px]">
-      <p className="text-3xl font-bold leading-none" style={{ color }}>{value}</p>
-      <p className="text-xs text-gray-500 font-medium leading-tight">{label}</p>
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-3 py-3 sm:px-5 sm:py-3.5 flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:gap-4">
+      <p className="text-2xl sm:text-3xl font-bold leading-none" style={{ color }}>{value}</p>
+      <p className="text-[10px] sm:text-xs text-gray-500 font-medium leading-tight text-center sm:text-left">{label}</p>
     </div>
   )
 }

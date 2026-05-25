@@ -44,35 +44,37 @@ export default async function MyOrdersPage() {
         <div className="space-y-4">
           {orders.map((order) => (
             <div key={order.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
-                <div>
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-50 flex items-center justify-between gap-2">
+                <div className="min-w-0">
                   <p className="text-sm font-bold text-gray-800">
                     #MO-{order.id.slice(-4).toUpperCase()}
                   </p>
                   <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-0.5">
-                    <Calendar className="w-3 h-3" />
-                    {new Date(order.created_at).toLocaleDateString('en-IN', {
-                      day: 'numeric', month: 'short', year: 'numeric',
-                      hour: '2-digit', minute: '2-digit',
-                    })}
+                    <Calendar className="w-3 h-3 shrink-0" />
+                    <span className="truncate">
+                      {new Date(order.created_at).toLocaleDateString('en-IN', {
+                        day: 'numeric', month: 'short', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit',
+                      })}
+                    </span>
                   </div>
                 </div>
-                <OrderStatusBadge status={order.status} />
+                <div className="shrink-0"><OrderStatusBadge status={order.status} /></div>
               </div>
 
               <div className="divide-y divide-gray-50">
                 {(order.items as any)?.map((item: any) => (
-                  <div key={item.id} className="px-6 py-3 flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
+                  <div key={item.id} className="px-4 sm:px-6 py-3 flex items-center gap-3">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
                       {item.product?.image_url ? (
                         <img src={item.product.image_url} alt={item.product.name} className="w-full h-full object-cover" />
                       ) : (
-                        <Package className="w-5 h-5 text-gray-300" />
+                        <Package className="w-4 h-4 text-gray-300" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-800 truncate">{item.product?.name}</p>
-                      <p className="text-xs text-gray-400">{item.product?.category?.name}</p>
+                      <p className="text-xs text-gray-400 truncate">{item.product?.category?.name}</p>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-sm font-bold text-gray-800">× {item.quantity}</p>
@@ -82,15 +84,15 @@ export default async function MyOrdersPage() {
                 ))}
               </div>
 
-              <div className="px-6 py-3 bg-gray-50 flex items-center justify-between">
+              <div className="px-4 sm:px-6 py-3 bg-gray-50 flex items-center justify-between gap-2 flex-wrap">
                 <p className="text-xs text-gray-400">
                   {(order.items as any)?.length} product{(order.items as any)?.length !== 1 ? 's' : ''} &nbsp;·&nbsp;
-                  {(order.items as any)?.reduce((s: number, i: any) => s + i.quantity, 0)} total items
+                  {(order.items as any)?.reduce((s: number, i: any) => s + i.quantity, 0)} items
                 </p>
                 {order.status === 'submitted' && <p className="text-xs text-orange-500 font-medium">Awaiting approval</p>}
-                {order.status === 'approved'  && <p className="text-xs text-green-600 font-medium">Approved — being processed</p>}
+                {order.status === 'approved'  && <p className="text-xs text-green-600 font-medium">Approved</p>}
                 {order.status === 'shipped'   && <p className="text-xs text-purple-600 font-medium">On the way</p>}
-                {order.status === 'delivered' && <p className="text-xs text-teal-600 font-medium">Delivered — confirm receipt</p>}
+                {order.status === 'delivered' && <p className="text-xs text-teal-600 font-medium">Delivered</p>}
               </div>
             </div>
           ))}

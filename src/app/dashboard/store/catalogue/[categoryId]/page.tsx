@@ -36,7 +36,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
           <ChevronLeft className="w-4 h-4" />
           Order Materials
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">{category?.name}</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{category?.name}</h1>
         <p className="text-sm text-gray-500 mt-1">{products.length} products</p>
       </div>
 
