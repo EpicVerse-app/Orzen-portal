@@ -153,7 +153,6 @@ export default function CartBar({ branchId, companyId, userId }: Props) {
           </div>
         </div>
       )}
-
     </>
   )
 }

@@ -82,7 +82,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
             <img
               src={logoUrl}
               alt={companyName}
-              className="h-9 w-auto object-contain"
+              className="h-10 w-auto object-contain"
             />
           ) : (
             /* Fallback: text */
