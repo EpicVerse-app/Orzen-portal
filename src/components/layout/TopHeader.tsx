@@ -79,14 +79,11 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
         {/* Company logo / name */}
         <Link href="/dashboard/store" className="shrink-0 hover:opacity-80 transition-opacity leading-tight">
           {logoUrl ? (
-            /* Logo in a white pill so it shows clearly on any header color */
-            <div className="bg-white rounded-lg px-2 py-1 flex items-center justify-center" style={{ minWidth: 48, height: 40 }}>
-              <img
-                src={logoUrl}
-                alt={companyName}
-                className="h-8 w-auto object-contain"
-              />
-            </div>
+            <img
+              src={logoUrl}
+              alt={companyName}
+              className="h-10 w-auto object-contain"
+            />
           ) : (
             /* Fallback: text */
             <>
