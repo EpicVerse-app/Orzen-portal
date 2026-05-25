@@ -4,6 +4,8 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { Package, ShoppingCart, Check } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
+import QuantityWarningModal from '@/components/orders/QuantityWarningModal'
+import { NORMAL_MAX_QTY } from '@/lib/constants/order'
 import toast from 'react-hot-toast'
 
 interface Product {
@@ -20,6 +22,7 @@ interface Props {
 
 export default function ProductGrid({ products }: Props) {
   const [quantities, setQuantities] = useState<Record<string, string>>({})
+  const [qtyWarning, setQtyWarning] = useState<{ name: string; quantity: number } | null>(null)
   const { addItem, items } = useCartStore()
 
   function handleQtyChange(productId: string, value: string) {
@@ -36,6 +39,9 @@ export default function ProductGrid({ products }: Props) {
     }
     addItem(product, qty)
     toast.success(`${product.name} added to order`)
+    if (qty > NORMAL_MAX_QTY) {
+      setQtyWarning({ name: product.name, quantity: qty })
+    }
   }
 
   function getCartQty(productId: string) {
@@ -52,6 +58,14 @@ export default function ProductGrid({ products }: Props) {
   }
 
   return (
+    <>
+    {qtyWarning && (
+      <QuantityWarningModal
+        productName={qtyWarning.name}
+        quantity={qtyWarning.quantity}
+        onClose={() => setQtyWarning(null)}
+      />
+    )}
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
       {products.map((product) => {
         const cartQty = getCartQty(product.id)
@@ -118,5 +132,6 @@ export default function ProductGrid({ products }: Props) {
         )
       })}
     </div>
+    </>
   )
 }
