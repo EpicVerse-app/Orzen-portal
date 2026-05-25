@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, ClipboardList, Truck,
-  ShoppingCart, Headphones, ShoppingBag, ImageIcon
+  ShoppingCart, Headphones, ShoppingBag
 } from 'lucide-react'
 import { AppUser } from '@/types'
 import LogoutButton from '@/components/ui/LogoutButton'
@@ -124,10 +124,6 @@ export default function AppShell({ user, children, primaryColor, sidebarColor, b
               <NavItem href="/dashboard/store/catalogue" icon={ShoppingBag} label="Order Materials" exact={false} />
 
               <NavItem href="/dashboard/store/view-order" icon={ShoppingCart} label="View Order"     exact={false} badge={cartCount} />
-
-              <div className="my-2 mx-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }} />
-
-              <NavItem href="/dashboard/admin/images"    icon={ImageIcon}    label="Product Images" exact={false} />
             </div>
           </nav>
 
