@@ -68,11 +68,11 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
   return (
     <>
       <header
-        className="text-white h-14 flex items-center px-4 gap-3 fixed top-0 left-0 right-0 z-50 relative"
+        className="text-white h-14 flex items-center px-3 sm:px-4 gap-2 sm:gap-3 fixed top-0 left-0 right-0 z-50"
         style={{ backgroundColor: headerBg }}
       >
         {/* Mobile menu toggle */}
-        <button className="lg:hidden text-gray-300 hover:text-white" onClick={onMenuToggle}>
+        <button className="lg:hidden text-gray-300 hover:text-white p-1 shrink-0" onClick={onMenuToggle}>
           <Menu className="w-5 h-5" />
         </button>
 
@@ -82,16 +82,16 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
             <img
               src={logoUrl}
               alt={companyName}
-              className="h-10 w-auto object-contain"
+              className="h-8 sm:h-10 w-auto object-contain max-w-[120px] sm:max-w-[180px]"
             />
           ) : (
             /* Fallback: text */
             <>
-              <p className="text-sm font-extrabold tracking-widest uppercase leading-none" style={{ color: gold }}>
+              <p className="text-xs sm:text-sm font-extrabold tracking-widest uppercase leading-none" style={{ color: gold }}>
                 {line1}
               </p>
               {line2 && (
-                <p className="text-sm font-extrabold tracking-widest uppercase leading-none mt-0.5" style={{ color: '#ffffff' }}>
+                <p className="text-xs sm:text-sm font-extrabold tracking-widest uppercase leading-none mt-0.5" style={{ color: '#ffffff' }}>
                   {line2}
                 </p>
               )}
@@ -99,10 +99,10 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
           )}
         </Link>
 
-        {/* Global search — centered absolutely on desktop */}
+        {/* Global search — centered absolutely, only on md+ to avoid overlap */}
         <form
           onSubmit={handleSearch}
-          className="absolute left-1/2 -translate-x-1/2 w-[380px] hidden sm:flex items-center rounded-lg px-3 gap-2 pointer-events-auto"
+          className="absolute left-1/2 -translate-x-1/2 w-[260px] lg:w-[380px] hidden md:flex items-center rounded-lg px-3 gap-2 pointer-events-auto"
           style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
         >
           <Search className="w-4 h-4 text-gray-400 shrink-0" />
@@ -120,8 +120,8 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
           )}
         </form>
 
-        {/* Mobile search toggle */}
-        <button className="sm:hidden text-gray-400 hover:text-white" onClick={() => setShowSearch(!showSearch)}>
+        {/* Mobile/tablet search toggle (hidden on md+) */}
+        <button className="md:hidden text-gray-400 hover:text-white p-1" onClick={() => setShowSearch(!showSearch)}>
           <Search className="w-4 h-4" />
         </button>
 
@@ -130,7 +130,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
         {/* New Order */}
         <Link
           href="/dashboard/store/catalogue"
-          className="flex items-center gap-1.5 text-black text-xs font-bold px-4 py-2 rounded-lg transition-opacity shrink-0 hover:opacity-90"
+          className="flex items-center gap-1.5 text-black text-xs font-bold px-3 sm:px-4 py-2 rounded-lg transition-opacity shrink-0 hover:opacity-90"
           style={{ backgroundColor: gold }}
         >
           <Plus className="w-4 h-4" />
@@ -138,7 +138,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
         </Link>
 
         {/* Notifications */}
-        <button className="relative text-gray-400 hover:text-white transition-colors p-1">
+        <button className="relative text-gray-400 hover:text-white transition-colors p-1 shrink-0">
           <Bell className="w-5 h-5" />
           <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
             3
@@ -146,7 +146,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
         </button>
 
         {/* Profile */}
-        <div ref={profileRef} className="relative">
+        <div ref={profileRef} className="relative shrink-0">
           <button
             onClick={() => setShowProfile(!showProfile)}
             className="w-8 h-8 rounded-full border-2 border-white/30 flex items-center justify-center hover:border-white/60 transition-colors"
@@ -207,7 +207,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
 
       {/* Mobile search bar */}
       {showSearch && (
-        <div className="fixed top-14 left-0 right-0 z-40 px-4 py-3 sm:hidden" style={{ backgroundColor: headerBg }}>
+        <div className="fixed top-14 left-0 right-0 z-40 px-4 py-3 md:hidden" style={{ backgroundColor: headerBg }}>
           <form onSubmit={handleSearch} className="flex items-center rounded-lg px-3 gap-2" style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
             <Search className="w-4 h-4 text-gray-400 shrink-0" />
             <input
