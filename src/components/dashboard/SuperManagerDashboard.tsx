@@ -201,45 +201,80 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
               <p className="text-xs text-gray-400 mt-1">No pending approvals</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-50 overflow-y-auto max-h-[420px]">
-              {pendingOrders.map((order) => (
-                <div key={order.id} className="px-5 py-4">
-                  <div className="flex items-start justify-between mb-1">
-                    <div>
-                      <p className="text-sm font-semibold text-gray-800">
-                        {(order.branch as any)?.name}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {(order.branch as any)?.city}
-                        {(order.items as any)?.length
-                          ? ` · ${(order.items as any).length} items`
-                          : ''}
-                        {' · '}{getDaysAgo(order.created_at)}
-                      </p>
-                      <p className="text-[10px] text-gray-300 mt-0.5 font-mono">{shortId(order.id)}</p>
+            <div className="divide-y divide-gray-50 overflow-y-auto max-h-[520px]">
+              {pendingOrders.map((order) => {
+                const items = (order.items as any) || []
+                return (
+                  <div key={order.id} className="px-5 py-4">
+                    {/* Order header */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">
+                          {(order.branch as any)?.name}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {(order.branch as any)?.city}
+                          {' · '}{items.length} {items.length === 1 ? 'item' : 'items'}
+                          {' · '}{getDaysAgo(order.created_at)}
+                        </p>
+                        <p className="text-[10px] text-gray-300 mt-0.5 font-mono">{shortId(order.id)}</p>
+                      </div>
+                      <Clock className="w-4 h-4 text-orange-300 shrink-0 mt-0.5" />
                     </div>
-                    <Clock className="w-4 h-4 text-orange-300 shrink-0 mt-0.5" />
+
+                    {/* Product list */}
+                    <div className="bg-gray-50 rounded-xl mb-3 divide-y divide-gray-100 overflow-hidden">
+                      {items.map((item: any) => (
+                        <div key={item.id} className="flex items-center gap-3 px-3 py-2.5">
+                          {/* Product image or placeholder */}
+                          {item.product?.image_url ? (
+                            <img
+                              src={item.product.image_url}
+                              alt={item.product?.name}
+                              className="w-8 h-8 rounded-lg object-cover shrink-0"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center shrink-0">
+                              <Package className="w-4 h-4 text-gray-400" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-gray-700 truncate">
+                              {item.product?.name || 'Unknown product'}
+                            </p>
+                            <p className="text-[10px] text-gray-400">
+                              {item.product?.unit || '—'}
+                            </p>
+                          </div>
+                          <span className="text-xs font-bold text-gray-700 shrink-0 bg-white px-2 py-1 rounded-lg border border-gray-200">
+                            × {item.quantity}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Approve / Reject */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleApproval(order.id, 'rejected')}
+                        disabled={processing === order.id}
+                        className="flex-1 flex items-center justify-center gap-1.5 border border-red-200 text-red-600 py-2 rounded-xl text-xs font-semibold hover:bg-red-50 transition-colors disabled:opacity-40"
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                        Reject
+                      </button>
+                      <button
+                        onClick={() => handleApproval(order.id, 'approved')}
+                        disabled={processing === order.id}
+                        className="flex-1 flex items-center justify-center gap-1.5 bg-green-600 text-white py-2 rounded-xl text-xs font-semibold hover:bg-green-700 transition-colors disabled:opacity-40"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        Approve
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2 mt-3">
-                    <button
-                      onClick={() => handleApproval(order.id, 'rejected')}
-                      disabled={processing === order.id}
-                      className="flex-1 flex items-center justify-center gap-1.5 border border-red-200 text-red-600 py-2 rounded-xl text-xs font-semibold hover:bg-red-50 transition-colors disabled:opacity-40"
-                    >
-                      <XCircle className="w-3.5 h-3.5" />
-                      Reject
-                    </button>
-                    <button
-                      onClick={() => handleApproval(order.id, 'approved')}
-                      disabled={processing === order.id}
-                      className="flex-1 flex items-center justify-center gap-1.5 bg-green-600 text-white py-2 rounded-xl text-xs font-semibold hover:bg-green-700 transition-colors disabled:opacity-40"
-                    >
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      Approve
-                    </button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

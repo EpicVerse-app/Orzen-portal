@@ -28,7 +28,7 @@ export default async function SuperDashboardPage() {
     .select(`
       id, status, created_at,
       branch:branches(id, name, city, state),
-      items:order_items(id)
+      items:order_items(id, quantity, product:products(id, name, unit, image_url))
     `)
     .eq('company_id', companyId)
     .order('created_at', { ascending: false })
