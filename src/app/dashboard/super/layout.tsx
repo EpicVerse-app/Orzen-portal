@@ -11,7 +11,7 @@ export default async function SuperLayout({ children }: { children: React.ReactN
   const { data: profile } = await supabase
     .from('users')
     .select(`
-      id, full_name, role, scope_state, scope_region,
+      id, full_name, role, company_id, branch_id, scope_state, scope_region,
       company:companies(id, name, logo_url, slug, primary_color, sidebar_color)
     `)
     .eq('id', user.id)
