@@ -5,7 +5,7 @@ import { getStoreProfile, getThemeColors } from '@/lib/auth/getStoreProfile'
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
   const profile = await getStoreProfile()
 
-  if (!profile || profile.role !== 'store_manager') redirect('/login')
+  if (!profile || profile.role !== 'store_manager') redirect('/dashboard')
 
   const { primaryColor, sidebarColor, backgroundImage, logoUrl } = getThemeColors(profile)
 

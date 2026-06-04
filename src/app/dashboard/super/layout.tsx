@@ -17,7 +17,7 @@ export default async function SuperLayout({ children }: { children: React.ReactN
     .eq('id', user.id)
     .single()
 
-  if (!profile || profile.role !== 'super_manager') redirect('/login')
+  if (!profile || profile.role !== 'super_manager') redirect('/dashboard')
 
   const company = Array.isArray(profile.company) ? profile.company[0] : profile.company
 

@@ -14,7 +14,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   // Only admin can access admin pages
   if (!profile || profile.role !== 'admin') {
-    redirect('/login')
+    redirect('/dashboard')
   }
 
   return <>{children}</>
