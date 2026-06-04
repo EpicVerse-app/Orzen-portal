@@ -22,9 +22,9 @@ export default function SuperManagerDashboard({ profile, pendingOrders, otherOrd
   const router = useRouter()
   const [processing, setProcessing] = useState<string | null>(null)
 
-  const headerBg = primaryColor || '#1a1a1a'
+  const headerBg = primaryColor || '#5B2D8E'   // fallback to Malabar purple
   const gold     = '#c9a84c'
-  const company  = (profile.company as any)
+  const company  = Array.isArray(profile.company) ? (profile.company as any)[0] : (profile.company as any)
 
   async function handleApproval(orderId: string, action: 'approved' | 'rejected') {
     setProcessing(orderId)

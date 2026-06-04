@@ -35,8 +35,8 @@ export default async function SuperDashboardPage() {
   const pendingOrders = (orders || []).filter((o) => o.status === 'submitted')
   const otherOrders = (orders || []).filter((o) => o.status !== 'submitted')
 
-  const primaryColor  = (company as any)?.primary_color  || '#1a1a1a'
-  const sidebarColor  = (company as any)?.sidebar_color  || '#111111'
+  const primaryColor  = (company as any)?.primary_color  || '#5B2D8E'
+  const sidebarColor  = (company as any)?.sidebar_color  || '#2D1B4E'
   const logoUrl       = (company as any)?.logo_url       || null
 
   return (
