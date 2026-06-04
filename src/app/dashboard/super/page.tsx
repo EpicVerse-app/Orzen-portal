@@ -12,7 +12,7 @@ export default async function SuperDashboardPage() {
     .from('users')
     .select(`
       id, full_name, role, scope_state, scope_region,
-      company:companies(id, name, logo_url, slug)
+      company:companies(id, name, logo_url, slug, primary_color, sidebar_color)
     `)
     .eq('id', user.id)
     .single()
@@ -35,11 +35,18 @@ export default async function SuperDashboardPage() {
   const pendingOrders = (orders || []).filter((o) => o.status === 'submitted')
   const otherOrders = (orders || []).filter((o) => o.status !== 'submitted')
 
+  const primaryColor  = (company as any)?.primary_color  || '#1a1a1a'
+  const sidebarColor  = (company as any)?.sidebar_color  || '#111111'
+  const logoUrl       = (company as any)?.logo_url       || null
+
   return (
     <SuperManagerDashboard
       profile={profile as any}
       pendingOrders={pendingOrders as any}
       otherOrders={otherOrders as any}
+      primaryColor={primaryColor}
+      sidebarColor={sidebarColor}
+      logoUrl={logoUrl}
     />
   )
 }

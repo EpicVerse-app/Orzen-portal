@@ -13,11 +13,18 @@ interface Props {
   profile: AppUser
   pendingOrders: Order[]
   otherOrders: Order[]
+  primaryColor?: string
+  sidebarColor?: string
+  logoUrl?: string | null
 }
 
-export default function SuperManagerDashboard({ profile, pendingOrders, otherOrders }: Props) {
+export default function SuperManagerDashboard({ profile, pendingOrders, otherOrders, primaryColor, sidebarColor, logoUrl }: Props) {
   const router = useRouter()
   const [processing, setProcessing] = useState<string | null>(null)
+
+  const headerBg = primaryColor || '#1a1a1a'
+  const gold     = '#c9a84c'
+  const company  = (profile.company as any)
 
   async function handleApproval(orderId: string, action: 'approved' | 'rejected') {
     setProcessing(orderId)
@@ -50,23 +57,40 @@ export default function SuperManagerDashboard({ profile, pendingOrders, otherOrd
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs text-gray-500">{(profile.company as any)?.name}</p>
-            <h1 className="text-lg font-semibold text-gray-900">{profile.full_name}</h1>
-            <p className="text-xs text-gray-400">{profile.scope_state} · Super Manager</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <LogoutButton />
-            <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center">
-              <span className="text-green-600 text-sm font-semibold">
-                {profile.full_name?.charAt(0)}
-              </span>
-            </div>
-          </div>
+      {/* Themed Header */}
+      <div
+        className="h-14 flex items-center px-4 gap-3 sticky top-0 z-50"
+        style={{ backgroundColor: headerBg }}
+      >
+        {/* Logo or company name */}
+        {logoUrl ? (
+          <img src={logoUrl} alt={company?.name} className="h-8 w-auto object-contain max-w-[140px]" />
+        ) : (
+          <p className="text-sm font-extrabold tracking-widest uppercase" style={{ color: gold }}>
+            {company?.name}
+          </p>
+        )}
+
+        <div className="flex-1" />
+
+        {/* Role badge */}
+        <span
+          className="text-xs font-semibold px-3 py-1 rounded-full hidden sm:block"
+          style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff' }}
+        >
+          Super Manager
+        </span>
+
+        {/* Avatar */}
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+          style={{ backgroundColor: gold, color: '#000' }}
+        >
+          {profile.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
         </div>
+
+        {/* Logout */}
+        <LogoutButton />
       </div>
 
       <div className="px-4 py-5 space-y-5 max-w-2xl mx-auto">
