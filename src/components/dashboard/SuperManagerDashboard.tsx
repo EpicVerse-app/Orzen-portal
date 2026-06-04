@@ -59,12 +59,12 @@ export default function SuperManagerDashboard({ profile, pendingOrders, otherOrd
     <div className="min-h-screen bg-gray-50">
       {/* Themed Header */}
       <div
-        className="h-14 flex items-center px-4 gap-3 sticky top-0 z-50"
+        className="h-16 flex items-center px-4 gap-3 sticky top-0 z-50"
         style={{ backgroundColor: headerBg }}
       >
         {/* Logo or company name */}
         {logoUrl ? (
-          <img src={logoUrl} alt={company?.name} className="h-8 w-auto object-contain max-w-[140px]" />
+          <img src={logoUrl} alt={company?.name} className="h-10 w-auto object-contain max-w-[160px]" />
         ) : (
           <p className="text-sm font-extrabold tracking-widest uppercase" style={{ color: gold }}>
             {company?.name}
