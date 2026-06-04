@@ -10,16 +10,11 @@ export default async function SuperCataloguePage() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select(`
-      id, role, company_id,
-      company:companies(name, logo_url)
-    `)
+    .select('id, role, company_id')
     .eq('id', user.id)
     .single()
 
   if (!profile || profile.role !== 'super_manager') redirect('/dashboard')
-
-  const company = Array.isArray(profile.company) ? profile.company[0] : profile.company as any
 
   const { data: categories } = await supabase
     .from('categories')
@@ -29,18 +24,9 @@ export default async function SuperCataloguePage() {
 
   return (
     <>
-      <div className="mb-6 flex items-center gap-4">
-        {company?.logo_url && (
-          <img
-            src={company.logo_url}
-            alt={company?.name}
-            className="h-12 w-auto object-contain"
-          />
-        )}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Order Materials</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Select a category to browse products</p>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Order Materials</h1>
+        <p className="text-sm text-gray-500 mt-1">Select a category to browse products</p>
       </div>
 
       {!categories || categories.length === 0 ? (
