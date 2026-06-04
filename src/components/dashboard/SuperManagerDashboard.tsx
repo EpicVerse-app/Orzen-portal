@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { AppUser, Order } from '@/types'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface Stats {
   total: number
@@ -126,7 +127,7 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
 
       {/* ── Stats Cards ──────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3">
+        <Link href="/dashboard/super/orders" className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3 hover:shadow-md hover:border-purple-200 transition-all">
           <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
             <Package className="w-5 h-5 text-purple-600" />
           </div>
@@ -134,9 +135,9 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
             <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
             <p className="text-xs text-gray-400">Total Orders</p>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-2xl border border-orange-100 shadow-sm px-4 py-4 flex items-center gap-3">
+        <Link href="/dashboard/super/orders?filter=pending" className="bg-white rounded-2xl border border-orange-100 shadow-sm px-4 py-4 flex items-center gap-3 hover:shadow-md hover:border-orange-300 transition-all">
           <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center shrink-0">
             <Clock className="w-5 h-5 text-orange-500" />
           </div>
@@ -144,9 +145,9 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
             <p className="text-2xl font-bold text-orange-500">{stats.pending}</p>
             <p className="text-xs text-gray-400">Pending</p>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-2xl border border-green-100 shadow-sm px-4 py-4 flex items-center gap-3">
+        <Link href="/dashboard/super/orders?filter=approved" className="bg-white rounded-2xl border border-green-100 shadow-sm px-4 py-4 flex items-center gap-3 hover:shadow-md hover:border-green-300 transition-all">
           <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
             <TrendingUp className="w-5 h-5 text-green-600" />
           </div>
@@ -154,9 +155,9 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
             <p className="text-2xl font-bold text-green-600">{stats.approved}</p>
             <p className="text-xs text-gray-400">Approved</p>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-2xl border border-red-100 shadow-sm px-4 py-4 flex items-center gap-3">
+        <Link href="/dashboard/super/orders?filter=rejected" className="bg-white rounded-2xl border border-red-100 shadow-sm px-4 py-4 flex items-center gap-3 hover:shadow-md hover:border-red-300 transition-all">
           <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
             <XCircle className="w-5 h-5 text-red-500" />
           </div>
@@ -164,9 +165,9 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
             <p className="text-2xl font-bold text-red-500">{stats.rejected}</p>
             <p className="text-xs text-gray-400">Rejected</p>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-2xl border border-blue-100 shadow-sm px-4 py-4 flex items-center gap-3 col-span-2 lg:col-span-1">
+        <Link href="/dashboard/super/branches" className="bg-white rounded-2xl border border-blue-100 shadow-sm px-4 py-4 flex items-center gap-3 hover:shadow-md hover:border-blue-300 transition-all col-span-2 lg:col-span-1">
           <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
             <Building2 className="w-5 h-5 text-blue-600" />
           </div>
@@ -174,7 +175,7 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
             <p className="text-2xl font-bold text-blue-600">{stats.branches}</p>
             <p className="text-xs text-gray-400">Branches</p>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* ── Main Grid: Approvals + Activity ──────────── */}
