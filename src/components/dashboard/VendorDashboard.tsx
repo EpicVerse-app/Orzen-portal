@@ -7,6 +7,7 @@ import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { sendOrderNotifications } from '@/app/actions/notifications'
 
 interface Stats {
   total: number
@@ -52,38 +53,11 @@ function shortId(id: string) {
   return 'ORD-' + id.replace(/-/g, '').slice(0, 6).toUpperCase()
 }
 
-async function insertStatusNotifications(
-  supabase: ReturnType<typeof createClient>,
-  orderId: string,
-  branchId: string,
-  companyId: string,
-  newStatus: string,
-) {
-  const [{ data: superMgrs }, { data: storeMgrs }] = await Promise.all([
-    supabase.from('users').select('id').eq('company_id', companyId).eq('role', 'super_manager'),
-    supabase.from('users').select('id').eq('branch_id', branchId).eq('role', 'store_manager'),
-  ])
-
-  const notifyUsers = [...(superMgrs || []), ...(storeMgrs || [])]
-  if (notifyUsers.length === 0) return
-
-  const titleMap: Record<string, string> = {
-    packing:   'Order Being Packed',
-    loaded:    'Order Loaded',
-    shipped:   'Order Shipped',
-    delivered: 'Order Delivered',
-  }
-
-  await supabase.from('notifications').insert(
-    notifyUsers.map(u => ({
-      user_id:    u.id,
-      company_id: companyId,
-      title:      titleMap[newStatus] || `Order ${newStatus}`,
-      message:    `Order ${shortId(orderId)} is now ${STATUS_LABEL[newStatus] || newStatus}`,
-      type:       `order_${newStatus}`,
-      order_id:   orderId,
-    }))
-  )
+const TITLE_MAP: Record<string, string> = {
+  packing:   'Order Being Packed',
+  loaded:    'Order Loaded',
+  shipped:   'Order Shipped',
+  delivered: 'Order Delivered',
 }
 
 export default function VendorDashboard({ profile, orders, stats }: Props) {
@@ -106,7 +80,15 @@ export default function VendorDashboard({ profile, orders, stats }: Props) {
       toast.error('Update failed.')
     } else {
       toast.success(`Marked as ${next}`)
-      await insertStatusNotifications(supabase, order.id, order.branch.id, profile.company_id, next)
+      await sendOrderNotifications({
+        orderId:     order.id,
+        companyId:   profile.company_id,
+        title:       TITLE_MAP[next] || `Order ${next}`,
+        message:     `Order ${shortId(order.id)} is now ${STATUS_LABEL[next] || next}`,
+        type:        `order_${next}`,
+        targetRoles: ['super_manager', 'store_manager'],
+        branchId:    order.branch.id,
+      })
       router.refresh()
     }
     setProcessing(null)
@@ -131,7 +113,15 @@ export default function VendorDashboard({ profile, orders, stats }: Props) {
       .eq('id', order.id)
 
     if (!error) {
-      await insertStatusNotifications(supabase, order.id, order.branch.id, profile.company_id, 'delivered')
+      await sendOrderNotifications({
+        orderId:     order.id,
+        companyId:   profile.company_id,
+        title:       'Order Delivered',
+        message:     `Order ${shortId(order.id)} has been delivered`,
+        type:        'order_delivered',
+        targetRoles: ['super_manager', 'store_manager'],
+        branchId:    order.branch.id,
+      })
       toast.success('Order marked as delivered!')
       router.refresh()
     } else {

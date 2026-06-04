@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { CheckCircle, XCircle, Clock, Package, AlertTriangle, RefreshCw } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { sendOrderNotifications } from '@/app/actions/notifications'
 
 interface OrderItem {
   id: string
@@ -83,27 +84,19 @@ export default function SuperRequestsPage() {
     } else {
       toast.success(action === 'approved' ? 'Order approved ✓' : 'Order rejected')
 
-      // Send notifications to vendor + store manager of the branch
+      // Notify vendor + store manager via server action
       const order = orders.find(o => o.id === orderId)
       if (order) {
         const sid = 'ORD-' + orderId.replace(/-/g, '').slice(0, 6).toUpperCase()
-        const [{ data: vendors }, { data: storeMgrs }] = await Promise.all([
-          supabase.from('users').select('id').eq('company_id', profile.company_id).eq('role', 'vendor'),
-          supabase.from('users').select('id').eq('branch_id', order.branch?.id).eq('role', 'store_manager'),
-        ])
-        const notifyUsers = [...(vendors || []), ...(storeMgrs || [])]
-        if (notifyUsers.length > 0) {
-          await supabase.from('notifications').insert(
-            notifyUsers.map(u => ({
-              user_id:    u.id,
-              company_id: profile.company_id,
-              title:   action === 'approved' ? 'Order Approved' : 'Order Rejected',
-              message: `Order ${sid} has been ${action}`,
-              type:    `order_${action}`,
-              order_id: orderId,
-            }))
-          )
-        }
+        await sendOrderNotifications({
+          orderId,
+          companyId:   profile.company_id,
+          title:       action === 'approved' ? 'Order Approved' : 'Order Rejected',
+          message:     `Order ${sid} has been ${action}`,
+          type:        `order_${action}`,
+          targetRoles: ['vendor', 'store_manager'],
+          branchId:    order.branch?.id,
+        })
       }
 
       setOrders(prev => prev.filter(o => o.id !== orderId))
