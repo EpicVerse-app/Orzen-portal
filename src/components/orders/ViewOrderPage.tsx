@@ -68,6 +68,26 @@ export default function ViewOrderPage({ branchId, companyId, userId, branch }: P
       return
     }
 
+    // Notify super managers + vendors
+    const sid = 'ORD-' + order.id.replace(/-/g, '').slice(0, 6).toUpperCase()
+    const [{ data: superMgrs }, { data: vendors }] = await Promise.all([
+      supabase.from('users').select('id').eq('company_id', companyId).eq('role', 'super_manager'),
+      supabase.from('users').select('id').eq('company_id', companyId).eq('role', 'vendor'),
+    ])
+    const notifyUsers = [...(superMgrs || []), ...(vendors || [])]
+    if (notifyUsers.length > 0) {
+      await supabase.from('notifications').insert(
+        notifyUsers.map(u => ({
+          user_id:    u.id,
+          company_id: companyId,
+          title:   'New Order Submitted',
+          message: `Order ${sid} from ${branch?.name} is waiting for approval`,
+          type:    'order_submitted',
+          order_id: order.id,
+        }))
+      )
+    }
+
     clearCart()
     toast.success('Order placed successfully!')
     router.push('/dashboard/store')

@@ -82,6 +82,30 @@ export default function SuperRequestsPage() {
       toast.error('Action failed. Try again.')
     } else {
       toast.success(action === 'approved' ? 'Order approved ✓' : 'Order rejected')
+
+      // Send notifications to vendor + store manager of the branch
+      const order = orders.find(o => o.id === orderId)
+      if (order) {
+        const sid = 'ORD-' + orderId.replace(/-/g, '').slice(0, 6).toUpperCase()
+        const [{ data: vendors }, { data: storeMgrs }] = await Promise.all([
+          supabase.from('users').select('id').eq('company_id', profile.company_id).eq('role', 'vendor'),
+          supabase.from('users').select('id').eq('branch_id', order.branch?.id).eq('role', 'store_manager'),
+        ])
+        const notifyUsers = [...(vendors || []), ...(storeMgrs || [])]
+        if (notifyUsers.length > 0) {
+          await supabase.from('notifications').insert(
+            notifyUsers.map(u => ({
+              user_id:    u.id,
+              company_id: profile.company_id,
+              title:   action === 'approved' ? 'Order Approved' : 'Order Rejected',
+              message: `Order ${sid} has been ${action}`,
+              type:    `order_${action}`,
+              order_id: orderId,
+            }))
+          )
+        }
+      }
+
       setOrders(prev => prev.filter(o => o.id !== orderId))
     }
     setProcessing(null)

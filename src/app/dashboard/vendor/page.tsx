@@ -14,7 +14,7 @@ export default async function VendorDashboardPage() {
     .eq('id', user.id)
     .single()
 
-  if (!profile || profile.role !== 'vendor') redirect('/login')
+  if (!profile || profile.role !== 'vendor') redirect('/dashboard')
 
   const { data: orders } = await supabase
     .from('orders')
@@ -27,19 +27,23 @@ export default async function VendorDashboardPage() {
       )
     `)
     .eq('company_id', profile.company_id)
-    .in('status', ['submitted', 'approved', 'packing', 'loaded', 'shipped'])
+    .not('status', 'in', '("closed","rejected")')
     .order('created_at', { ascending: true })
 
-  const approvedOrders = (orders || []).filter((o) =>
-    ['approved', 'packing', 'loaded', 'shipped'].includes(o.status)
-  )
-  const holdOrders = (orders || []).filter((o) => o.status === 'submitted')
+  const allOrders = (orders || []) as any[]
+
+  const stats = {
+    waitingApproval: allOrders.filter(o => o.status === 'submitted').length,
+    inProcess:       allOrders.filter(o => ['approved','packing','loaded','shipped'].includes(o.status)).length,
+    delivered:       allOrders.filter(o => o.status === 'delivered').length,
+    total:           allOrders.length,
+  }
 
   return (
     <VendorDashboard
       profile={profile as any}
-      approvedOrders={approvedOrders as any}
-      holdOrders={holdOrders as any}
+      orders={allOrders}
+      stats={stats}
     />
   )
 }

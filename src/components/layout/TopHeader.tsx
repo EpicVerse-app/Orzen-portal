@@ -18,10 +18,11 @@ interface Props {
 export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: Props) {
   const router = useRouter()
   const [showProfile, setShowProfile] = useState(false)
-  const [showSearch, setShowSearch] = useState(false)
-  const [showHelp, setShowHelp] = useState(false)
+  const [showSearch, setShowSearch]   = useState(false)
+  const [showHelp, setShowHelp]       = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [loggingOut, setLoggingOut] = useState(false)
+  const [loggingOut, setLoggingOut]   = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const profileRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
@@ -38,6 +39,21 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
   useEffect(() => {
     if (showSearch) searchRef.current?.focus()
   }, [showSearch])
+
+  useEffect(() => {
+    async function fetchUnread() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { count } = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false)
+      setUnreadCount(count || 0)
+    }
+    fetchUnread()
+  }, [])
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -138,12 +154,17 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
         </Link>
 
         {/* Notifications */}
-        <button className="relative text-gray-400 hover:text-white transition-colors p-1 shrink-0">
+        <Link
+          href="/dashboard/store/notifications"
+          className="relative text-gray-400 hover:text-white transition-colors p-1 shrink-0"
+        >
           <Bell className="w-5 h-5" />
-          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-            3
-          </span>
-        </button>
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </Link>
 
         {/* Profile */}
         <div ref={profileRef} className="relative shrink-0">

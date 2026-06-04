@@ -1,93 +1,47 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  Menu, Headphones,
-  LayoutDashboard, CheckCircle, FileText, Building2,
-  ShoppingBag, Users, BarChart2, Settings, Circle,
-  ClipboardList, Truck, Bell, LogOut, User, ChevronDown,
+  Menu, LayoutDashboard, Bell, LogOut,
+  ChevronDown, Headphones,
 } from 'lucide-react'
-import { AppUser } from '@/types'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
-import SuperSearchBar from '@/components/layout/SuperSearchBar'
-
-// Map DB icon name → Lucide component
-const ICON_MAP: Record<string, React.ElementType> = {
-  LayoutDashboard,
-  CheckCircle,
-  FileText,
-  Building2,
-  ShoppingBag,
-  Users,
-  BarChart2,
-  Settings,
-  ClipboardList,
-  Truck,
-  Bell,
-}
-
-interface MenuItem {
-  id: string
-  name: string
-  path: string
-  icon: string
-  display_order: number
-  is_active: boolean
-}
 
 interface Props {
-  user: AppUser
-  menus: MenuItem[]
+  user: any
   children: React.ReactNode
   primaryColor?: string
   sidebarColor?: string
   logoUrl?: string | null
 }
 
-export default function SuperShell({
-  user,
-  menus,
-  children,
-  primaryColor,
-  sidebarColor,
-  logoUrl,
-}: Props) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [showProfile, setShowProfile] = useState(false)
-  const [loggingOut, setLoggingOut]   = useState(false)
-  const [unreadCount, setUnreadCount] = useState(0)
-  const profileRef = useRef<HTMLDivElement>(null)
+export default function VendorShell({ user, children, primaryColor, sidebarColor, logoUrl }: Props) {
+  const pathname    = usePathname()
+  const [sidebarOpen, setSidebarOpen]   = useState(false)
+  const [showProfile, setShowProfile]   = useState(false)
+  const [loggingOut, setLoggingOut]     = useState(false)
+  const [unreadCount, setUnreadCount]   = useState(0)
+  const profileRef  = useRef<HTMLDivElement>(null)
 
-  const headerBg = primaryColor || '#5B2D8E'
+  const headerBg  = primaryColor || '#5B2D8E'
   const sidebarBg = sidebarColor || '#2D1B4E'
-  const gold = '#c9a84c'
+  const gold      = '#c9a84c'
 
-  const company = Array.isArray(user.company)
-    ? (user.company as any)[0]
-    : (user.company as any)
-
-  const initials = user.full_name
-    ?.split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
+  const company  = Array.isArray(user.company) ? user.company[0] : user.company
+  const initials = user.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
 
   // Close profile dropdown on outside click
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
+    function handle(e: MouseEvent) {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
         setShowProfile(false)
       }
     }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
   }, [])
 
   // Fetch unread notification count
@@ -112,47 +66,18 @@ export default function SuperShell({
     window.location.href = '/login'
   }
 
-  function isActive(path: string) {
-    return pathname === path || pathname.startsWith(path + '/')
-  }
-
-  function NavItem({ item }: { item: MenuItem }) {
-    const Icon = ICON_MAP[item.icon] || Circle
-    const active = isActive(item.path)
-
-    return (
-      <div className="relative">
-        {active && (
-          <span
-            className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full"
-            style={{ backgroundColor: gold }}
-          />
-        )}
-        <Link
-          href={item.path}
-          onClick={() => setSidebarOpen(false)}
-          className="flex items-center gap-3 pl-5 pr-3 py-2.5 rounded-lg text-sm transition-colors"
-          style={
-            active
-              ? { color: '#fff', fontWeight: 600, backgroundColor: 'rgba(255,255,255,0.08)' }
-              : { color: 'rgba(255,255,255,0.55)', fontWeight: 500 }
-          }
-        >
-          <Icon className="w-4 h-4 shrink-0" style={active ? { color: gold } : {}} />
-          <span className="flex-1">{item.name}</span>
-        </Link>
-      </div>
-    )
-  }
+  const NAV = [
+    { href: '/dashboard/vendor',               label: 'Dashboard',     icon: LayoutDashboard, exact: true,  badge: 0 },
+    { href: '/dashboard/vendor/notifications',  label: 'Notifications', icon: Bell,            exact: false, badge: unreadCount },
+  ]
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* ── Header ─────────────────────────────────────────── */}
+      {/* ── Header ──────────────────────────────────────── */}
       <header
         className="h-14 flex items-center px-3 sm:px-4 gap-3 fixed top-0 left-0 right-0 z-50"
         style={{ backgroundColor: headerBg }}
       >
-        {/* Mobile hamburger */}
         <button
           className="lg:hidden text-white/70 hover:text-white p-1 shrink-0"
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -160,14 +85,9 @@ export default function SuperShell({
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Logo / company name */}
-        <Link href="/dashboard/super" className="shrink-0 hover:opacity-80 transition-opacity">
+        <Link href="/dashboard/vendor" className="shrink-0 hover:opacity-80 transition-opacity">
           {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt={company?.name}
-              className="h-8 sm:h-10 w-auto object-contain max-w-[140px] sm:max-w-[180px]"
-            />
+            <img src={logoUrl} alt={company?.name} className="h-8 sm:h-10 w-auto object-contain max-w-[140px] sm:max-w-[180px]" />
           ) : (
             <p className="text-sm font-extrabold tracking-widest uppercase" style={{ color: gold }}>
               {company?.name}
@@ -177,12 +97,9 @@ export default function SuperShell({
 
         <div className="flex-1" />
 
-        {/* Search bar */}
-        <SuperSearchBar companyId={(user as any).company_id} />
-
         {/* Notification bell */}
         <Link
-          href="/dashboard/super/notifications"
+          href="/dashboard/vendor/notifications"
           className="relative p-1.5 text-white/70 hover:text-white transition-colors shrink-0"
         >
           <Bell className="w-5 h-5" />
@@ -210,40 +127,11 @@ export default function SuperShell({
 
           {showProfile && (
             <div className="absolute right-0 top-11 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
-              {/* User info */}
               <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
                 <p className="text-sm font-semibold text-gray-800">{user.full_name}</p>
-                <p className="text-xs text-gray-500">Super Manager</p>
+                <p className="text-xs text-gray-500">Vendor</p>
                 <p className="text-xs text-gray-400 mt-0.5">{company?.name}</p>
               </div>
-
-              <div className="py-1">
-                <Link
-                  href="/dashboard/super/profile"
-                  onClick={() => setShowProfile(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <User className="w-4 h-4 text-gray-400" />
-                  Profile
-                </Link>
-                <Link
-                  href="/dashboard/super/notifications"
-                  onClick={() => setShowProfile(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <Bell className="w-4 h-4 text-gray-400" />
-                  Notifications
-                </Link>
-                <Link
-                  href="/dashboard/super/settings"
-                  onClick={() => setShowProfile(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <Settings className="w-4 h-4 text-gray-400" />
-                  Settings
-                </Link>
-              </div>
-
               <div className="border-t border-gray-100 py-1">
                 <button
                   onClick={handleLogout}
@@ -260,7 +148,7 @@ export default function SuperShell({
       </header>
 
       <div className="flex flex-1 pt-14">
-        {/* ── Sidebar ────────────────────────────────────────── */}
+        {/* ── Sidebar ─────────────────────────────────────── */}
         <aside
           className={`
             w-56 fixed top-14 bottom-0 left-0 z-40 flex flex-col
@@ -269,7 +157,6 @@ export default function SuperShell({
           `}
           style={{ backgroundColor: sidebarBg }}
         >
-          {/* Nav links */}
           <nav className="flex-1 px-2 py-5 overflow-y-auto">
             <p
               className="text-[10px] font-bold tracking-widest uppercase px-3 mb-3"
@@ -278,13 +165,42 @@ export default function SuperShell({
               Menu
             </p>
             <div className="space-y-0.5">
-              {menus.map((item) => (
-                <NavItem key={item.id} item={item} />
-              ))}
+              {NAV.map((item) => {
+                const active = item.exact ? pathname === item.href : pathname.startsWith(item.href)
+                const Icon   = item.icon
+                return (
+                  <div key={item.href} className="relative">
+                    {active && (
+                      <span
+                        className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full"
+                        style={{ backgroundColor: gold }}
+                      />
+                    )}
+                    <Link
+                      href={item.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className="flex items-center gap-3 pl-5 pr-3 py-2.5 rounded-lg text-sm transition-colors"
+                      style={
+                        active
+                          ? { color: '#fff', fontWeight: 600, backgroundColor: 'rgba(255,255,255,0.08)' }
+                          : { color: 'rgba(255,255,255,0.55)', fontWeight: 500 }
+                      }
+                    >
+                      <Icon className="w-4 h-4 shrink-0" style={active ? { color: gold } : {}} />
+                      <span className="flex-1">{item.label}</span>
+                      {item.badge > 0 && (
+                        <span className="text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-white/20 text-white">
+                          {item.badge > 9 ? '9+' : item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  </div>
+                )
+              })}
             </div>
           </nav>
 
-          {/* Need help card */}
+          {/* Need help */}
           <div className="px-3 pb-2">
             <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
               <div className="flex items-center gap-2 mb-0.5">
@@ -308,9 +224,7 @@ export default function SuperShell({
               </div>
               <div className="min-w-0">
                 <p className="text-white text-xs font-semibold truncate">{user.full_name}</p>
-                <p className="text-xs capitalize" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                  Super Manager
-                </p>
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Vendor</p>
               </div>
             </div>
             <button
