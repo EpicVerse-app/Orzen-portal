@@ -161,14 +161,6 @@ export default function SuperShell({
 
         <div className="flex-1" />
 
-        {/* Role badge */}
-        <span
-          className="text-xs font-semibold px-3 py-1 rounded-full hidden sm:block"
-          style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff' }}
-        >
-          Super Manager
-        </span>
-
         {/* Notification bell */}
         <Link
           href="/dashboard/super/notifications"
