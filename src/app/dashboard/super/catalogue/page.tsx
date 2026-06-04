@@ -25,8 +25,8 @@ export default async function SuperCataloguePage() {
   return (
     <>
       <div className="mb-6 flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: '#570439' }}>
-          <ShoppingBag className="w-5 h-5 text-white" />
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: '#f5f0e8' }}>
+          <ShoppingBag className="w-5 h-5" style={{ color: '#c9a84c' }} />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Order Materials</h1>
