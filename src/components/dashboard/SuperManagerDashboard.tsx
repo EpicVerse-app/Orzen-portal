@@ -1,31 +1,22 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle, XCircle, Clock, ChevronRight, AlertTriangle, Settings } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, ChevronRight, AlertTriangle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { AppUser, Order } from '@/types'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
-import LogoutButton from '@/components/ui/LogoutButton'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 
 interface Props {
   profile: AppUser
   pendingOrders: Order[]
   otherOrders: Order[]
-  primaryColor?: string
-  sidebarColor?: string
-  logoUrl?: string | null
 }
 
-export default function SuperManagerDashboard({ profile, pendingOrders, otherOrders, primaryColor, sidebarColor, logoUrl }: Props) {
+export default function SuperManagerDashboard({ profile, pendingOrders, otherOrders }: Props) {
   const router = useRouter()
   const [processing, setProcessing] = useState<string | null>(null)
-
-  const headerBg = primaryColor || '#5B2D8E'   // fallback to Malabar purple
-  const gold     = '#c9a84c'
-  const company  = Array.isArray(profile.company) ? (profile.company as any)[0] : (profile.company as any)
 
   async function handleApproval(orderId: string, action: 'approved' | 'rejected') {
     setProcessing(orderId)
@@ -57,54 +48,7 @@ export default function SuperManagerDashboard({ profile, pendingOrders, otherOrd
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Themed Header */}
-      <div
-        className="h-16 flex items-center px-4 gap-3 sticky top-0 z-50"
-        style={{ backgroundColor: headerBg }}
-      >
-        {/* Logo or company name */}
-        {logoUrl ? (
-          <img src={logoUrl} alt={company?.name} className="h-10 w-auto object-contain max-w-[160px]" />
-        ) : (
-          <p className="text-sm font-extrabold tracking-widest uppercase" style={{ color: gold }}>
-            {company?.name}
-          </p>
-        )}
-
-        <div className="flex-1" />
-
-        {/* Role badge */}
-        <span
-          className="text-xs font-semibold px-3 py-1 rounded-full hidden sm:block"
-          style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff' }}
-        >
-          Super Manager
-        </span>
-
-        {/* Avatar */}
-        <div
-          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-          style={{ backgroundColor: gold, color: '#000' }}
-        >
-          {profile.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-        </div>
-
-        {/* Admin link */}
-        <Link
-          href="/dashboard/admin/products"
-          className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
-          style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff' }}
-        >
-          <Settings className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Products</span>
-        </Link>
-
-        {/* Logout */}
-        <LogoutButton />
-      </div>
-
-      <div className="px-4 py-5 space-y-5 max-w-2xl mx-auto">
+    <div className="px-4 py-5 space-y-5 max-w-2xl mx-auto">
         {/* Pending Approvals */}
         {pendingOrders.length > 0 && (
           <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
@@ -184,7 +128,7 @@ export default function SuperManagerDashboard({ profile, pendingOrders, otherOrd
             </div>
           )}
         </div>
-      </div>
     </div>
   )
 }
+

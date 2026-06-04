@@ -28,25 +28,18 @@ export default async function SuperDashboardPage() {
       branch:branches(id, name, city, state),
       items:order_items(id)
     `)
-    .eq('company_id', company?.id)
+    .eq('company_id', (company as any)?.id)
     .in('status', ['submitted', 'approved', 'rejected', 'packing', 'loaded', 'shipped'])
     .order('created_at', { ascending: true })
 
   const pendingOrders = (orders || []).filter((o) => o.status === 'submitted')
-  const otherOrders = (orders || []).filter((o) => o.status !== 'submitted')
-
-  const primaryColor  = (company as any)?.primary_color  || '#5B2D8E'
-  const sidebarColor  = (company as any)?.sidebar_color  || '#2D1B4E'
-  const logoUrl       = (company as any)?.logo_url       || null
+  const otherOrders   = (orders || []).filter((o) => o.status !== 'submitted')
 
   return (
     <SuperManagerDashboard
       profile={profile as any}
       pendingOrders={pendingOrders as any}
       otherOrders={otherOrders as any}
-      primaryColor={primaryColor}
-      sidebarColor={sidebarColor}
-      logoUrl={logoUrl}
     />
   )
 }
