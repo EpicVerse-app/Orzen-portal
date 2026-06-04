@@ -13,6 +13,7 @@ import { AppUser } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
+import SuperSearchBar from '@/components/layout/SuperSearchBar'
 
 // Map DB icon name → Lucide component
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -160,6 +161,9 @@ export default function SuperShell({
         </Link>
 
         <div className="flex-1" />
+
+        {/* Search bar */}
+        <SuperSearchBar companyId={(user as any).company_id} />
 
         {/* Notification bell */}
         <Link
