@@ -5,9 +5,10 @@ import { UserRole } from '@/types'
 const ROLE_REDIRECTS: Record<UserRole, string> = {
   store_manager: '/dashboard/store',
   super_manager: '/dashboard/super',
-  mvm: '/dashboard/mvm',
-  hvm: '/dashboard/hvm',
-  vendor: '/dashboard/vendor',
+  mvm:           '/dashboard/mvm',
+  hvm:           '/dashboard/hvm',
+  vendor:        '/dashboard/vendor',
+  admin:         '/dashboard/admin/products',
 }
 
 export default async function DashboardPage() {

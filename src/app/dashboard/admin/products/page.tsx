@@ -17,7 +17,7 @@ export default async function AdminProductsPage() {
     .eq('id', user.id)
     .single()
 
-  if (!profile || profile.role !== 'super_manager') redirect('/login')
+  if (!profile || !['admin', 'super_manager'].includes(profile.role)) redirect('/login')
 
   const company = Array.isArray(profile.company) ? profile.company[0] : profile.company as any
 
