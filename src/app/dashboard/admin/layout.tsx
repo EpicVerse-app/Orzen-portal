@@ -12,8 +12,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .eq('id', user.id)
     .single()
 
-  // Both admin and super_manager can access admin pages
-  if (!profile || !['admin', 'super_manager'].includes(profile.role)) {
+  // Only admin can access admin pages
+  if (!profile || profile.role !== 'admin') {
     redirect('/login')
   }
 
