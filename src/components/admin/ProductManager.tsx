@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, Trash2, ChevronDown, ChevronUp, Package, FolderPlus, X, LogOut } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Plus, Trash2, ChevronDown, ChevronUp, Package, FolderPlus, X, Upload, ImageIcon } from 'lucide-react'
 import { addProductAction, deleteProductAction, addCategoryAction, deleteCategoryAction } from '@/app/dashboard/admin/products/actions'
+import { createClient } from '@/lib/supabase/client'
 import LogoutButton from '@/components/ui/LogoutButton'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
@@ -30,14 +31,30 @@ interface Props {
 }
 
 export default function ProductManager({ profile, categories, companyId, primaryColor, logoUrl }: Props) {
-  const [expandedCat, setExpandedCat]     = useState<string | null>(categories[0]?.id || null)
-  const [showAddProduct, setShowAddProduct] = useState<string | null>(null)  // categoryId
+  const [expandedCat, setExpandedCat]       = useState<string | null>(categories[0]?.id || null)
+  const [showAddProduct, setShowAddProduct]   = useState<string | null>(null)
   const [showAddCategory, setShowAddCategory] = useState(false)
-  const [deleting, setDeleting]           = useState<string | null>(null)
-  const [saving, setSaving]               = useState(false)
+  const [deleting, setDeleting]             = useState<string | null>(null)
+  const [saving, setSaving]                 = useState(false)
+  const [imageFile, setImageFile]           = useState<File | null>(null)
+  const [imagePreview, setImagePreview]     = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const gold = '#c9a84c'
   const company = Array.isArray(profile.company) ? profile.company[0] : profile.company
+
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  function resetImageState() {
+    setImageFile(null)
+    setImagePreview(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   async function handleAddProduct(e: React.FormEvent<HTMLFormElement>, categoryId: string) {
     e.preventDefault()
@@ -47,12 +64,38 @@ export default function ProductManager({ profile, categories, companyId, primary
     fd.set('category_id', categoryId)
     fd.set('company_id', companyId)
 
+    // Upload image to Supabase Storage if a file was selected
+    if (imageFile) {
+      try {
+        const supabase = createClient()
+        const ext  = imageFile.name.split('.').pop()
+        const path = `${companyId}/${Date.now()}.${ext}`
+
+        const { data: uploaded, error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(path, imageFile, { upsert: true })
+
+        if (uploadError) throw uploadError
+
+        const { data: urlData } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(uploaded.path)
+
+        fd.set('image_url', urlData.publicUrl)
+      } catch (err: any) {
+        toast.error('Image upload failed: ' + (err.message || 'Unknown error'))
+        setSaving(false)
+        return
+      }
+    }
+
     const result = await addProductAction(fd)
     if (result?.error) {
       toast.error(result.error)
     } else {
       toast.success('Product added')
       form.reset()
+      resetImageState()
       setShowAddProduct(null)
     }
     setSaving(false)
@@ -245,18 +288,56 @@ export default function ProductManager({ profile, categories, companyId, primary
                         placeholder="Product name"
                         className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]"
                       />
-                      <div className="flex gap-2">
+                      <input
+                        name="unit"
+                        required
+                        placeholder="Unit (e.g. pcs, kg)"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]"
+                      />
+
+                      {/* Image upload */}
+                      <div>
+                        <p className="text-xs text-gray-400 mb-1.5">Product Image (optional)</p>
                         <input
-                          name="unit"
-                          required
-                          placeholder="Unit (e.g. pcs, kg)"
-                          className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]"
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageSelect}
+                          className="hidden"
+                          id="product-image-upload"
                         />
-                        <input
-                          name="image_url"
-                          placeholder="Image URL (optional)"
-                          className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]"
-                        />
+                        {imagePreview ? (
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={imagePreview}
+                              alt="Preview"
+                              className="w-16 h-16 rounded-xl object-cover border border-gray-200"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-gray-600 truncate">{imageFile?.name}</p>
+                              <button
+                                type="button"
+                                onClick={resetImageState}
+                                className="text-xs text-red-400 hover:text-red-600 mt-1"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <label
+                            htmlFor="product-image-upload"
+                            className="flex items-center gap-3 border-2 border-dashed border-gray-200 rounded-xl px-4 py-3 cursor-pointer hover:border-[#c9a84c] transition-colors"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                              <Upload className="w-4 h-4 text-gray-400" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-600">Click to upload image</p>
+                              <p className="text-xs text-gray-400">PNG, JPG, WEBP</p>
+                            </div>
+                          </label>
+                        )}
                       </div>
                       <button
                         type="submit"
