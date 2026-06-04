@@ -169,6 +169,14 @@ export default function SuperShell({
           Super Manager
         </span>
 
+        {/* Notification bell */}
+        <Link
+          href="/dashboard/super/notifications"
+          className="relative p-1.5 text-white/70 hover:text-white transition-colors shrink-0"
+        >
+          <Bell className="w-5 h-5" />
+        </Link>
+
         {/* Profile dropdown */}
         <div ref={profileRef} className="relative shrink-0">
           <button
