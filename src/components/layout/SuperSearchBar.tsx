@@ -25,7 +25,7 @@ export default function SuperSearchBar({ companyId }: Props) {
   const [showMobile, setShowMobile] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef     = useRef<HTMLInputElement>(null)
-  const debounceRef  = useRef<NodeJS.Timeout>()
+  const debounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const router = useRouter()
 
   // Close on outside click
