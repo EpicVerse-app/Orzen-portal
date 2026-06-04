@@ -120,7 +120,7 @@ export default function SuperSearchBar({ companyId }: Props) {
 
   function handleChange(val: string) {
     setQuery(val)
-    clearTimeout(debounceRef.current)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => search(val), 300)
   }
 
