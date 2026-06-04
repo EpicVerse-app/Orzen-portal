@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Tag, ChevronRight } from 'lucide-react'
+import { Tag, ChevronRight, ShoppingBag } from 'lucide-react'
 
 export default async function SuperCataloguePage() {
   const supabase = await createClient()
@@ -24,9 +24,14 @@ export default async function SuperCataloguePage() {
 
   return (
     <>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Order Materials</h1>
-        <p className="text-sm text-gray-500 mt-1">Select a category to browse products</p>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: '#570439' }}>
+          <ShoppingBag className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Order Materials</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Select a category to browse products</p>
+        </div>
       </div>
 
       {!categories || categories.length === 0 ? (
