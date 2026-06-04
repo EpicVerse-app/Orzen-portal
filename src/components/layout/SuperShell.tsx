@@ -1,16 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  Menu, X, Headphones,
+  Menu, Headphones,
   LayoutDashboard, CheckCircle, FileText, Building2,
   ShoppingBag, Users, BarChart2, Settings, Circle,
-  ClipboardList, Truck, Bell, LogOut,
+  ClipboardList, Truck, Bell, LogOut, User, ChevronDown,
 } from 'lucide-react'
 import { AppUser } from '@/types'
-import LogoutButton from '@/components/ui/LogoutButton'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
+import toast from 'react-hot-toast'
 
 // Map DB icon name → Lucide component
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -54,7 +56,11 @@ export default function SuperShell({
   logoUrl,
 }: Props) {
   const pathname = usePathname()
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
 
   const headerBg = primaryColor || '#5B2D8E'
   const sidebarBg = sidebarColor || '#2D1B4E'
@@ -71,8 +77,26 @@ export default function SuperShell({
     .slice(0, 2)
     .toUpperCase()
 
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setShowProfile(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  async function handleLogout() {
+    setLoggingOut(true)
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    toast.success('Logged out')
+    window.location.href = '/login'
+  }
+
   function isActive(path: string) {
-    // Exact match for root dashboard paths, prefix match for sub-paths
     return pathname === path || pathname.startsWith(path + '/')
   }
 
@@ -129,10 +153,7 @@ export default function SuperShell({
               className="h-8 sm:h-10 w-auto object-contain max-w-[140px] sm:max-w-[180px]"
             />
           ) : (
-            <p
-              className="text-sm font-extrabold tracking-widest uppercase"
-              style={{ color: gold }}
-            >
+            <p className="text-sm font-extrabold tracking-widest uppercase" style={{ color: gold }}>
               {company?.name}
             </p>
           )}
@@ -148,12 +169,69 @@ export default function SuperShell({
           Super Manager
         </span>
 
-        {/* Avatar */}
-        <div
-          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-          style={{ backgroundColor: gold, color: '#000' }}
-        >
-          {initials}
+        {/* Profile dropdown */}
+        <div ref={profileRef} className="relative shrink-0">
+          <button
+            onClick={() => setShowProfile(!showProfile)}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+              style={{ backgroundColor: gold, color: '#000' }}
+            >
+              {initials}
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-white/60 hidden sm:block" />
+          </button>
+
+          {showProfile && (
+            <div className="absolute right-0 top-11 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
+              {/* User info */}
+              <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                <p className="text-sm font-semibold text-gray-800">{user.full_name}</p>
+                <p className="text-xs text-gray-500">Super Manager</p>
+                <p className="text-xs text-gray-400 mt-0.5">{company?.name}</p>
+              </div>
+
+              <div className="py-1">
+                <Link
+                  href="/dashboard/super/profile"
+                  onClick={() => setShowProfile(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <User className="w-4 h-4 text-gray-400" />
+                  Profile
+                </Link>
+                <Link
+                  href="/dashboard/super/notifications"
+                  onClick={() => setShowProfile(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <Bell className="w-4 h-4 text-gray-400" />
+                  Notifications
+                </Link>
+                <Link
+                  href="/dashboard/super/settings"
+                  onClick={() => setShowProfile(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <Settings className="w-4 h-4 text-gray-400" />
+                  Settings
+                </Link>
+              </div>
+
+              <div className="border-t border-gray-100 py-1">
+                <button
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  {loggingOut ? 'Logging out…' : 'Log out'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
@@ -184,10 +262,7 @@ export default function SuperShell({
 
           {/* Need help card */}
           <div className="px-3 pb-2">
-            <div
-              className="rounded-xl px-4 py-3"
-              style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}
-            >
+            <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
               <div className="flex items-center gap-2 mb-0.5">
                 <Headphones className="w-4 h-4 shrink-0" style={{ color: gold }} />
                 <p className="text-sm font-bold text-white">Need help?</p>
@@ -199,10 +274,7 @@ export default function SuperShell({
           </div>
 
           {/* User + logout */}
-          <div
-            className="px-3 py-3 space-y-2"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
-          >
+          <div className="px-3 py-3 space-y-2" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
             <div className="flex items-center gap-3 px-2 py-1">
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-black"
@@ -217,14 +289,19 @@ export default function SuperShell({
                 </p>
               </div>
             </div>
-            <LogoutButton />
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-colors"
+              style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }}
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              {loggingOut ? 'Logging out…' : 'Logout'}
+            </button>
           </div>
 
           {/* Powered by */}
-          <div
-            className="px-4 py-2 text-center"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
-          >
+          <div className="px-4 py-2 text-center" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
               Powered by&nbsp;
               <span style={{ color: gold }} className="font-semibold">Orzen Flow</span>

@@ -20,26 +20,44 @@ export default async function SuperDashboardPage() {
   if (!profile || profile.role !== 'super_manager') redirect('/login')
 
   const company = Array.isArray(profile.company) ? profile.company[0] : profile.company
+  const companyId = (company as any)?.id
 
-  const { data: orders } = await supabase
+  // Fetch ALL orders for the company (for stats + activity + approvals)
+  const { data: allOrders } = await supabase
     .from('orders')
     .select(`
-      id, status, created_at, escalation_deadline,
+      id, status, created_at,
       branch:branches(id, name, city, state),
       items:order_items(id)
     `)
-    .eq('company_id', (company as any)?.id)
-    .in('status', ['submitted', 'approved', 'rejected', 'packing', 'loaded', 'shipped'])
-    .order('created_at', { ascending: true })
+    .eq('company_id', companyId)
+    .order('created_at', { ascending: false })
 
-  const pendingOrders = (orders || []).filter((o) => o.status === 'submitted')
-  const otherOrders   = (orders || []).filter((o) => o.status !== 'submitted')
+  // Fetch branch count
+  const { count: branchCount } = await supabase
+    .from('branches')
+    .select('id', { count: 'exact', head: true })
+    .eq('company_id', companyId)
+
+  const orders = allOrders || []
+
+  const stats = {
+    total:    orders.length,
+    pending:  orders.filter(o => o.status === 'submitted').length,
+    approved: orders.filter(o => ['approved', 'packing', 'loaded', 'shipped', 'delivered'].includes(o.status)).length,
+    rejected: orders.filter(o => o.status === 'rejected').length,
+    branches: branchCount || 0,
+  }
+
+  const pendingOrders  = orders.filter(o => o.status === 'submitted')
+  const recentActivity = orders.slice(0, 20)   // latest 20 for activity feed
 
   return (
     <SuperManagerDashboard
       profile={profile as any}
       pendingOrders={pendingOrders as any}
-      otherOrders={otherOrders as any}
+      recentActivity={recentActivity as any}
+      stats={stats}
     />
   )
 }
