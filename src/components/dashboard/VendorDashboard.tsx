@@ -123,7 +123,8 @@ export default function VendorDashboard({ profile, orders, stats }: Props) {
   async function uploadPhotoAndUpdate(order: Order, file: File, newStatus: string) {
     setUploadingFor(`${order.id}_${newStatus}`)
     const supabase = createClient()
-    const path = `delivery/${order.id}/${newStatus}_${Date.now()}_${file.name}`
+    const ext  = file.name.split('.').pop() || 'jpg'
+    const path = `delivery/${order.id}/${newStatus}_${Date.now()}.${ext}`
 
     const { error: uploadError } = await supabase.storage.from('order-photos').upload(path, file)
     if (uploadError) {

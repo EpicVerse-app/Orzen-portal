@@ -21,7 +21,8 @@ export default function DeliveryReceiveButton({ orderId, companyId, branchId, sh
   async function handleReceived(file: File) {
     setUploading(true)
     const supabase = createClient()
-    const path = `delivery/${orderId}/received_${Date.now()}_${file.name}`
+    const ext  = file.name.split('.').pop() || 'jpg'
+    const path = `delivery/${orderId}/received_${Date.now()}.${ext}`
 
     const { error: uploadError } = await supabase.storage
       .from('order-photos')
