@@ -113,7 +113,11 @@ export default function SuperShell({
   }
 
   function isActive(path: string) {
-    return pathname === path || pathname.startsWith(path + '/')
+    if (pathname === path) return true
+    // Use prefix match for sub-pages (e.g. catalogue/[id])
+    // but NOT for the dashboard root — that must be exact
+    if (path === '/dashboard/super') return false
+    return pathname.startsWith(path + '/')
   }
 
   function NavItem({ item }: { item: MenuItem }) {
