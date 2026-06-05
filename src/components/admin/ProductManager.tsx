@@ -145,11 +145,11 @@ export default function ProductManager({ profile, categories, companyId, primary
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div
-        className="h-16 flex items-center px-4 gap-3 sticky top-0 z-50"
+        className="h-20 flex items-center px-4 gap-3 sticky top-0 z-50"
         style={{ backgroundColor: primaryColor }}
       >
         {logoUrl ? (
-          <img src={logoUrl} alt={company?.name} className="h-10 w-auto object-contain max-w-[160px]" />
+          <img src={logoUrl} alt={company?.name} className="h-14 sm:h-16 w-auto object-contain max-w-[260px] sm:max-w-[380px]" />
         ) : (
           <p className="text-sm font-extrabold tracking-widest uppercase" style={{ color: gold }}>
             {company?.name}

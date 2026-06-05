@@ -84,7 +84,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
   return (
     <>
       <header
-        className="text-white h-14 flex items-center px-3 sm:px-4 gap-2 sm:gap-3 fixed top-0 left-0 right-0 z-50"
+        className="text-white h-20 flex items-center px-3 sm:px-4 gap-2 sm:gap-3 fixed top-0 left-0 right-0 z-50"
         style={{ backgroundColor: headerBg }}
       >
         {/* Mobile menu toggle */}
@@ -98,7 +98,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
             <img
               src={logoUrl}
               alt={companyName}
-              className="h-8 sm:h-10 w-auto object-contain max-w-[120px] sm:max-w-[180px]"
+              className="h-14 sm:h-16 w-auto object-contain max-w-[260px] sm:max-w-[380px]"
             />
           ) : (
             /* Fallback: text */
@@ -228,7 +228,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
 
       {/* Mobile search bar */}
       {showSearch && (
-        <div className="fixed top-14 left-0 right-0 z-40 px-4 py-3 md:hidden" style={{ backgroundColor: headerBg }}>
+        <div className="fixed top-20 left-0 right-0 z-40 px-4 py-3 md:hidden" style={{ backgroundColor: headerBg }}>
           <form onSubmit={handleSearch} className="flex items-center rounded-lg px-3 gap-2" style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
             <Search className="w-4 h-4 text-gray-400 shrink-0" />
             <input
