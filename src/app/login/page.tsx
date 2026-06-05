@@ -1,32 +1,69 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { loginAction } from './actions'
+import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
+import Link from 'next/link'
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [username, setUsername]         = useState('')
+  const [password, setPassword]         = useState('')
+  const [loading, setLoading]           = useState(false)
+  const [currentUser, setCurrentUser]   = useState<{ name: string; role: string } | null>(null)
+
+  // Check if someone is already signed in
+  useEffect(() => {
+    async function checkSession() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: profile } = await supabase
+        .from('users')
+        .select('full_name, role')
+        .eq('id', user.id)
+        .single()
+      if (profile) {
+        setCurrentUser({
+          name: profile.full_name,
+          role: profile.role.replace('_', ' '),
+        })
+      }
+    }
+    checkSession()
+  }, [])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-
-    // loginAction runs on the server → sets cookie → calls redirect('/dashboard')
-    // If it returns a string it's an error message
     const error = await loginAction(username, password)
-
     if (error) {
       toast.error(error)
       setLoading(false)
     }
-    // If no error, Next.js handles the redirect automatically — no client code needed
   }
 
   return (
     <div className="min-h-screen bg-[#f5f0e8] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
+
+        {/* Already signed in banner */}
+        {currentUser && (
+          <div className="mb-4 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold text-amber-800">Currently signed in as</p>
+              <p className="text-sm font-bold text-amber-900">{currentUser.name}</p>
+              <p className="text-xs text-amber-700 capitalize">{currentUser.role}</p>
+            </div>
+            <Link
+              href="/dashboard"
+              className="shrink-0 text-xs font-semibold bg-amber-100 hover:bg-amber-200 text-amber-800 px-3 py-2 rounded-xl transition-colors"
+            >
+              Go to Dashboard →
+            </Link>
+          </div>
+        )}
+
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           {/* Logo */}
           <div className="mb-8 text-center">
@@ -34,7 +71,9 @@ export default function LoginPage() {
               <span className="text-[#c9a84c] text-xl font-bold tracking-wide">OF</span>
             </div>
             <h1 className="text-xl font-semibold text-gray-900">Orzen Flow</h1>
-            <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>
+            <p className="text-sm text-gray-500 mt-1">
+              {currentUser ? 'Sign in as a different account' : 'Sign in to your account'}
+            </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
