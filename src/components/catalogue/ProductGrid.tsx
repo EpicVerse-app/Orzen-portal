@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ShoppingCart, Check, AlertTriangle, X } from 'lucide-react'
+import { Package, ShoppingCart, Check, AlertTriangle, X } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
 import toast from 'react-hot-toast'
 import ImageCarousel from '@/components/ui/ImageCarousel'
