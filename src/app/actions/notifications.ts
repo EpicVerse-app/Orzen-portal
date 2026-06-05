@@ -44,13 +44,13 @@ export async function sendOrderNotifications({
     const supabase    = await createClient()
     const adminClient = createAdminClient()
 
-    // ── 1. Find users to notify ──────────────────────────────
+    // ── 1. Find users to notify (use adminClient to bypass any permission issues) ──
     type UserRow = { id: string; full_name: string; email: string | null; role: string }
     const recipients: UserRow[] = []
 
     const companyRoles = targetRoles.filter(r => r !== 'store_manager')
     if (companyRoles.length > 0) {
-      const { data } = await supabase
+      const { data } = await adminClient
         .from('users')
         .select('id, full_name, email, role')
         .eq('company_id', companyId)
@@ -59,7 +59,7 @@ export async function sendOrderNotifications({
     }
 
     if (targetRoles.includes('store_manager') && branchId) {
-      const { data } = await supabase
+      const { data } = await adminClient
         .from('users')
         .select('id, full_name, email, role')
         .eq('branch_id', branchId)
@@ -70,7 +70,7 @@ export async function sendOrderNotifications({
     if (recipients.length === 0) return
 
     // ── 2. Insert in-app notifications ──────────────────────
-    await supabase.from('notifications').insert(
+    await adminClient.from('notifications').insert(
       recipients.map(u => ({
         user_id:    u.id,
         company_id: companyId,
@@ -82,7 +82,7 @@ export async function sendOrderNotifications({
     )
 
     // ── 3. Fetch order details for email body ────────────────
-    const { data: order } = await supabase
+    const { data: order } = await adminClient
       .from('orders')
       .select(`
         id, status,
@@ -97,7 +97,7 @@ export async function sendOrderNotifications({
 
     if (!order) return
 
-    const { data: company } = await supabase
+    const { data: company } = await adminClient
       .from('companies')
       .select('name')
       .eq('id', companyId)
