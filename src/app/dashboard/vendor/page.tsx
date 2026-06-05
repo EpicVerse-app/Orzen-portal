@@ -20,6 +20,7 @@ export default async function VendorDashboardPage() {
     .from('orders')
     .select(`
       id, status, created_at,
+      loaded_photo_url, shipped_photo_url, delivery_photo_url,
       branch:branches(id, name, address, city, state),
       items:order_items(
         id, quantity,

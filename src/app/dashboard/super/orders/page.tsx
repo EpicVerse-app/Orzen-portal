@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Package } from 'lucide-react'
+import { ChevronLeft, Package, Image as ImageIcon } from 'lucide-react'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 
 const FILTERS: Record<string, { label: string; statuses: string[] }> = {
@@ -47,6 +47,7 @@ export default async function SuperOrdersPage({
     .from('orders')
     .select(`
       id, status, created_at,
+      loaded_photo_url, shipped_photo_url, delivery_photo_url,
       branch:branches(id, name, city, state),
       items:order_items(id)
     `)
@@ -103,25 +104,47 @@ export default async function SuperOrdersPage({
                 <div key={order.id} className="px-5 py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      {/* Branch */}
-                      <p className="text-sm font-semibold text-gray-800 truncate">
-                        {branch?.name}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {branch?.city}, {branch?.state}
-                      </p>
-                      {/* Meta row */}
+                      <p className="text-sm font-semibold text-gray-800 truncate">{branch?.name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{branch?.city}, {branch?.state}</p>
                       <div className="flex items-center gap-3 mt-2">
-                        <span className="text-[11px] text-gray-400 font-mono">
-                          {shortId(order.id)}
-                        </span>
-                        <span className="text-[11px] text-gray-400">
-                          {itemCount} item{itemCount !== 1 ? 's' : ''}
-                        </span>
-                        <span className="text-[11px] text-gray-400">
-                          {formatDate(order.created_at)}
-                        </span>
+                        <span className="text-[11px] text-gray-400 font-mono">{shortId(order.id)}</span>
+                        <span className="text-[11px] text-gray-400">{itemCount} item{itemCount !== 1 ? 's' : ''}</span>
+                        <span className="text-[11px] text-gray-400">{formatDate(order.created_at)}</span>
                       </div>
+                      {/* Photos */}
+                      {((order as any).loaded_photo_url || (order as any).shipped_photo_url || (order as any).delivery_photo_url) && (
+                        <div className="mt-3">
+                          <p className="text-[10px] text-gray-400 flex items-center gap-1 mb-1.5">
+                            <ImageIcon className="w-3 h-3" /> Delivery Photos
+                          </p>
+                          <div className="flex gap-2">
+                            {(order as any).loaded_photo_url && (
+                              <div className="text-center">
+                                <a href={(order as any).loaded_photo_url} target="_blank" rel="noopener noreferrer">
+                                  <img src={(order as any).loaded_photo_url} alt="Loaded" className="w-14 h-14 rounded-lg object-cover border border-gray-200 hover:opacity-80" />
+                                </a>
+                                <p className="text-[9px] text-gray-400 mt-0.5">Loaded</p>
+                              </div>
+                            )}
+                            {(order as any).shipped_photo_url && (
+                              <div className="text-center">
+                                <a href={(order as any).shipped_photo_url} target="_blank" rel="noopener noreferrer">
+                                  <img src={(order as any).shipped_photo_url} alt="Shipped" className="w-14 h-14 rounded-lg object-cover border border-gray-200 hover:opacity-80" />
+                                </a>
+                                <p className="text-[9px] text-gray-400 mt-0.5">Shipped</p>
+                              </div>
+                            )}
+                            {(order as any).delivery_photo_url && (
+                              <div className="text-center">
+                                <a href={(order as any).delivery_photo_url} target="_blank" rel="noopener noreferrer">
+                                  <img src={(order as any).delivery_photo_url} alt="Received" className="w-14 h-14 rounded-lg object-cover border border-gray-200 hover:opacity-80" />
+                                </a>
+                                <p className="text-[9px] text-gray-400 mt-0.5">Received</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <OrderStatusBadge status={order.status as any} />
                   </div>

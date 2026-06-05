@@ -2,7 +2,12 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getStoreProfile } from '@/lib/auth/getStoreProfile'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
-import { Package, Calendar, MapPin } from 'lucide-react'
+import DeliveryReceiveButton from '@/components/orders/DeliveryReceiveButton'
+import { Package, Calendar, MapPin, Image as ImageIcon } from 'lucide-react'
+
+function shortId(id: string) {
+  return 'ORD-' + id.replace(/-/g, '').slice(0, 6).toUpperCase()
+}
 
 export default async function MyOrdersPage() {
   const profile = await getStoreProfile()
@@ -15,6 +20,7 @@ export default async function MyOrdersPage() {
     .from('orders')
     .select(`
       id, status, created_at, escalation_deadline,
+      loaded_photo_url, shipped_photo_url, delivery_photo_url,
       items:order_items(
         id, quantity,
         product:products(id, name, image_url, unit,
@@ -44,11 +50,10 @@ export default async function MyOrdersPage() {
         <div className="space-y-4">
           {orders.map((order) => (
             <div key={order.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              {/* Header */}
               <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-50 flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-gray-800">
-                    #MO-{order.id.slice(-4).toUpperCase()}
-                  </p>
+                  <p className="text-sm font-bold text-gray-800">{shortId(order.id)}</p>
                   <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-0.5">
                     <Calendar className="w-3 h-3 shrink-0" />
                     <span className="truncate">
@@ -62,6 +67,7 @@ export default async function MyOrdersPage() {
                 <div className="shrink-0"><OrderStatusBadge status={order.status} /></div>
               </div>
 
+              {/* Items */}
               <div className="divide-y divide-gray-50">
                 {(order.items as any)?.map((item: any) => (
                   <div key={item.id} className="px-4 sm:px-6 py-3 flex items-center gap-3">
@@ -84,15 +90,58 @@ export default async function MyOrdersPage() {
                 ))}
               </div>
 
-              <div className="px-4 sm:px-6 py-3 bg-gray-50 flex items-center justify-between gap-2 flex-wrap">
+              {/* Photos row */}
+              {(order.loaded_photo_url || order.shipped_photo_url || order.delivery_photo_url) && (
+                <div className="px-4 sm:px-6 py-3 border-t border-gray-50">
+                  <p className="text-xs text-gray-400 flex items-center gap-1 mb-2">
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    Delivery Photos
+                  </p>
+                  <div className="flex gap-2 flex-wrap">
+                    {order.loaded_photo_url && (
+                      <div className="text-center">
+                        <a href={order.loaded_photo_url} target="_blank" rel="noopener noreferrer">
+                          <img src={order.loaded_photo_url} alt="Loaded" className="w-16 h-16 rounded-lg object-cover border border-gray-200 hover:opacity-80" />
+                        </a>
+                        <p className="text-[9px] text-gray-400 mt-0.5">Loaded</p>
+                      </div>
+                    )}
+                    {order.shipped_photo_url && (
+                      <div className="text-center">
+                        <a href={order.shipped_photo_url} target="_blank" rel="noopener noreferrer">
+                          <img src={order.shipped_photo_url} alt="Shipped" className="w-16 h-16 rounded-lg object-cover border border-gray-200 hover:opacity-80" />
+                        </a>
+                        <p className="text-[9px] text-gray-400 mt-0.5">Shipped</p>
+                      </div>
+                    )}
+                    {order.delivery_photo_url && (
+                      <div className="text-center">
+                        <a href={order.delivery_photo_url} target="_blank" rel="noopener noreferrer">
+                          <img src={order.delivery_photo_url} alt="Received" className="w-16 h-16 rounded-lg object-cover border border-gray-200 hover:opacity-80" />
+                        </a>
+                        <p className="text-[9px] text-gray-400 mt-0.5">Received</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Footer */}
+              <div className="px-4 sm:px-6 py-3 bg-gray-50 border-t border-gray-50 flex items-center justify-between gap-2 flex-wrap">
                 <p className="text-xs text-gray-400">
                   {(order.items as any)?.length} product{(order.items as any)?.length !== 1 ? 's' : ''} &nbsp;·&nbsp;
                   {(order.items as any)?.reduce((s: number, i: any) => s + i.quantity, 0)} items
                 </p>
-                {order.status === 'submitted' && <p className="text-xs text-orange-500 font-medium">Awaiting approval</p>}
-                {order.status === 'approved'  && <p className="text-xs text-green-600 font-medium">Approved</p>}
-                {order.status === 'shipped'   && <p className="text-xs text-purple-600 font-medium">On the way</p>}
-                {order.status === 'delivered' && <p className="text-xs text-teal-600 font-medium">Delivered</p>}
+
+                {/* Upload received photo when status = shipped */}
+                {order.status === 'shipped' && (
+                  <DeliveryReceiveButton
+                    orderId={order.id}
+                    companyId={(profile as any).company_id}
+                    branchId={(profile as any).branch_id}
+                    shortId={shortId(order.id)}
+                  />
+                )}
               </div>
             </div>
           ))}
