@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
+import ImageCarousel from '@/components/ui/ImageCarousel'
 import { sendOrderNotifications } from '@/app/actions/notifications'
 
 interface Stats {
@@ -19,7 +19,7 @@ interface Stats {
 interface OrderItem {
   id: string
   quantity: number
-  product: { id: string; name: string; image_url: string | null; unit: string }
+  product: { id: string; name: string; image_url: string | null; image_url_2?: string | null; image_url_3?: string | null; unit: string }
 }
 
 interface Order {
@@ -187,15 +187,12 @@ export default function VendorDashboard({ profile, orders, stats }: Props) {
                 <div className="space-y-1.5">
                   {order.items?.map((item) => (
                     <div key={item.id} className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
-                      <div className="w-8 h-8 bg-gray-200 rounded-md overflow-hidden shrink-0">
-                        {item.product?.image_url ? (
-                          <Image src={item.product.image_url} alt={item.product.name} width={32} height={32} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Package className="w-4 h-4 text-gray-300" />
-                          </div>
-                        )}
-                      </div>
+                      <ImageCarousel
+                        images={[item.product?.image_url, item.product?.image_url_2, item.product?.image_url_3]}
+                        alt={item.product?.name || ''}
+                        className="w-12 h-12 rounded-lg shrink-0"
+                        size={48}
+                      />
                       <span className="text-xs text-gray-700 flex-1">{item.product?.name}</span>
                       <span className="text-xs font-semibold text-gray-800">×{item.quantity} {item.product?.unit}</span>
                     </div>

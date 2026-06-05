@@ -10,7 +10,9 @@ export async function addProductAction(formData: FormData) {
   const unit        = formData.get('unit') as string
   const category_id = formData.get('category_id') as string
   const company_id  = formData.get('company_id') as string
-  const image_url   = (formData.get('image_url') as string) || null
+  const image_url   = (formData.get('image_url')   as string) || null
+  const image_url_2 = (formData.get('image_url_2') as string) || null
+  const image_url_3 = (formData.get('image_url_3') as string) || null
 
   if (!name || !unit || !category_id || !company_id) {
     return { error: 'All fields are required.' }
@@ -22,6 +24,8 @@ export async function addProductAction(formData: FormData) {
     category_id,
     company_id,
     image_url,
+    image_url_2,
+    image_url_3,
   })
 
   if (error) return { error: error.message }

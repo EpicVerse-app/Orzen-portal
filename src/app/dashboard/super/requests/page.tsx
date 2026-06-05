@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { CheckCircle, XCircle, Clock, Package, AlertTriangle, RefreshCw } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, Package, RefreshCw } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { sendOrderNotifications } from '@/app/actions/notifications'
+import ImageCarousel from '@/components/ui/ImageCarousel'
 
 interface OrderItem {
   id: string
   quantity: number
-  product: { id: string; name: string; unit: string; image_url: string | null }
+  product: { id: string; name: string; unit: string; image_url: string | null; image_url_2?: string | null; image_url_3?: string | null }
 }
 
 interface Order {
@@ -58,7 +59,7 @@ export default function SuperRequestsPage() {
         .select(`
           id, status, created_at,
           branch:branches(id, name, city, state),
-          items:order_items(id, quantity, product:products(id, name, unit, image_url))
+          items:order_items(id, quantity, product:products(id, name, unit, image_url, image_url_2, image_url_3))
         `)
         .eq('company_id', prof.company_id)
         .eq('status', 'submitted')
@@ -158,17 +159,12 @@ export default function SuperRequestsPage() {
               <div className="divide-y divide-gray-50">
                 {order.items?.map(item => (
                   <div key={item.id} className="flex items-center gap-3 px-5 py-3">
-                    {item.product?.image_url ? (
-                      <img
-                        src={item.product.image_url}
-                        alt={item.product.name}
-                        className="w-10 h-10 rounded-lg object-cover shrink-0"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                        <Package className="w-4 h-4 text-gray-300" />
-                      </div>
-                    )}
+                    <ImageCarousel
+                      images={[item.product?.image_url, item.product?.image_url_2, item.product?.image_url_3]}
+                      alt={item.product?.name || ''}
+                      className="w-14 h-14 rounded-lg shrink-0"
+                      size={56}
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-800 truncate">{item.product?.name}</p>
                       <p className="text-xs text-gray-400">{item.product?.unit}</p>

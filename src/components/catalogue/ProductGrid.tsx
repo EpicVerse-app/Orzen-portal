@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
-import { Package, ShoppingCart, Check, AlertTriangle, X } from 'lucide-react'
+import { ShoppingCart, Check, AlertTriangle, X } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
 import toast from 'react-hot-toast'
+import ImageCarousel from '@/components/ui/ImageCarousel'
 
 const NORMAL_MAX_QTY = 10
 
@@ -13,6 +13,8 @@ interface Product {
   name: string
   unit: string
   image_url: string | null
+  image_url_2?: string | null
+  image_url_3?: string | null
   categoryName: string
 }
 
@@ -89,19 +91,12 @@ export default function ProductGrid({ products }: Props) {
                 </div>
               )}
 
-              <div className="aspect-square bg-gray-50 flex items-center justify-center">
-                {product.image_url ? (
-                  <Image
-                    src={product.image_url}
-                    alt={product.name}
-                    width={200}
-                    height={200}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <Package className="w-10 h-10 text-gray-200" />
-                )}
-              </div>
+              <ImageCarousel
+                images={[product.image_url, product.image_url_2, product.image_url_3]}
+                alt={product.name}
+                className="aspect-square"
+                size={200}
+              />
 
               <div className="p-3 space-y-2">
                 <p className="text-sm font-semibold text-gray-800 truncate">{product.name}</p>

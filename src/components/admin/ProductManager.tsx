@@ -36,24 +36,54 @@ export default function ProductManager({ profile, categories, companyId, primary
   const [showAddCategory, setShowAddCategory] = useState(false)
   const [deleting, setDeleting]             = useState<string | null>(null)
   const [saving, setSaving]                 = useState(false)
-  const [imageFile, setImageFile]           = useState<File | null>(null)
-  const [imagePreview, setImagePreview]     = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // 3 image slots
+  const [imageFiles, setImageFiles]     = useState<(File | null)[]>([null, null, null])
+  const [imagePreviews, setImagePreviews] = useState<(string | null)[]>([null, null, null])
+  const fileInputRefs = [
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+  ]
 
   const gold = '#c9a84c'
   const company = Array.isArray(profile.company) ? profile.company[0] : profile.company
 
-  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleImageSelect(slot: number, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    setImageFile(file)
-    setImagePreview(URL.createObjectURL(file))
+    setImageFiles(prev => { const n = [...prev]; n[slot] = file; return n })
+    setImagePreviews(prev => { const n = [...prev]; n[slot] = URL.createObjectURL(file); return n })
+  }
+
+  function removeImage(slot: number) {
+    setImageFiles(prev => { const n = [...prev]; n[slot] = null; return n })
+    setImagePreviews(prev => { const n = [...prev]; n[slot] = null; return n })
+    const ref = fileInputRefs[slot]
+    if (ref.current) ref.current.value = ''
   }
 
   function resetImageState() {
-    setImageFile(null)
-    setImagePreview(null)
-    if (fileInputRef.current) fileInputRef.current.value = ''
+    setImageFiles([null, null, null])
+    setImagePreviews([null, null, null])
+    fileInputRefs.forEach(r => { if (r.current) r.current.value = '' })
+  }
+
+  async function uploadImage(file: File, slot: number): Promise<string | null> {
+    try {
+      const supabase = createClient()
+      const ext  = file.name.split('.').pop()
+      const path = `${companyId}/${Date.now()}_${slot}.${ext}`
+      const { data: uploaded, error } = await supabase.storage
+        .from('product-images')
+        .upload(path, file, { upsert: true })
+      if (error) throw error
+      const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(uploaded.path)
+      return urlData.publicUrl
+    } catch (err: any) {
+      toast.error(`Image ${slot + 1} upload failed: ` + (err.message || 'Unknown error'))
+      return null
+    }
   }
 
   async function handleAddProduct(e: React.FormEvent<HTMLFormElement>, categoryId: string) {
@@ -64,28 +94,13 @@ export default function ProductManager({ profile, categories, companyId, primary
     fd.set('category_id', categoryId)
     fd.set('company_id', companyId)
 
-    // Upload image to Supabase Storage if a file was selected
-    if (imageFile) {
-      try {
-        const supabase = createClient()
-        const ext  = imageFile.name.split('.').pop()
-        const path = `${companyId}/${Date.now()}.${ext}`
-
-        const { data: uploaded, error: uploadError } = await supabase.storage
-          .from('product-images')
-          .upload(path, imageFile, { upsert: true })
-
-        if (uploadError) throw uploadError
-
-        const { data: urlData } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(uploaded.path)
-
-        fd.set('image_url', urlData.publicUrl)
-      } catch (err: any) {
-        toast.error('Image upload failed: ' + (err.message || 'Unknown error'))
-        setSaving(false)
-        return
+    // Upload up to 3 images
+    const urlKeys = ['image_url', 'image_url_2', 'image_url_3']
+    for (let i = 0; i < 3; i++) {
+      if (imageFiles[i]) {
+        const url = await uploadImage(imageFiles[i]!, i)
+        if (!url) { setSaving(false); return }
+        fd.set(urlKeys[i], url)
       }
     }
 
@@ -295,49 +310,47 @@ export default function ProductManager({ profile, categories, companyId, primary
                         className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]"
                       />
 
-                      {/* Image upload */}
+                      {/* Image upload — 3 slots */}
                       <div>
-                        <p className="text-xs text-gray-400 mb-1.5">Product Image (optional)</p>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageSelect}
-                          className="hidden"
-                          id="product-image-upload"
-                        />
-                        {imagePreview ? (
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={imagePreview}
-                              alt="Preview"
-                              className="w-16 h-16 rounded-xl object-cover border border-gray-200"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs text-gray-600 truncate">{imageFile?.name}</p>
-                              <button
-                                type="button"
-                                onClick={resetImageState}
-                                className="text-xs text-red-400 hover:text-red-600 mt-1"
-                              >
-                                Remove
-                              </button>
+                        <p className="text-xs text-gray-400 mb-2">Product Images — up to 3 angles (optional)</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[0, 1, 2].map((slot) => (
+                            <div key={slot}>
+                              <input
+                                ref={fileInputRefs[slot]}
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageSelect(slot, e)}
+                                className="hidden"
+                                id={`product-image-${slot}`}
+                              />
+                              {imagePreviews[slot] ? (
+                                <div className="relative">
+                                  <img
+                                    src={imagePreviews[slot]!}
+                                    alt={`Preview ${slot + 1}`}
+                                    className="w-full aspect-square rounded-xl object-cover border border-gray-200"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => removeImage(slot)}
+                                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <label
+                                  htmlFor={`product-image-${slot}`}
+                                  className="flex flex-col items-center justify-center aspect-square border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-[#c9a84c] transition-colors"
+                                >
+                                  <Upload className="w-4 h-4 text-gray-400 mb-1" />
+                                  <p className="text-[10px] text-gray-400">Image {slot + 1}</p>
+                                </label>
+                              )}
                             </div>
-                          </div>
-                        ) : (
-                          <label
-                            htmlFor="product-image-upload"
-                            className="flex items-center gap-3 border-2 border-dashed border-gray-200 rounded-xl px-4 py-3 cursor-pointer hover:border-[#c9a84c] transition-colors"
-                          >
-                            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                              <Upload className="w-4 h-4 text-gray-400" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-gray-600">Click to upload image</p>
-                              <p className="text-xs text-gray-400">PNG, JPG, WEBP</p>
-                            </div>
-                          </label>
-                        )}
+                          ))}
+                        </div>
                       </div>
                       <button
                         type="submit"
