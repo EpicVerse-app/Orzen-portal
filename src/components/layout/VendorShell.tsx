@@ -75,7 +75,7 @@ export default function VendorShell({ user, children, primaryColor, sidebarColor
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* ── Header ──────────────────────────────────────── */}
       <header
-        className="h-14 flex items-center px-3 sm:px-4 gap-3 fixed top-0 left-0 right-0 z-50"
+        className="h-20 flex items-center px-3 sm:px-4 gap-3 fixed top-0 left-0 right-0 z-50"
         style={{ backgroundColor: headerBg }}
       >
         <button
@@ -87,7 +87,7 @@ export default function VendorShell({ user, children, primaryColor, sidebarColor
 
         <Link href="/dashboard/vendor" className="shrink-0 hover:opacity-80 transition-opacity">
           {logoUrl ? (
-            <img src={logoUrl} alt={company?.name} className="h-11 sm:h-13 w-auto object-contain max-w-[200px] sm:max-w-[280px]" />
+            <img src={logoUrl} alt={company?.name} className="h-14 sm:h-16 w-auto object-contain max-w-[260px] sm:max-w-[380px]" />
           ) : (
             <p className="text-sm font-extrabold tracking-widest uppercase" style={{ color: gold }}>
               {company?.name}
@@ -147,11 +147,11 @@ export default function VendorShell({ user, children, primaryColor, sidebarColor
         </div>
       </header>
 
-      <div className="flex flex-1 pt-14">
+      <div className="flex flex-1 pt-20">
         {/* ── Sidebar ─────────────────────────────────────── */}
         <aside
           className={`
-            w-56 fixed top-14 bottom-0 left-0 z-40 flex flex-col
+            w-56 fixed top-20 bottom-0 left-0 z-40 flex flex-col
             transition-transform duration-200 ease-in-out
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           `}
