@@ -2,7 +2,12 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getStoreProfile } from '@/lib/auth/getStoreProfile'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
-import { Package, Calendar, MapPin, Truck, CheckCircle2, Clock } from 'lucide-react'
+import DeliveryReceiveButton from '@/components/orders/DeliveryReceiveButton'
+import { Package, Calendar, MapPin, Truck, CheckCircle2, Clock, Image as ImageIcon } from 'lucide-react'
+
+function shortId(id: string) {
+  return 'ORD-' + id.replace(/-/g, '').slice(0, 6).toUpperCase()
+}
 
 export default async function DeliveriesPage() {
   const profile = await getStoreProfile()
@@ -14,7 +19,8 @@ export default async function DeliveriesPage() {
   const { data: orders } = await supabase
     .from('orders')
     .select(`
-      id, status, created_at, updated_at, delivery_photo_url,
+      id, status, created_at, updated_at,
+      loaded_photo_url, shipped_photo_url, delivery_photo_url,
       items:order_items(
         id, quantity,
         product:products(id, name, image_url, unit,
@@ -48,7 +54,15 @@ export default async function DeliveriesPage() {
             </h2>
           </div>
           <div className="space-y-3">
-            {inTransit.map((order) => <OrderCard key={order.id} order={order} showDeliveredDate={false} />)}
+            {inTransit.map((order) => (
+              <OrderCard
+                key={order.id}
+                order={order}
+                showDeliveredDate={false}
+                companyId={(profile as any).company_id}
+                branchId={(profile as any).branch_id}
+              />
+            ))}
           </div>
         </div>
       )}
@@ -68,7 +82,15 @@ export default async function DeliveriesPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {delivered.map((order) => <OrderCard key={order.id} order={order} showDeliveredDate={true} />)}
+            {delivered.map((order) => (
+              <OrderCard
+                key={order.id}
+                order={order}
+                showDeliveredDate={true}
+                companyId={(profile as any).company_id}
+                branchId={(profile as any).branch_id}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -76,12 +98,23 @@ export default async function DeliveriesPage() {
   )
 }
 
-function OrderCard({ order, showDeliveredDate }: { order: any; showDeliveredDate: boolean }) {
+function OrderCard({
+  order,
+  showDeliveredDate,
+  companyId,
+  branchId,
+}: {
+  order: any
+  showDeliveredDate: boolean
+  companyId: string
+  branchId: string
+}) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* Header */}
       <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-50 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-sm font-bold text-gray-800">#MO-{order.id.slice(-4).toUpperCase()}</p>
+          <p className="text-sm font-bold text-gray-800">{shortId(order.id)}</p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5">
             <div className="flex items-center gap-1 text-xs text-gray-400">
               <Calendar className="w-3 h-3 shrink-0" />
@@ -103,6 +136,7 @@ function OrderCard({ order, showDeliveredDate }: { order: any; showDeliveredDate
         <div className="shrink-0"><OrderStatusBadge status={order.status} /></div>
       </div>
 
+      {/* Items */}
       <div className="divide-y divide-gray-50">
         {order.items?.map((item: any) => (
           <div key={item.id} className="px-4 sm:px-6 py-3 flex items-center gap-3">
@@ -123,15 +157,57 @@ function OrderCard({ order, showDeliveredDate }: { order: any; showDeliveredDate
         ))}
       </div>
 
-      <div className="px-4 sm:px-6 py-3 bg-gray-50 flex items-center justify-between gap-2 flex-wrap">
+      {/* Vendor photos row */}
+      {(order.loaded_photo_url || order.shipped_photo_url) && (
+        <div className="px-4 sm:px-6 py-3 border-t border-gray-50">
+          <p className="text-xs text-gray-400 flex items-center gap-1 mb-2">
+            <ImageIcon className="w-3.5 h-3.5" />
+            Vendor Photos
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            {order.loaded_photo_url && (
+              <div className="text-center">
+                <a href={order.loaded_photo_url} target="_blank" rel="noopener noreferrer">
+                  <img src={order.loaded_photo_url} alt="Loaded" className="w-16 h-16 rounded-lg object-cover border border-gray-200 hover:opacity-80" />
+                </a>
+                <p className="text-[9px] text-gray-400 mt-0.5">Loaded</p>
+              </div>
+            )}
+            {order.shipped_photo_url && (
+              <div className="text-center">
+                <a href={order.shipped_photo_url} target="_blank" rel="noopener noreferrer">
+                  <img src={order.shipped_photo_url} alt="Shipped" className="w-16 h-16 rounded-lg object-cover border border-gray-200 hover:opacity-80" />
+                </a>
+                <p className="text-[9px] text-gray-400 mt-0.5">Shipped</p>
+              </div>
+            )}
+            {order.delivery_photo_url && (
+              <div className="text-center">
+                <a href={order.delivery_photo_url} target="_blank" rel="noopener noreferrer">
+                  <img src={order.delivery_photo_url} alt="Received" className="w-16 h-16 rounded-lg object-cover border border-gray-200 hover:opacity-80" />
+                </a>
+                <p className="text-[9px] text-gray-400 mt-0.5">Received</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="px-4 sm:px-6 py-3 bg-gray-50 border-t border-gray-50 flex items-center justify-between gap-2 flex-wrap">
         <p className="text-xs text-gray-400">
           {order.items?.length} product{order.items?.length !== 1 ? 's' : ''} &nbsp;·&nbsp;
           {order.items?.reduce((s: number, i: any) => s + i.quantity, 0)} items
         </p>
-        {order.delivery_photo_url && (
-          <a href={order.delivery_photo_url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:text-blue-600 font-medium">
-            View photo →
-          </a>
+
+        {/* Upload received photo — only for shipped orders */}
+        {order.status === 'shipped' && (
+          <DeliveryReceiveButton
+            orderId={order.id}
+            companyId={companyId}
+            branchId={branchId}
+            shortId={shortId(order.id)}
+          />
         )}
       </div>
     </div>
