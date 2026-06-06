@@ -128,10 +128,13 @@ export default async function MyOrdersPage() {
 
               {/* Footer */}
               <div className="px-4 sm:px-6 py-3 bg-gray-50 border-t border-gray-50 flex items-center justify-between gap-2 flex-wrap">
-                <p className="text-xs text-gray-400">
-                  {(order.items as any)?.length} product{(order.items as any)?.length !== 1 ? 's' : ''} &nbsp;·&nbsp;
-                  {(order.items as any)?.reduce((s: number, i: any) => s + i.quantity, 0)} items
-                </p>
+                <div>
+                  <p className="text-xs text-gray-400">
+                    {(order.items as any)?.length} product{(order.items as any)?.length !== 1 ? 's' : ''} &nbsp;·&nbsp;
+                    {(order.items as any)?.reduce((s: number, i: any) => s + i.quantity, 0)} items
+                  </p>
+                  <p className="text-[10px] text-gray-300 mt-0.5">{order.status}</p>
+                </div>
 
                 {/* Upload received photo when status = shipped */}
                 {order.status === 'shipped' && (
