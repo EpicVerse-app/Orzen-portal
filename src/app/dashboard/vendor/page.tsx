@@ -28,15 +28,19 @@ export default async function VendorDashboardPage() {
       )
     `)
     .eq('company_id', profile.company_id)
-    .not('status', 'in', '("closed","rejected")')
+    .in('status', ['submitted', 'approved', 'delivered'])
     .order('created_at', { ascending: true })
 
   const allOrders = (orders || []) as any[]
 
+  const submitted  = allOrders.filter(o => o.status === 'submitted')
+  const approved   = allOrders.filter(o => o.status === 'approved')
+  const delivered  = allOrders.filter(o => o.status === 'delivered')
+
   const stats = {
-    waitingApproval: allOrders.filter(o => o.status === 'submitted').length,
-    inProcess:       allOrders.filter(o => o.status === 'approved').length,
-    delivered:       allOrders.filter(o => o.status === 'delivered').length,
+    waitingApproval: submitted.length,
+    inProcess:       approved.length,
+    delivered:       delivered.length,
     total:           allOrders.length,
   }
 
