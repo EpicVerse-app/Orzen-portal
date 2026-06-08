@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, ClipboardList, Truck,
-  ShoppingCart, Headphones, ShoppingBag
+  ShoppingCart, Headphones, ShoppingBag, History
 } from 'lucide-react'
 import { AppUser } from '@/types'
 import LogoutButton from '@/components/ui/LogoutButton'
@@ -122,7 +122,8 @@ export default function AppShell({ user, children, primaryColor, sidebarColor, b
               <NavItem href="/dashboard/store/catalogue"   icon={ShoppingBag}     label="Order Materials" exact={false} />
               <NavItem href="/dashboard/store/orders"      icon={ClipboardList}   label="My Orders"       exact={false} />
               <NavItem href="/dashboard/store/view-order"  icon={ShoppingCart}    label="View Cart"       exact={false} badge={cartCount} />
-              <NavItem href="/dashboard/store/deliveries"  icon={Truck}           label="Delivery Status" exact={false} />
+              <NavItem href="/dashboard/store/deliveries"        icon={Truck}   label="Delivery Status"  exact={true} />
+              <NavItem href="/dashboard/store/delivery-history" icon={History} label="Delivery History" exact={false} />
             </div>
           </nav>
 

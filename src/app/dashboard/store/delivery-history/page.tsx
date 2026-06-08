@@ -2,8 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getStoreProfile } from '@/lib/auth/getStoreProfile'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
-import DeliveryReceiveButton from '@/components/orders/DeliveryReceiveButton'
-import { Package, Calendar, MapPin, Truck, Clock, Image as ImageIcon } from 'lucide-react'
+import { Package, Calendar, MapPin, CheckCircle2, Image as ImageIcon, History } from 'lucide-react'
 
 function shortId(id: string) {
   return 'ORD-' + id.replace(/-/g, '').slice(0, 6).toUpperCase()
@@ -12,7 +11,7 @@ function fmtDate(d: string) {
   return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-export default async function DeliveryStatusPage() {
+export default async function DeliveryHistoryPage() {
   const profile = await getStoreProfile()
   if (!profile || profile.role !== 'store_manager') redirect('/login')
 
@@ -22,23 +21,23 @@ export default async function DeliveryStatusPage() {
   const { data: orders } = await supabase
     .from('orders')
     .select(`
-      id, status, created_at,
-      loaded_photo_url, shipped_photo_url,
+      id, status, created_at, updated_at,
+      delivery_photo_url,
       items:order_items(
         id, quantity,
         product:products(id, name, image_url, unit, category:categories(name))
       )
     `)
     .eq('branch_id', profile.branch_id)
-    .eq('status', 'shipped')
+    .in('status', ['delivered', 'closed'])
     .order('created_at', { ascending: false })
 
-  const inTransit = orders || []
+  const delivered = orders || []
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Delivery Status</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Delivery History</h1>
         <div className="flex items-center gap-1.5 text-sm text-gray-400 mt-1">
           <MapPin className="w-3.5 h-3.5" />
           {(branch as any)?.name} — {(branch as any)?.city}
@@ -46,33 +45,33 @@ export default async function DeliveryStatusPage() {
       </div>
 
       <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-xl bg-purple-100 flex items-center justify-center shrink-0">
-          <Truck className="w-4 h-4 text-purple-600" />
+        <div className="w-8 h-8 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
+          <History className="w-4 h-4 text-green-600" />
         </div>
         <div className="flex-1">
-          <h2 className="text-sm font-bold text-gray-800">Orders On The Way</h2>
-          <p className="text-xs text-gray-400">Currently being delivered to your store</p>
+          <h2 className="text-sm font-bold text-gray-800">Received Orders</h2>
+          <p className="text-xs text-gray-400">All orders successfully delivered to your store</p>
         </div>
-        {inTransit.length > 0 && (
-          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-purple-100 text-purple-700">
-            {inTransit.length} active
+        {delivered.length > 0 && (
+          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">
+            {delivered.length} delivered
           </span>
         )}
       </div>
 
-      {inTransit.length === 0 ? (
+      {delivered.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-14 flex flex-col items-center text-center">
-          <div className="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center mb-3">
-            <Truck className="w-7 h-7 text-purple-200" />
+          <div className="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center mb-3">
+            <CheckCircle2 className="w-7 h-7 text-green-200" />
           </div>
-          <p className="text-sm font-medium text-gray-500">No active deliveries</p>
-          <p className="text-xs text-gray-400 mt-1">Orders will appear here once shipped by the vendor</p>
+          <p className="text-sm font-medium text-gray-500">No delivery history yet</p>
+          <p className="text-xs text-gray-400 mt-1">Completed deliveries will appear here</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {inTransit.map((order) => (
-            <div key={order.id} className="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
-              <div className="h-1 w-full bg-purple-400" />
+          {delivered.map((order) => (
+            <div key={order.id} className="bg-white rounded-2xl border border-green-100 shadow-sm overflow-hidden">
+              <div className="h-1 w-full bg-green-400" />
               <div className="px-4 sm:px-5 py-3.5 border-b border-gray-50 flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-gray-800">{shortId(order.id)}</p>
@@ -80,8 +79,8 @@ export default async function DeliveryStatusPage() {
                     <span className="flex items-center gap-1 text-xs text-gray-400">
                       <Calendar className="w-3 h-3" />{fmtDate(order.created_at)}
                     </span>
-                    <span className="flex items-center gap-1 text-xs text-purple-600 font-semibold">
-                      <Clock className="w-3 h-3" />On the way
+                    <span className="flex items-center gap-1 text-xs text-green-600 font-semibold">
+                      <CheckCircle2 className="w-3 h-3" />{fmtDate(order.updated_at)}
                     </span>
                   </div>
                 </div>
@@ -108,36 +107,19 @@ export default async function DeliveryStatusPage() {
                 ))}
               </div>
 
-              {(order.loaded_photo_url || order.shipped_photo_url) && (
+              {order.delivery_photo_url && (
                 <div className="px-4 sm:px-5 py-3 border-t border-gray-50">
-                  <p className="text-xs text-gray-400 flex items-center gap-1 mb-2"><ImageIcon className="w-3.5 h-3.5" />Photos</p>
-                  <div className="flex gap-2">
-                    {order.loaded_photo_url && (
-                      <a href={order.loaded_photo_url} target="_blank" rel="noopener noreferrer" className="text-center">
-                        <img src={order.loaded_photo_url} alt="Loaded" className="w-16 h-16 rounded-xl object-cover border border-gray-200 hover:opacity-80" />
-                        <p className="text-[10px] text-gray-400 mt-0.5">Loaded</p>
-                      </a>
-                    )}
-                    {order.shipped_photo_url && (
-                      <a href={order.shipped_photo_url} target="_blank" rel="noopener noreferrer" className="text-center">
-                        <img src={order.shipped_photo_url} alt="Shipped" className="w-16 h-16 rounded-xl object-cover border border-gray-200 hover:opacity-80" />
-                        <p className="text-[10px] text-gray-400 mt-0.5">Shipped</p>
-                      </a>
-                    )}
-                  </div>
+                  <p className="text-xs text-gray-400 flex items-center gap-1 mb-2"><ImageIcon className="w-3.5 h-3.5" />Received Photo</p>
+                  <a href={order.delivery_photo_url} target="_blank" rel="noopener noreferrer">
+                    <img src={order.delivery_photo_url} alt="Received" className="w-16 h-16 rounded-xl object-cover border border-gray-200 hover:opacity-80" />
+                  </a>
                 </div>
               )}
 
-              <div className="px-4 sm:px-5 py-3 bg-gray-50/70 border-t border-gray-100 flex items-center justify-between gap-2 flex-wrap">
+              <div className="px-4 sm:px-5 py-3 bg-gray-50/70 border-t border-gray-100">
                 <p className="text-xs text-gray-400">
                   {order.items?.length} product{order.items?.length !== 1 ? 's' : ''} · {order.items?.reduce((s: number, i: any) => s + i.quantity, 0)} items
                 </p>
-                <DeliveryReceiveButton
-                  orderId={order.id}
-                  companyId={(profile as any).company_id}
-                  branchId={(profile as any).branch_id}
-                  shortId={shortId(order.id)}
-                />
               </div>
             </div>
           ))}
