@@ -167,7 +167,7 @@ export default function VendorDashboard({ profile, orders, stats }: Props) {
 
   const STAT_CARDS = [
     { label: 'Waiting Approval', value: stats.waitingApproval, color: 'text-orange-500', bg: 'bg-orange-50',  Icon: Clock },
-    { label: 'Approved',         value: stats.inProcess,       color: 'text-blue-600',   bg: 'bg-blue-50',    Icon: TrendingUp },
+    { label: 'Waiting Delivery',  value: stats.inProcess,       color: 'text-blue-600',   bg: 'bg-blue-50',    Icon: TrendingUp },
     { label: 'Delivered',        value: stats.delivered,       color: 'text-green-600',  bg: 'bg-green-50',   Icon: CheckCircle },
     { label: 'Total Orders',     value: stats.total,           color: 'text-gray-700',   bg: 'bg-gray-100',   Icon: Package },
   ]
@@ -197,26 +197,26 @@ export default function VendorDashboard({ profile, orders, stats }: Props) {
         ))}
       </div>
 
-      {/* Approved orders */}
+      {/* New orders — waiting for approval */}
       <OrderSection
-        title="Approved Orders"
-        count={activeOrders.length}
-        icon={Truck}
-        iconColor="text-blue-700"
-        bgColor="bg-blue-50 border-blue-100"
-        emptyMsg="No approved orders at this time"
-        orders={activeOrders}
-      />
-
-      {/* Waiting for approval */}
-      <OrderSection
-        title="Awaiting Approval"
+        title="New Orders"
         count={waitingOrders.length}
         icon={Clock}
         iconColor="text-orange-700"
         bgColor="bg-orange-50 border-orange-100"
-        emptyMsg="No orders waiting for approval"
+        emptyMsg="No new orders"
         orders={waitingOrders}
+      />
+
+      {/* Waiting for delivery — approved by manager */}
+      <OrderSection
+        title="Waiting for Delivery"
+        count={activeOrders.length}
+        icon={Truck}
+        iconColor="text-blue-700"
+        bgColor="bg-blue-50 border-blue-100"
+        emptyMsg="No orders waiting for delivery"
+        orders={activeOrders}
       />
 
       {/* Delivered */}
