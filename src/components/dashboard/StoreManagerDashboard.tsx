@@ -3,8 +3,17 @@
 import { AppUser, Order, CategoryWithCount } from '@/types'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 import AnimatedNumber from '@/components/ui/AnimatedNumber'
-import { useRealtimeOrders } from '@/hooks/useRealtimeOrders'
+import { useLiveOrders } from '@/hooks/useRealtimeOrders'
 import { fadeUp, stagger, itemAnim } from '@/lib/motion'
+
+const STORE_ORDER_SELECT = `id, status, created_at, items:order_items(id, quantity, product:products(id, name))` as const
+
+async function fetchStoreOrder(id: string) {
+  const { createClient } = await import('@/lib/supabase/client')
+  const supabase = createClient()
+  const { data } = await supabase.from('orders').select(STORE_ORDER_SELECT).eq('id', id).single()
+  return (data as any) ?? null
+}
 import { Package, Headphones } from 'lucide-react'
 import Link from 'next/link'
 import { m as motion } from 'framer-motion'
@@ -24,16 +33,15 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
 
   const gold = '#c9a84c'
 
-  const openOrders = orders.filter(o => ['submitted', 'approved', 'packing', 'loaded'].includes(o.status))
-  const inDelivery = orders.filter(o => o.status === 'shipped')
-  const toReceive  = orders.filter(o => o.status === 'delivered')
-
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long', month: 'long', day: 'numeric',
   })
 
-  // Live updates
-  useRealtimeOrders(profile.company_id)
+  // Live order state — patched instantly without page refresh
+  const liveOrders = useLiveOrders(orders as any[], profile.company_id, fetchStoreOrder)
+  const openOrders = liveOrders.filter((o: any) => ['submitted', 'approved', 'packing', 'loaded'].includes(o.status))
+  const inDelivery = liveOrders.filter((o: any) => o.status === 'shipped')
+  const toReceive  = liveOrders.filter((o: any) => o.status === 'delivered')
 
   return (
     <>
@@ -82,13 +90,13 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
             </Link>
           </div>
 
-          {orders.length === 0 ? (
+          {liveOrders.length === 0 ? (
             <div className="px-5 py-10 text-center text-sm text-gray-400">
               No orders yet — tap <strong>+ New Order</strong> to get started
             </div>
           ) : (
             <motion.div variants={stagger} initial="hidden" animate="show" className="divide-y divide-gray-50">
-              {orders.slice(0, 6).map((order) => {
+              {liveOrders.slice(0, 6).map((order: any) => {
                 const firstItem  = (order.items as any)?.[0]
                 const extraCount = ((order.items as any)?.length || 1) - 1
                 const itemLabel  = firstItem

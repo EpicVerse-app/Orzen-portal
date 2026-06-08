@@ -9,11 +9,27 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { AppUser, Order } from '@/types'
 import AnimatedNumber from '@/components/ui/AnimatedNumber'
-import { useRealtimeOrders } from '@/hooks/useRealtimeOrders'
+import { useLiveOrders } from '@/hooks/useRealtimeOrders'
 import { fadeUp, stagger, itemAnim, slideIn } from '@/lib/motion'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+
+const SUPER_ORDER_SELECT = `
+  id, status, created_at,
+  branch:branches(id, name, city, state),
+  items:order_items(id, quantity, product:products(id, name, unit, image_url))
+` as const
+
+async function fetchSuperOrder(id: string) {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('orders')
+    .select(SUPER_ORDER_SELECT)
+    .eq('id', id)
+    .single()
+  return (data as any) ?? null
+}
 
 interface Stats {
   total: number
@@ -79,11 +95,22 @@ function activityDot(status: string) {
 }
 
 export default function SuperManagerDashboard({ profile, pendingOrders, recentActivity, stats }: Props) {
-  const router = useRouter()
   const [processing, setProcessing] = useState<string | null>(null)
 
-  // Live updates
-  useRealtimeOrders(profile.company_id)
+  // Live order state — all orders for this company, patched instantly on any change
+  const allInitial  = [...pendingOrders, ...recentActivity.filter(o => !pendingOrders.find(p => p.id === o.id))]
+  const liveOrders  = useLiveOrders(allInitial as any[], profile.company_id, fetchSuperOrder)
+
+  const livePending  = liveOrders.filter((o: any) => o.status === 'submitted')
+  const liveActivity = liveOrders.slice(0, 20)
+
+  const liveStats = {
+    ...stats,
+    total:    liveOrders.length,
+    pending:  livePending.length,
+    approved: liveOrders.filter((o: any) => ['approved','packing','loaded','shipped','delivered'].includes(o.status)).length,
+    rejected: liveOrders.filter((o: any) => o.status === 'rejected').length,
+  }
 
   async function handleApproval(orderId: string, action: 'approved' | 'rejected') {
     setProcessing(orderId)
@@ -97,7 +124,7 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
       toast.error('Action failed. Try again.')
     } else {
       toast.success(action === 'approved' ? 'Order approved ✓' : 'Order rejected')
-      router.refresh()
+      // No router.refresh() needed — realtime will patch state instantly
     }
     setProcessing(null)
   }
@@ -111,11 +138,11 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
   }
 
   const STAT_CARDS = [
-    { href: '/dashboard/super/orders',               bg: 'bg-purple-50', border: 'border-gray-100',   hover: 'hover:border-purple-200', Icon: Package,   color: 'text-gray-800',    value: stats.total,    label: 'Total Orders' },
-    { href: '/dashboard/super/orders?filter=pending', bg: 'bg-orange-50', border: 'border-orange-100', hover: 'hover:border-orange-300', Icon: Clock,     color: 'text-orange-500',  value: stats.pending,  label: 'Pending' },
-    { href: '/dashboard/super/orders?filter=approved',bg: 'bg-green-50',  border: 'border-green-100',  hover: 'hover:border-green-300',  Icon: TrendingUp,color: 'text-green-600',   value: stats.approved, label: 'Approved' },
-    { href: '/dashboard/super/orders?filter=rejected',bg: 'bg-red-50',    border: 'border-red-100',    hover: 'hover:border-red-300',    Icon: XCircle,   color: 'text-red-500',     value: stats.rejected, label: 'Rejected' },
-    { href: '/dashboard/super/branches',             bg: 'bg-blue-50',   border: 'border-blue-100',   hover: 'hover:border-blue-300',   Icon: Building2, color: 'text-blue-600',    value: stats.branches, label: 'Branches', wide: true },
+    { href: '/dashboard/super/orders',                bg: 'bg-purple-50', border: 'border-gray-100',   hover: 'hover:border-purple-200', Icon: Package,   color: 'text-gray-800',    value: liveStats.total,    label: 'Total Orders' },
+    { href: '/dashboard/super/orders?filter=pending', bg: 'bg-orange-50', border: 'border-orange-100', hover: 'hover:border-orange-300', Icon: Clock,     color: 'text-orange-500',  value: liveStats.pending,  label: 'Pending' },
+    { href: '/dashboard/super/orders?filter=approved',bg: 'bg-green-50',  border: 'border-green-100',  hover: 'hover:border-green-300',  Icon: TrendingUp,color: 'text-green-600',   value: liveStats.approved, label: 'Approved' },
+    { href: '/dashboard/super/orders?filter=rejected',bg: 'bg-red-50',    border: 'border-red-100',    hover: 'hover:border-red-300',    Icon: XCircle,   color: 'text-red-500',     value: liveStats.rejected, label: 'Rejected' },
+    { href: '/dashboard/super/branches',              bg: 'bg-blue-50',   border: 'border-blue-100',   hover: 'hover:border-blue-300',   Icon: Building2, color: 'text-blue-600',    value: liveStats.branches, label: 'Branches', wide: true },
   ]
 
   return (
@@ -161,20 +188,20 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
             <AlertTriangle className="w-4 h-4 text-orange-500" />
             <h2 className="text-sm font-semibold text-gray-700 flex-1">Pending Approvals</h2>
             <AnimatePresence>
-              {pendingOrders.length > 0 && (
+              {livePending.length > 0 && (
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   exit={{ scale: 0 }}
                   className="text-xs font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-600"
                 >
-                  {pendingOrders.length}
+                  {livePending.length}
                 </motion.span>
               )}
             </AnimatePresence>
           </div>
 
-          {pendingOrders.length === 0 ? (
+          {livePending.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -192,7 +219,7 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
           ) : (
             <motion.div variants={stagger} initial="hidden" animate="show" className="divide-y divide-gray-50 overflow-y-auto max-h-[520px]">
               <AnimatePresence>
-                {pendingOrders.map((order) => {
+                {livePending.map((order) => {
                   const items = (order.items as any) || []
                   return (
                     <motion.div
@@ -281,14 +308,14 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
             <h2 className="text-sm font-semibold text-gray-700">Recent Activity</h2>
           </div>
 
-          {recentActivity.length === 0 ? (
+          {liveActivity.length === 0 ? (
             <div className="flex-1 flex items-center justify-center py-12">
               <p className="text-sm text-gray-400">No activity yet</p>
             </div>
           ) : (
             <div className="overflow-y-auto max-h-[420px]">
               <motion.div variants={stagger} initial="hidden" animate="show" className="px-5 py-3 space-y-0">
-                {recentActivity.map((order, i) => (
+                {liveActivity.map((order, i) => (
                   <motion.div
                     key={order.id}
                     variants={itemAnim}
@@ -319,3 +346,4 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
     </div>
   )
 }
+

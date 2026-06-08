@@ -12,10 +12,29 @@ import ImageCarousel from '@/components/ui/ImageCarousel'
 import AnimatedNumber from '@/components/ui/AnimatedNumber'
 import { createClient } from '@/lib/supabase/client'
 import { sendOrderNotifications } from '@/app/actions/notifications'
-import { useRealtimeOrders } from '@/hooks/useRealtimeOrders'
+import { useLiveOrders } from '@/hooks/useRealtimeOrders'
 import { fadeUp, stagger, itemAnim } from '@/lib/motion'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
+
+const ORDER_SELECT = `
+  id, status, created_at, delivery_photo_url,
+  branch:branches(id, name, address, city, state),
+  items:order_items(
+    id, quantity,
+    product:products(id, name, image_url, image_url_2, image_url_3, unit, category:categories(id, name))
+  )
+` as const
+
+async function fetchVendorOrder(id: string) {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('orders')
+    .select(ORDER_SELECT)
+    .eq('id', id)
+    .single()
+  return (data as any) ?? null
+}
 
 interface Stats {
   newOrders: number
@@ -468,18 +487,35 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
   const shippedRef    = useRef<HTMLDivElement>(null)
   const deliveredRef  = useRef<HTMLDivElement>(null)
 
-  // Live updates
-  useRealtimeOrders(companyId)
+  // Combine all orders into one live list, split by status in render
+  const allInitial   = [...newOrders, ...shippedOrders, ...deliveredOrders]
+  const liveOrders   = useLiveOrders(
+    allInitial,
+    companyId,
+    fetchVendorOrder,
+    ['approved', 'shipped', 'delivered'],
+  )
+
+  const liveNew       = liveOrders.filter(o => o.status === 'approved')
+  const liveShipped   = liveOrders.filter(o => o.status === 'shipped')
+  const liveDelivered = liveOrders.filter(o => o.status === 'delivered')
+
+  const liveStats = {
+    newOrders: liveNew.length,
+    shipped:   liveShipped.length,
+    delivered: liveDelivered.length,
+    total:     liveOrders.length,
+  }
 
   function scrollTo(ref: React.RefObject<HTMLDivElement | null>) {
     ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   const STAT_CARDS = [
-    { label: 'New Orders',           value: stats.newOrders, color: 'text-blue-600',   bg: 'bg-blue-50',   border: 'hover:border-blue-300',   Icon: Package,    ref: newOrdersRef },
-    { label: 'Waiting for Delivery', value: stats.shipped,   color: 'text-purple-600', bg: 'bg-purple-50', border: 'hover:border-purple-300', Icon: Truck,       ref: shippedRef },
-    { label: 'Delivered',            value: stats.delivered, color: 'text-green-600',  bg: 'bg-green-50',  border: 'hover:border-green-300',  Icon: CheckCircle, ref: deliveredRef },
-    { label: 'Total',                value: stats.total,     color: 'text-gray-700',   bg: 'bg-gray-100',  border: 'hover:border-gray-300',   Icon: TrendingUp,  ref: null },
+    { label: 'New Orders',           value: liveStats.newOrders, color: 'text-blue-600',   bg: 'bg-blue-50',   border: 'hover:border-blue-300',   Icon: Package,    ref: newOrdersRef },
+    { label: 'Waiting for Delivery', value: liveStats.shipped,   color: 'text-purple-600', bg: 'bg-purple-50', border: 'hover:border-purple-300', Icon: Truck,       ref: shippedRef },
+    { label: 'Delivered',            value: liveStats.delivered, color: 'text-green-600',  bg: 'bg-green-50',  border: 'hover:border-green-300',  Icon: CheckCircle, ref: deliveredRef },
+    { label: 'Total',                value: liveStats.total,     color: 'text-gray-700',   bg: 'bg-gray-100',  border: 'hover:border-gray-300',   Icon: TrendingUp,  ref: null },
   ]
 
   return (
@@ -518,7 +554,7 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
 
       {/* New Orders */}
       <motion.div variants={fadeUp} initial="hidden" animate="show" ref={newOrdersRef} className="scroll-mt-4">
-        <NewOrdersSection orders={newOrders} companyId={companyId} />
+        <NewOrdersSection orders={liveNew} companyId={companyId} />
       </motion.div>
 
       {/* Waiting for Delivery */}
@@ -527,7 +563,7 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
         <OrderSection
           title="Waiting for Delivery" icon={Truck} iconColor="text-purple-700"
           bgColor="bg-purple-50 border-purple-100" emptyMsg="No orders waiting for delivery"
-          orders={shippedOrders} companyId={companyId}
+          orders={liveShipped} companyId={companyId}
         />
       </motion.div>
 
@@ -537,7 +573,7 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
         <OrderSection
           title="Delivered" icon={CheckCircle} iconColor="text-green-700"
           bgColor="bg-green-50 border-green-100" emptyMsg="No delivered orders yet"
-          orders={deliveredOrders} companyId={companyId}
+          orders={liveDelivered} companyId={companyId}
         />
       </motion.div>
     </div>
