@@ -2,15 +2,20 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react'
 import {
-  Package, CheckCircle, TrendingUp, Truck,
+  Package, CheckCircle, TrendingUp, Truck, Clock,
   Image as ImageIcon, ChevronDown, ChevronUp, Calendar,
-  SlidersHorizontal, X, ChevronRight, MapPin,
+  SlidersHorizontal, X, ChevronRight, MapPin, Download,
 } from 'lucide-react'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 import ImageCarousel from '@/components/ui/ImageCarousel'
+import { createClient } from '@/lib/supabase/client'
+import { sendOrderNotifications } from '@/app/actions/notifications'
+import toast from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
 
 interface Stats {
   newOrders: number
+  shipped: number
   delivered: number
   total: number
 }
@@ -40,7 +45,9 @@ interface Order {
 
 interface Props {
   profile: { id: string; full_name: string; company_id: string; company: any }
+  companyId: string
   newOrders: Order[]
+  shippedOrders: Order[]
   deliveredOrders: Order[]
   stats: Stats
 }
@@ -52,11 +59,79 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+// ── Download order as text file ─────────────────────────
+function downloadOrder(order: Order) {
+  const lines = [
+    `Order ID   : ${shortId(order.id)}`,
+    `Date       : ${formatDate(order.created_at)}`,
+    `Branch     : ${order.branch?.name}`,
+    `Address    : ${order.branch?.address}, ${order.branch?.city}, ${order.branch?.state}`,
+    `Status     : ${order.status}`,
+    ``,
+    `─────────────────────────────────────`,
+    `PRODUCTS`,
+    `─────────────────────────────────────`,
+    ...(order.items?.map(i =>
+      `${i.product?.name?.padEnd(30)} x${i.quantity} ${i.product?.unit}`
+    ) || []),
+    `─────────────────────────────────────`,
+    `Total Items: ${order.items?.reduce((s, i) => s + i.quantity, 0)}`,
+  ]
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href     = url
+  a.download = `${shortId(order.id)}.txt`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 // ── Single collapsible order card ──────────────────────
-function OrderCard({ order }: { order: Order }) {
-  const [open, setOpen] = useState(false)
+function OrderCard({
+  order,
+  companyId,
+  showShipButton = false,
+}: {
+  order: Order
+  companyId: string
+  showShipButton?: boolean
+}) {
+  const [open, setOpen]         = useState(false)
+  const [shipping, setShipping] = useState(false)
+  const router = useRouter()
+
+  async function markShipped() {
+    setShipping(true)
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: 'shipped' })
+      .eq('id', order.id)
+
+    if (error) {
+      toast.error('Failed to update status.')
+      setShipping(false)
+      return
+    }
+
+    await sendOrderNotifications({
+      orderId:     order.id,
+      companyId,
+      title:       'Order Shipped',
+      message:     `Order ${shortId(order.id)} has been shipped`,
+      type:        'order_shipped',
+      targetRoles: ['super_manager', 'store_manager'],
+      branchId:    order.branch?.id,
+    })
+
+    toast.success('Order marked as shipped!')
+    router.refresh()
+    setShipping(false)
+  }
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* Header */}
       <button
         onClick={() => setOpen(v => !v)}
         className="w-full px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors text-left"
@@ -88,8 +163,10 @@ function OrderCard({ order }: { order: Order }) {
         </div>
       </button>
 
+      {/* Expanded content */}
       {open && (
         <div className="border-t border-gray-100">
+          {/* Products */}
           <div className="divide-y divide-gray-50">
             {order.items?.map((item) => (
               <div key={item.id} className="px-4 sm:px-5 py-3 flex items-center gap-3">
@@ -113,6 +190,7 @@ function OrderCard({ order }: { order: Order }) {
             ))}
           </div>
 
+          {/* Delivery photo */}
           {order.delivery_photo_url && (
             <div className="px-4 sm:px-5 py-3 border-t border-gray-50">
               <p className="text-[10px] text-gray-400 flex items-center gap-1 mb-1.5">
@@ -126,14 +204,41 @@ function OrderCard({ order }: { order: Order }) {
               </a>
             </div>
           )}
+
+          {/* Action buttons */}
+          <div className="px-4 sm:px-5 py-3 border-t border-gray-50 flex gap-2">
+            {/* Shipped button — only for approved (new) orders */}
+            {showShipButton && (
+              <button
+                onClick={markShipped}
+                disabled={shipping}
+                className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {shipping ? (
+                  <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Updating…</>
+                ) : (
+                  <><Truck className="w-4 h-4" />Mark as Shipped</>
+                )}
+              </button>
+            )}
+
+            {/* Download button — always visible */}
+            <button
+              onClick={() => downloadOrder(order)}
+              className={`flex items-center justify-center gap-2 border border-gray-200 text-gray-600 py-2.5 px-4 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors ${showShipButton ? '' : 'flex-1'}`}
+            >
+              <Download className="w-4 h-4" />
+              Download
+            </button>
+          </div>
         </div>
       )}
     </div>
   )
 }
 
-// ── New Orders section with product filter ──────────────
-function NewOrdersSection({ orders }: { orders: Order[] }) {
+// ── New Orders section with filter ─────────────────────
+function NewOrdersSection({ orders, companyId }: { orders: Order[]; companyId: string }) {
   const [filterOpen, setFilterOpen]             = useState(false)
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set())
   const [expandedCats, setExpandedCats]         = useState<Set<string>>(new Set())
@@ -142,9 +247,9 @@ function NewOrdersSection({ orders }: { orders: Order[] }) {
   const categoryMap = useMemo(() => {
     const map = new Map<string, { catId: string; catName: string; products: Map<string, string> }>()
     orders.forEach(o => o.items?.forEach(i => {
-      const catId   = i.product?.category?.id   || 'uncategorised'
-      const catName = i.product?.category?.name || 'Uncategorised'
-      const prodId  = i.product?.id
+      const catId    = i.product?.category?.id   || 'uncategorised'
+      const catName  = i.product?.category?.name || 'Uncategorised'
+      const prodId   = i.product?.id
       const prodName = i.product?.name
       if (!prodId) return
       if (!map.has(catId)) {
@@ -158,58 +263,40 @@ function NewOrdersSection({ orders }: { orders: Order[] }) {
 
   useEffect(() => {
     function handler(e: MouseEvent) {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        setFilterOpen(false)
-      }
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) setFilterOpen(false)
     }
     if (filterOpen) document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [filterOpen])
 
   function toggleProduct(id: string) {
-    setSelectedProducts(prev => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
+    setSelectedProducts(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   }
-
   function toggleCategory(catId: string) {
-    setExpandedCats(prev => {
-      const next = new Set(prev)
-      next.has(catId) ? next.delete(catId) : next.add(catId)
-      return next
-    })
+    setExpandedCats(prev => { const n = new Set(prev); n.has(catId) ? n.delete(catId) : n.add(catId); return n })
   }
-
   function clearAll() { setSelectedProducts(new Set()) }
 
   const filteredOrders = selectedProducts.size > 0
     ? orders.filter(o => o.items?.some(i => i.product?.id && selectedProducts.has(i.product.id)))
     : orders
-
   const activeCount = selectedProducts.size
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Header */}
       <div className="px-5 py-3.5 bg-blue-50 border-b border-blue-100 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Truck className="w-4 h-4 text-blue-700" />
+          <Package className="w-4 h-4 text-blue-700" />
           <h2 className="text-sm font-semibold text-blue-700">
             New Orders ({filteredOrders.length}{activeCount > 0 ? ` of ${orders.length}` : ''})
           </h2>
         </div>
-
-        {/* Filter button — only when there are orders */}
         {orders.length > 0 && (
           <div className="relative" ref={panelRef}>
             <button
               onClick={() => setFilterOpen(v => !v)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
-                activeCount > 0
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white border border-blue-200 text-blue-600 hover:bg-blue-100'
+                activeCount > 0 ? 'bg-blue-600 text-white' : 'bg-white border border-blue-200 text-blue-600 hover:bg-blue-100'
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -226,55 +313,35 @@ function NewOrdersSection({ orders }: { orders: Order[] }) {
                 <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                   <p className="text-sm font-semibold text-gray-800">Filter by Product</p>
                   <div className="flex items-center gap-2">
-                    {activeCount > 0 && (
-                      <button onClick={clearAll} className="text-xs text-blue-500 hover:underline font-medium">
-                        Clear all
-                      </button>
-                    )}
-                    <button onClick={() => setFilterOpen(false)} className="text-gray-400 hover:text-gray-600">
-                      <X className="w-4 h-4" />
-                    </button>
+                    {activeCount > 0 && <button onClick={clearAll} className="text-xs text-blue-500 hover:underline font-medium">Clear all</button>}
+                    <button onClick={() => setFilterOpen(false)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
                   </div>
                 </div>
-
                 <div className="max-h-72 overflow-y-auto">
                   {categoryMap.size === 0 ? (
                     <p className="px-4 py-6 text-sm text-gray-400 text-center">No products found</p>
-                  ) : (
-                    Array.from(categoryMap.values()).map(({ catId, catName, products }) => (
-                      <div key={catId}>
-                        <button
-                          onClick={() => toggleCategory(catId)}
-                          className="w-full px-4 py-2.5 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
-                        >
-                          <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">{catName}</span>
-                          <ChevronRight className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedCats.has(catId) ? 'rotate-90' : ''}`} />
-                        </button>
-                        {expandedCats.has(catId) && (
-                          <div className="py-1">
-                            {Array.from(products.entries()).map(([prodId, prodName]) => (
-                              <label key={prodId} className="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors">
-                                <input
-                                  type="checkbox"
-                                  checked={selectedProducts.has(prodId)}
-                                  onChange={() => toggleProduct(prodId)}
-                                  className="w-4 h-4 rounded accent-blue-500 cursor-pointer"
-                                />
-                                <span className="text-sm text-gray-700">{prodName}</span>
-                              </label>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  )}
+                  ) : Array.from(categoryMap.values()).map(({ catId, catName, products }) => (
+                    <div key={catId}>
+                      <button onClick={() => toggleCategory(catId)} className="w-full px-4 py-2.5 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">{catName}</span>
+                        <ChevronRight className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedCats.has(catId) ? 'rotate-90' : ''}`} />
+                      </button>
+                      {expandedCats.has(catId) && (
+                        <div className="py-1">
+                          {Array.from(products.entries()).map(([prodId, prodName]) => (
+                            <label key={prodId} className="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors">
+                              <input type="checkbox" checked={selectedProducts.has(prodId)} onChange={() => toggleProduct(prodId)} className="w-4 h-4 rounded accent-blue-500 cursor-pointer" />
+                              <span className="text-sm text-gray-700">{prodName}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-
                 {activeCount > 0 && (
                   <div className="px-4 py-2.5 border-t border-gray-100 bg-blue-50">
-                    <p className="text-xs text-blue-600 font-medium">
-                      {activeCount} product{activeCount !== 1 ? 's' : ''} selected · {filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''}
-                    </p>
+                    <p className="text-xs text-blue-600 font-medium">{activeCount} product{activeCount !== 1 ? 's' : ''} selected · {filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''}</p>
                   </div>
                 )}
               </div>
@@ -283,7 +350,6 @@ function NewOrdersSection({ orders }: { orders: Order[] }) {
         )}
       </div>
 
-      {/* Active filter chips */}
       {activeCount > 0 && orders.length > 0 && (
         <div className="px-4 py-2 border-b border-gray-50 flex items-center gap-2 flex-wrap">
           {Array.from(selectedProducts).map(prodId => {
@@ -292,14 +358,13 @@ function NewOrdersSection({ orders }: { orders: Order[] }) {
             return (
               <span key={prodId} className="flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full">
                 {name}
-                <button onClick={() => toggleProduct(prodId)} className="hover:text-blue-900"><X className="w-3 h-3" /></button>
+                <button onClick={() => toggleProduct(prodId)}><X className="w-3 h-3" /></button>
               </span>
             )
           })}
         </div>
       )}
 
-      {/* Orders */}
       {orders.length === 0 ? (
         <div className="px-5 py-8 text-center text-sm text-gray-400">No new orders</div>
       ) : filteredOrders.length === 0 ? (
@@ -309,26 +374,30 @@ function NewOrdersSection({ orders }: { orders: Order[] }) {
         </div>
       ) : (
         <div className="p-3 space-y-2">
-          {filteredOrders.map(order => <OrderCard key={order.id} order={order} />)}
+          {filteredOrders.map(order => (
+            <OrderCard key={order.id} order={order} companyId={companyId} showShipButton />
+          ))}
         </div>
       )}
     </div>
   )
 }
 
-// ── Delivered section ───────────────────────────────────
-function DeliveredSection({ orders }: { orders: Order[] }) {
+// ── Generic section (no filter) ─────────────────────────
+function OrderSection({ title, icon: Icon, iconColor, bgColor, emptyMsg, orders, companyId }: {
+  title: string; icon: any; iconColor: string; bgColor: string; emptyMsg: string; orders: Order[]; companyId: string
+}) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-5 py-3.5 bg-green-50 border-b border-green-100 flex items-center gap-2">
-        <CheckCircle className="w-4 h-4 text-green-700" />
-        <h2 className="text-sm font-semibold text-green-700">Delivered ({orders.length})</h2>
+      <div className={`px-5 py-3.5 ${bgColor} border-b flex items-center gap-2`}>
+        <Icon className={`w-4 h-4 ${iconColor}`} />
+        <h2 className={`text-sm font-semibold ${iconColor}`}>{title} ({orders.length})</h2>
       </div>
       {orders.length === 0 ? (
-        <div className="px-5 py-8 text-center text-sm text-gray-400">No delivered orders yet</div>
+        <div className="px-5 py-8 text-center text-sm text-gray-400">{emptyMsg}</div>
       ) : (
         <div className="p-3 space-y-2">
-          {orders.map(order => <OrderCard key={order.id} order={order} />)}
+          {orders.map(order => <OrderCard key={order.id} order={order} companyId={companyId} />)}
         </div>
       )}
     </div>
@@ -336,11 +405,12 @@ function DeliveredSection({ orders }: { orders: Order[] }) {
 }
 
 // ── Main dashboard ──────────────────────────────────────
-export default function VendorDashboard({ profile, newOrders, deliveredOrders, stats }: Props) {
+export default function VendorDashboard({ profile, companyId, newOrders, shippedOrders, deliveredOrders, stats }: Props) {
   const STAT_CARDS = [
-    { label: 'New Orders', value: stats.newOrders, color: 'text-blue-600',  bg: 'bg-blue-50',   Icon: TrendingUp },
-    { label: 'Delivered',  value: stats.delivered, color: 'text-green-600', bg: 'bg-green-50',  Icon: CheckCircle },
-    { label: 'Total',      value: stats.total,     color: 'text-gray-700',  bg: 'bg-gray-100',  Icon: Package },
+    { label: 'New Orders',          value: stats.newOrders, color: 'text-blue-600',  bg: 'bg-blue-50',   Icon: Package },
+    { label: 'Waiting for Delivery',value: stats.shipped,   color: 'text-purple-600',bg: 'bg-purple-50', Icon: Truck },
+    { label: 'Delivered',           value: stats.delivered, color: 'text-green-600', bg: 'bg-green-50',  Icon: CheckCircle },
+    { label: 'Total',               value: stats.total,     color: 'text-gray-700',  bg: 'bg-gray-100',  Icon: TrendingUp },
   ]
 
   return (
@@ -350,8 +420,7 @@ export default function VendorDashboard({ profile, newOrders, deliveredOrders, s
         <p className="text-sm text-gray-400 mt-0.5">Here's your order overview</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {STAT_CARDS.map(({ label, value, color, bg, Icon }) => (
           <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3">
             <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}>
@@ -365,11 +434,22 @@ export default function VendorDashboard({ profile, newOrders, deliveredOrders, s
         ))}
       </div>
 
-      {/* New Orders (approved) with filter */}
-      <NewOrdersSection orders={newOrders} />
+      {/* New Orders (approved) — with Shipped + Download buttons + filter */}
+      <NewOrdersSection orders={newOrders} companyId={companyId} />
 
-      {/* Delivered */}
-      <DeliveredSection orders={deliveredOrders} />
+      {/* Waiting for Delivery (shipped) — with Download button */}
+      <OrderSection
+        title="Waiting for Delivery" icon={Truck} iconColor="text-purple-700"
+        bgColor="bg-purple-50 border-purple-100" emptyMsg="No orders waiting for delivery"
+        orders={shippedOrders} companyId={companyId}
+      />
+
+      {/* Delivered — with Download button */}
+      <OrderSection
+        title="Delivered" icon={CheckCircle} iconColor="text-green-700"
+        bgColor="bg-green-50 border-green-100" emptyMsg="No delivered orders yet"
+        orders={deliveredOrders} companyId={companyId}
+      />
     </div>
   )
 }

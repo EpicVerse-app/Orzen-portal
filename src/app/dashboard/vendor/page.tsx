@@ -28,16 +28,17 @@ export default async function VendorDashboardPage() {
       )
     `)
     .eq('company_id', profile.company_id)
-    .in('status', ['approved', 'delivered'])
+    .in('status', ['approved', 'shipped', 'delivered'])
     .order('created_at', { ascending: true })
 
-  const allOrders = (orders || []) as any[]
-
-  const newOrders      = allOrders.filter(o => o.status === 'approved')
+  const allOrders       = (orders || []) as any[]
+  const newOrders       = allOrders.filter(o => o.status === 'approved')
+  const shippedOrders   = allOrders.filter(o => o.status === 'shipped')
   const deliveredOrders = allOrders.filter(o => o.status === 'delivered')
 
   const stats = {
     newOrders:  newOrders.length,
+    shipped:    shippedOrders.length,
     delivered:  deliveredOrders.length,
     total:      allOrders.length,
   }
@@ -45,7 +46,9 @@ export default async function VendorDashboardPage() {
   return (
     <VendorDashboard
       profile={profile as any}
+      companyId={profile.company_id}
       newOrders={newOrders}
+      shippedOrders={shippedOrders}
       deliveredOrders={deliveredOrders}
       stats={stats}
     />
