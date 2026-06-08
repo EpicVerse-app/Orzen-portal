@@ -129,9 +129,13 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
             placeholder="Search orders & materials..."
             className="bg-transparent text-sm text-white placeholder-gray-500 outline-none w-full py-2"
           />
-          {searchQuery && (
+          {searchQuery ? (
             <button type="button" onClick={() => setSearchQuery('')}>
               <X className="w-3.5 h-3.5 text-gray-500 hover:text-white" />
+            </button>
+          ) : (
+            <button type="submit" className="shrink-0">
+              <Search className="w-3.5 h-3.5 text-gray-500 hover:text-white" />
             </button>
           )}
         </form>
@@ -239,9 +243,10 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
               placeholder="Search orders, catalogue..."
               className="bg-transparent text-sm text-white placeholder-gray-500 outline-none w-full py-2.5"
             />
-            <button type="button" onClick={() => setShowSearch(false)}>
-              <X className="w-4 h-4 text-gray-400" />
-            </button>
+            {searchQuery
+              ? <button type="submit" className="shrink-0"><Search className="w-4 h-4 text-gray-300 hover:text-white" /></button>
+              : <button type="button" onClick={() => setShowSearch(false)}><X className="w-4 h-4 text-gray-400" /></button>
+            }
           </form>
         </div>
       )}

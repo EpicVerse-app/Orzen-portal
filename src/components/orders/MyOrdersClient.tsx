@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import OrderAccordionCard from '@/components/orders/OrderAccordionCard'
 import { Package, Image as ImageIcon, Search, X } from 'lucide-react'
 
@@ -15,6 +15,9 @@ interface Props {
 
 export default function MyOrdersClient({ orders, initialSearch = '' }: Props) {
   const [query, setQuery] = useState(initialSearch)
+
+  // Sync when URL search param changes (same-page soft navigation)
+  useEffect(() => { setQuery(initialSearch) }, [initialSearch])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()

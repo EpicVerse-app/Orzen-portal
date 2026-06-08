@@ -42,6 +42,7 @@ export default async function MyOrdersPage({
       </div>
 
       <MyOrdersClient
+        key={search || ''}
         orders={orders || []}
         initialSearch={search || ''}
       />
