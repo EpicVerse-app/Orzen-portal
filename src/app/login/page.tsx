@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m as motion, AnimatePresence } from 'framer-motion'
 import { loginAction } from './actions'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'

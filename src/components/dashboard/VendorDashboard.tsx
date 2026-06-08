@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m as motion, AnimatePresence } from 'framer-motion'
 import {
   Package, CheckCircle, TrendingUp, Truck, Clock,
   Image as ImageIcon, ChevronDown, ChevronUp, Calendar,

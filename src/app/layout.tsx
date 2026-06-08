@@ -3,6 +3,7 @@ import { Geist } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import PWAServiceWorker from '@/components/PWAServiceWorker'
+import MotionProvider from '@/components/layout/MotionProvider'
 
 const geist = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 
@@ -46,7 +47,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <style>{`* { -webkit-tap-highlight-color: transparent; }`}</style>
       </head>
       <body className="min-h-full bg-gray-50 overscroll-none">
-        {children}
+        <MotionProvider>
+          {children}
+        </MotionProvider>
         <PWAServiceWorker />
         <Toaster
           position="top-center"

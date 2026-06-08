@@ -7,7 +7,7 @@ import { useRealtimeOrders } from '@/hooks/useRealtimeOrders'
 import { fadeUp, stagger, itemAnim } from '@/lib/motion'
 import { Package, Headphones } from 'lucide-react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { m as motion } from 'framer-motion'
 
 interface Props {
   profile: AppUser
