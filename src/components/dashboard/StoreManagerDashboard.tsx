@@ -5,10 +5,7 @@ import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 import AnimatedNumber from '@/components/ui/AnimatedNumber'
 import { useRealtimeOrders } from '@/hooks/useRealtimeOrders'
 import { fadeUp, stagger, itemAnim } from '@/lib/motion'
-import {
-  Diamond, Monitor, Package, PenLine, BellRing,
-  BookOpen, Tag, Layers, Archive, Gem, Headphones
-} from 'lucide-react'
+import { Package, Headphones } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 
@@ -20,7 +17,6 @@ interface Props {
   sidebarColor: string
 }
 
-const CAT_ICONS = [Diamond, Package, Monitor, PenLine, BellRing, BookOpen, Layers, Archive, Gem, Tag]
 
 export default function StoreManagerDashboard({ profile, orders, categories, primaryColor, sidebarColor }: Props) {
   const branch  = Array.isArray(profile.branch)  ? profile.branch[0]  : profile.branch  as any
@@ -64,64 +60,6 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
         </motion.div>
       </motion.div>
 
-      {/* ── Order Materials ─────────────────────────────────────── */}
-      {categories.length > 0 && (
-        <section className="mb-6">
-          <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex items-center gap-4 mb-4">
-            <p className="text-xs font-bold tracking-widest uppercase shrink-0" style={{ color: gold }}>
-              Order Materials
-            </p>
-            <p className="text-sm text-gray-500 flex-1 hidden sm:block">
-              Everything your store needs — pick a category to start an order.
-            </p>
-            <Link
-              href="/dashboard/store/catalogue"
-              className="text-sm font-semibold hover:opacity-80 transition-opacity shrink-0"
-              style={{ color: primaryColor }}
-            >
-              Browse all →
-            </Link>
-          </motion.div>
-
-          <motion.div
-            variants={stagger}
-            initial="hidden"
-            animate="show"
-            className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"
-          >
-            {categories.map((cat, idx) => {
-              const Icon = CAT_ICONS[idx % CAT_ICONS.length]
-              return (
-                <motion.div key={cat.id} variants={itemAnim}>
-                  <Link
-                    href={`/dashboard/store/catalogue/${cat.id}`}
-                    className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 sm:p-5 flex items-center gap-3 sm:gap-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 block"
-                    style={{ borderLeft: `4px solid ${gold}` }}
-                  >
-                    <div
-                      className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center shrink-0"
-                      style={{ backgroundColor: primaryColor }}
-                    >
-                      <Icon className="w-6 h-6 sm:w-8 sm:h-8" style={{ color: gold }} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm sm:text-base font-bold text-gray-900 truncate">{cat.name}</p>
-                      {cat.description && (
-                        <p className="text-xs text-gray-400 mt-0.5 line-clamp-2 leading-relaxed hidden sm:block">
-                          {cat.description}
-                        </p>
-                      )}
-                      <p className="text-xs sm:text-sm font-semibold mt-1" style={{ color: gold }}>
-                        {cat.product_count} items
-                      </p>
-                    </div>
-                  </Link>
-                </motion.div>
-              )
-            })}
-          </motion.div>
-        </section>
-      )}
 
       {/* ── Bottom: My Orders + Delivery Status ─────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
