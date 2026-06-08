@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { CheckCircle, XCircle, Clock, Package, RefreshCw } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, Package, RefreshCw, Image as ImageIcon } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { sendOrderNotifications } from '@/app/actions/notifications'
 import ImageCarousel from '@/components/ui/ImageCarousel'
+import OrderAccordionCard from '@/components/orders/OrderAccordionCard'
 
 interface OrderItem {
   id: string
@@ -25,18 +26,10 @@ function shortId(id: string) {
   return 'ORD-' + id.replace(/-/g, '').slice(0, 6).toUpperCase()
 }
 
-function timeAgo(dateStr: string) {
-  const diff  = Date.now() - new Date(dateStr).getTime()
-  const hours = Math.floor(diff / (1000 * 60 * 60))
-  if (hours < 1)  return 'just now'
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
-}
-
 export default function SuperRequestsPage() {
-  const [orders, setOrders]       = useState<Order[]>([])
-  const [profile, setProfile]     = useState<any>(null)
-  const [loading, setLoading]     = useState(true)
+  const [orders, setOrders]         = useState<Order[]>([])
+  const [profile, setProfile]       = useState<any>(null)
+  const [loading, setLoading]       = useState(true)
   const [processing, setProcessing] = useState<string | null>(null)
 
   useEffect(() => {
@@ -84,11 +77,9 @@ export default function SuperRequestsPage() {
       toast.error('Action failed. Try again.')
     } else {
       toast.success(action === 'approved' ? 'Order approved ✓' : 'Order rejected')
-
-      // Notify vendor + store manager via server action
       const order = orders.find(o => o.id === orderId)
       if (order) {
-        const sid = 'ORD-' + orderId.replace(/-/g, '').slice(0, 6).toUpperCase()
+        const sid = shortId(orderId)
         await sendOrderNotifications({
           orderId,
           companyId:   profile.company_id,
@@ -99,7 +90,6 @@ export default function SuperRequestsPage() {
           branchId:    order.branch?.id,
         })
       }
-
       setOrders(prev => prev.filter(o => o.id !== orderId))
     }
     setProcessing(null)
@@ -138,23 +128,18 @@ export default function SuperRequestsPage() {
           <p className="text-sm text-gray-400 mt-1">No requests are waiting for approval</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {orders.map(order => (
-            <div key={order.id} className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
-              {/* Header */}
-              <div className="px-5 py-4 bg-orange-50/60 border-b border-orange-100 flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-bold text-gray-800">{order.branch?.name}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {order.branch?.city}, {order.branch?.state}
-                    {' · '}{order.items?.length} item{order.items?.length !== 1 ? 's' : ''}
-                    {' · '}{timeAgo(order.created_at)}
-                  </p>
-                  <p className="text-[10px] font-mono text-gray-300 mt-1">{shortId(order.id)}</p>
-                </div>
-                <Clock className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
-              </div>
-
+            <OrderAccordionCard
+              key={order.id}
+              shortOrderId={shortId(order.id)}
+              branchName={order.branch?.name}
+              branchCity={order.branch?.city}
+              date={order.created_at}
+              status={order.status}
+              itemCount={order.items?.length || 0}
+              totalQty={order.items?.reduce((s, i) => s + i.quantity, 0) || 0}
+            >
               {/* Product list */}
               <div className="divide-y divide-gray-50">
                 {order.items?.map(item => (
@@ -162,8 +147,8 @@ export default function SuperRequestsPage() {
                     <ImageCarousel
                       images={[item.product?.image_url, item.product?.image_url_2, item.product?.image_url_3]}
                       alt={item.product?.name || ''}
-                      className="w-14 h-14 rounded-lg shrink-0"
-                      size={56}
+                      className="w-10 h-10 rounded-lg shrink-0"
+                      size={40}
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-800 truncate">{item.product?.name}</p>
@@ -176,26 +161,24 @@ export default function SuperRequestsPage() {
                 ))}
               </div>
 
-              {/* Action buttons */}
+              {/* Approve / Reject */}
               <div className="px-5 py-4 flex gap-3 border-t border-gray-50">
                 <button
                   onClick={() => handleApproval(order.id, 'rejected')}
                   disabled={processing === order.id}
                   className="flex-1 flex items-center justify-center gap-2 border border-red-200 text-red-600 py-2.5 rounded-xl text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-40"
                 >
-                  <XCircle className="w-4 h-4" />
-                  Reject
+                  <XCircle className="w-4 h-4" />Reject
                 </button>
                 <button
                   onClick={() => handleApproval(order.id, 'approved')}
                   disabled={processing === order.id}
                   className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-green-700 transition-colors disabled:opacity-40"
                 >
-                  <CheckCircle className="w-4 h-4" />
-                  Approve
+                  <CheckCircle className="w-4 h-4" />Approve
                 </button>
               </div>
-            </div>
+            </OrderAccordionCard>
           ))}
         </div>
       )}
