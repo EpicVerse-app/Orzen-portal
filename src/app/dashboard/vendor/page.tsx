@@ -24,7 +24,7 @@ export default async function VendorDashboardPage() {
       branch:branches(id, name, address, city, state),
       items:order_items(
         id, quantity,
-        product:products(id, name, image_url, image_url_2, image_url_3, unit)
+        product:products(id, name, image_url, image_url_2, image_url_3, unit, category:categories(id, name))
       )
     `)
     .eq('company_id', profile.company_id)

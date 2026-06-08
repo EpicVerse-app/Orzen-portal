@@ -1,7 +1,11 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Package, Clock, MapPin, CheckCircle, TrendingUp, Truck, Image as ImageIcon, ChevronDown, ChevronUp, Calendar, Filter, X } from 'lucide-react'
+import { useState, useMemo, useRef, useEffect } from 'react'
+import {
+  Package, Clock, MapPin, CheckCircle, TrendingUp, Truck,
+  Image as ImageIcon, ChevronDown, ChevronUp, Calendar,
+  SlidersHorizontal, X, ChevronRight,
+} from 'lucide-react'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 import ImageCarousel from '@/components/ui/ImageCarousel'
 
@@ -22,6 +26,7 @@ interface OrderItem {
     image_url_2?: string | null
     image_url_3?: string | null
     unit: string
+    category?: { id: string; name: string } | null
   }
 }
 
@@ -43,7 +48,6 @@ interface Props {
 function shortId(id: string) {
   return 'ORD-' + id.replace(/-/g, '').slice(0, 6).toUpperCase()
 }
-
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 }
@@ -51,7 +55,6 @@ function formatDate(d: string) {
 // ── Single collapsible order card ──────────────────────
 function OrderCard({ order }: { order: Order }) {
   const [open, setOpen] = useState(false)
-
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <button
@@ -73,7 +76,7 @@ function OrderCard({ order }: { order: Order }) {
               {formatDate(order.created_at)}
             </div>
             <span className="text-[11px] text-gray-400">
-              {order.items?.length} product{order.items?.length !== 1 ? 's' : ''} &nbsp;·&nbsp;
+              {order.items?.length} product{order.items?.length !== 1 ? 's' : ''}&nbsp;·&nbsp;
               {order.items?.reduce((s, i) => s + i.quantity, 0)} items
             </span>
           </div>
@@ -96,6 +99,9 @@ function OrderCard({ order }: { order: Order }) {
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-800 truncate">{item.product?.name}</p>
+                  {item.product?.category?.name && (
+                    <p className="text-[11px] text-gray-400 mt-0.5">{item.product.category.name}</p>
+                  )}
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-sm font-bold text-gray-800">×{item.quantity}</p>
@@ -111,7 +117,8 @@ function OrderCard({ order }: { order: Order }) {
                 <ImageIcon className="w-3 h-3" /> Delivery Confirmation Photo
               </p>
               <a href={order.delivery_photo_url} target="_blank" rel="noopener noreferrer">
-                <img src={order.delivery_photo_url} alt="Delivery" className="w-24 h-24 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity" />
+                <img src={order.delivery_photo_url} alt="Delivery"
+                  className="w-24 h-24 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity" />
               </a>
             </div>
           )}
@@ -121,25 +128,68 @@ function OrderCard({ order }: { order: Order }) {
   )
 }
 
-// ── New Orders section with product filter ──────────────
+// ── New Orders section with category+product filter ─────
 function NewOrdersSection({ orders }: { orders: Order[] }) {
-  const [selectedProduct, setSelectedProduct] = useState<string | null>(null)
+  const [filterOpen, setFilterOpen]         = useState(false)
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set())
+  const [expandedCats, setExpandedCats]     = useState<Set<string>>(new Set())
+  const panelRef = useRef<HTMLDivElement>(null)
 
-  // Collect all unique products from new orders
-  const allProducts = useMemo(() => {
-    const map = new Map<string, { id: string; name: string }>()
+  // Build category → products map from all new orders
+  const categoryMap = useMemo(() => {
+    const map = new Map<string, { catId: string; catName: string; products: Map<string, string> }>()
     orders.forEach(o => o.items?.forEach(i => {
-      if (i.product?.id) map.set(i.product.id, { id: i.product.id, name: i.product.name })
+      const catId   = i.product?.category?.id   || 'uncategorised'
+      const catName = i.product?.category?.name || 'Uncategorised'
+      const prodId  = i.product?.id
+      const prodName = i.product?.name
+      if (!prodId) return
+      if (!map.has(catId)) {
+        map.set(catId, { catId, catName, products: new Map() })
+        setExpandedCats(prev => new Set([...prev, catId]))   // expand by default
+      }
+      map.get(catId)!.products.set(prodId, prodName)
     }))
-    return Array.from(map.values())
+    return map
   }, [orders])
 
-  // Apply filter: only show orders that contain the selected product
-  const filteredOrders = selectedProduct
-    ? orders.filter(o => o.items?.some(i => i.product?.id === selectedProduct))
+  // Close panel on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        setFilterOpen(false)
+      }
+    }
+    if (filterOpen) document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [filterOpen])
+
+  function toggleProduct(id: string) {
+    setSelectedProducts(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  function toggleCategory(catId: string) {
+    setExpandedCats(prev => {
+      const next = new Set(prev)
+      next.has(catId) ? next.delete(catId) : next.add(catId)
+      return next
+    })
+  }
+
+  function clearAll() {
+    setSelectedProducts(new Set())
+  }
+
+  // Filter orders
+  const filteredOrders = selectedProducts.size > 0
+    ? orders.filter(o => o.items?.some(i => i.product?.id && selectedProducts.has(i.product.id)))
     : orders
 
-  const hasFilter = allProducts.length > 1
+  const activeCount = selectedProducts.size
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -148,57 +198,123 @@ function NewOrdersSection({ orders }: { orders: Order[] }) {
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-orange-700" />
           <h2 className="text-sm font-semibold text-orange-700">
-            New Orders ({filteredOrders.length}{selectedProduct ? ` of ${orders.length}` : ''})
+            New Orders ({filteredOrders.length}{activeCount > 0 ? ` of ${orders.length}` : ''})
           </h2>
         </div>
-        {hasFilter && (
-          <div className="flex items-center gap-1 text-xs text-orange-500">
-            <Filter className="w-3 h-3" />
-            <span>Filter by product</span>
-          </div>
-        )}
-      </div>
 
-      {/* Product filter chips — only if more than 1 unique product */}
-      {hasFilter && (
-        <div className="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2 overflow-x-auto">
-          {/* All chip */}
+        {/* Filter button */}
+        <div className="relative" ref={panelRef}>
           <button
-            onClick={() => setSelectedProduct(null)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-              selectedProduct === null
+            onClick={() => setFilterOpen(v => !v)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+              activeCount > 0
                 ? 'bg-orange-500 text-white'
-                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                : 'bg-white border border-orange-200 text-orange-600 hover:bg-orange-100'
             }`}
           >
-            All
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            Filter
+            {activeCount > 0 && (
+              <span className="bg-white text-orange-600 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
+                {activeCount}
+              </span>
+            )}
           </button>
-          {allProducts.map(p => (
-            <button
-              key={p.id}
-              onClick={() => setSelectedProduct(prev => prev === p.id ? null : p.id)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 ${
-                selectedProduct === p.id
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-orange-100 hover:text-orange-700'
-              }`}
-            >
-              {p.name}
-              {selectedProduct === p.id && (
-                <X className="w-3 h-3" />
+
+          {/* Filter dropdown panel */}
+          {filterOpen && (
+            <div className="absolute right-0 top-9 w-64 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+              {/* Panel header */}
+              <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                <p className="text-sm font-semibold text-gray-800">Filter by Product</p>
+                <div className="flex items-center gap-2">
+                  {activeCount > 0 && (
+                    <button onClick={clearAll} className="text-xs text-orange-500 hover:underline font-medium">
+                      Clear all
+                    </button>
+                  )}
+                  <button onClick={() => setFilterOpen(false)} className="text-gray-400 hover:text-gray-600">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Category + product list */}
+              <div className="max-h-72 overflow-y-auto">
+                {categoryMap.size === 0 ? (
+                  <p className="px-4 py-6 text-sm text-gray-400 text-center">No products found</p>
+                ) : (
+                  Array.from(categoryMap.values()).map(({ catId, catName, products }) => (
+                    <div key={catId}>
+                      {/* Category row */}
+                      <button
+                        onClick={() => toggleCategory(catId)}
+                        className="w-full px-4 py-2.5 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+                      >
+                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">{catName}</span>
+                        <ChevronRight className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedCats.has(catId) ? 'rotate-90' : ''}`} />
+                      </button>
+
+                      {/* Products under category */}
+                      {expandedCats.has(catId) && (
+                        <div className="py-1">
+                          {Array.from(products.entries()).map(([prodId, prodName]) => (
+                            <label
+                              key={prodId}
+                              className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 cursor-pointer transition-colors"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedProducts.has(prodId)}
+                                onChange={() => toggleProduct(prodId)}
+                                className="w-4 h-4 rounded accent-orange-500 cursor-pointer"
+                              />
+                              <span className="text-sm text-gray-700">{prodName}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Footer */}
+              {activeCount > 0 && (
+                <div className="px-4 py-2.5 border-t border-gray-100 bg-orange-50">
+                  <p className="text-xs text-orange-600 font-medium">
+                    {activeCount} product{activeCount !== 1 ? 's' : ''} selected · showing {filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
               )}
-            </button>
-          ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Active filter chips */}
+      {activeCount > 0 && (
+        <div className="px-4 py-2 border-b border-gray-50 flex items-center gap-2 flex-wrap">
+          {Array.from(selectedProducts).map(prodId => {
+            let name = prodId
+            categoryMap.forEach(cat => { if (cat.products.has(prodId)) name = cat.products.get(prodId)! })
+            return (
+              <span key={prodId} className="flex items-center gap-1 bg-orange-100 text-orange-700 text-xs font-medium px-2.5 py-1 rounded-full">
+                {name}
+                <button onClick={() => toggleProduct(prodId)} className="hover:text-orange-900">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )
+          })}
         </div>
       )}
 
-      {/* Orders */}
+      {/* Orders list */}
       {filteredOrders.length === 0 ? (
         <div className="px-5 py-8 text-center">
-          <p className="text-sm text-gray-400">No orders contain this product</p>
-          <button onClick={() => setSelectedProduct(null)} className="text-xs text-orange-500 mt-1 hover:underline">
-            Clear filter
-          </button>
+          <p className="text-sm text-gray-400">No orders match the selected filter</p>
+          <button onClick={clearAll} className="text-xs text-orange-500 mt-1 hover:underline">Clear filter</button>
         </div>
       ) : (
         <div className="p-3 space-y-2">
@@ -210,9 +326,7 @@ function NewOrdersSection({ orders }: { orders: Order[] }) {
 }
 
 // ── Generic section (no filter) ─────────────────────────
-function OrderSection({
-  title, count, icon: Icon, iconColor, bgColor, emptyMsg, orders,
-}: {
+function OrderSection({ title, count, icon: Icon, iconColor, bgColor, emptyMsg, orders }: {
   title: string; count: number; icon: any; iconColor: string; bgColor: string; emptyMsg: string; orders: Order[]
 }) {
   return (
@@ -247,15 +361,11 @@ export default function VendorDashboard({ profile, orders, stats }: Props) {
 
   return (
     <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-6">
-      {/* Greeting */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Hello, {profile.full_name?.split(' ')[0]} 👋
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900">Hello, {profile.full_name?.split(' ')[0]} 👋</h1>
         <p className="text-sm text-gray-400 mt-0.5">Here's your order overview</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {STAT_CARDS.map(({ label, value, color, bg, Icon }) => (
           <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3">
@@ -270,29 +380,18 @@ export default function VendorDashboard({ profile, orders, stats }: Props) {
         ))}
       </div>
 
-      {/* New Orders — with product filter */}
       <NewOrdersSection orders={waitingOrders} />
 
-      {/* Waiting for Delivery */}
       <OrderSection
-        title="Waiting for Delivery"
-        count={activeOrders.length}
-        icon={Truck}
-        iconColor="text-blue-700"
-        bgColor="bg-blue-50 border-blue-100"
-        emptyMsg="No orders waiting for delivery"
-        orders={activeOrders}
+        title="Waiting for Delivery" count={activeOrders.length}
+        icon={Truck} iconColor="text-blue-700" bgColor="bg-blue-50 border-blue-100"
+        emptyMsg="No orders waiting for delivery" orders={activeOrders}
       />
 
-      {/* Delivered */}
       <OrderSection
-        title="Delivered"
-        count={deliveredOrders.length}
-        icon={CheckCircle}
-        iconColor="text-green-700"
-        bgColor="bg-green-50 border-green-100"
-        emptyMsg="No delivered orders yet"
-        orders={deliveredOrders}
+        title="Delivered" count={deliveredOrders.length}
+        icon={CheckCircle} iconColor="text-green-700" bgColor="bg-green-50 border-green-100"
+        emptyMsg="No delivered orders yet" orders={deliveredOrders}
       />
     </div>
   )
