@@ -406,11 +406,19 @@ function OrderSection({ title, icon: Icon, iconColor, bgColor, emptyMsg, orders,
 
 // ── Main dashboard ──────────────────────────────────────
 export default function VendorDashboard({ profile, companyId, newOrders, shippedOrders, deliveredOrders, stats }: Props) {
+  const newOrdersRef  = useRef<HTMLDivElement>(null)
+  const shippedRef    = useRef<HTMLDivElement>(null)
+  const deliveredRef  = useRef<HTMLDivElement>(null)
+
+  function scrollTo(ref: React.RefObject<HTMLDivElement | null>) {
+    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   const STAT_CARDS = [
-    { label: 'New Orders',          value: stats.newOrders, color: 'text-blue-600',  bg: 'bg-blue-50',   Icon: Package },
-    { label: 'Waiting for Delivery',value: stats.shipped,   color: 'text-purple-600',bg: 'bg-purple-50', Icon: Truck },
-    { label: 'Delivered',           value: stats.delivered, color: 'text-green-600', bg: 'bg-green-50',  Icon: CheckCircle },
-    { label: 'Total',               value: stats.total,     color: 'text-gray-700',  bg: 'bg-gray-100',  Icon: TrendingUp },
+    { label: 'New Orders',           value: stats.newOrders, color: 'text-blue-600',   bg: 'bg-blue-50',   border: 'hover:border-blue-300',   Icon: Package,    ref: newOrdersRef },
+    { label: 'Waiting for Delivery', value: stats.shipped,   color: 'text-purple-600', bg: 'bg-purple-50', border: 'hover:border-purple-300', Icon: Truck,       ref: shippedRef },
+    { label: 'Delivered',            value: stats.delivered, color: 'text-green-600',  bg: 'bg-green-50',  border: 'hover:border-green-300',  Icon: CheckCircle, ref: deliveredRef },
+    { label: 'Total',                value: stats.total,     color: 'text-gray-700',   bg: 'bg-gray-100',  border: 'hover:border-gray-300',   Icon: TrendingUp,  ref: null },
   ]
 
   return (
@@ -421,8 +429,12 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {STAT_CARDS.map(({ label, value, color, bg, Icon }) => (
-          <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3">
+        {STAT_CARDS.map(({ label, value, color, bg, border, Icon, ref }) => (
+          <button
+            key={label}
+            onClick={() => ref && scrollTo(ref)}
+            className={`bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3 text-left transition-all ${ref ? `cursor-pointer ${border} hover:shadow-md active:scale-95` : 'cursor-default'}`}
+          >
             <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}>
               <Icon className={`w-4 h-4 ${color}`} />
             </div>
@@ -430,26 +442,32 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
               <p className={`text-xl font-bold ${color}`}>{value}</p>
               <p className="text-[10px] text-gray-400 leading-tight">{label}</p>
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
       {/* New Orders (approved) — with Shipped + Download buttons + filter */}
-      <NewOrdersSection orders={newOrders} companyId={companyId} />
+      <div ref={newOrdersRef} className="scroll-mt-4">
+        <NewOrdersSection orders={newOrders} companyId={companyId} />
+      </div>
 
       {/* Waiting for Delivery (shipped) — with Download button */}
-      <OrderSection
-        title="Waiting for Delivery" icon={Truck} iconColor="text-purple-700"
-        bgColor="bg-purple-50 border-purple-100" emptyMsg="No orders waiting for delivery"
-        orders={shippedOrders} companyId={companyId}
-      />
+      <div ref={shippedRef} className="scroll-mt-4">
+        <OrderSection
+          title="Waiting for Delivery" icon={Truck} iconColor="text-purple-700"
+          bgColor="bg-purple-50 border-purple-100" emptyMsg="No orders waiting for delivery"
+          orders={shippedOrders} companyId={companyId}
+        />
+      </div>
 
       {/* Delivered — with Download button */}
-      <OrderSection
-        title="Delivered" icon={CheckCircle} iconColor="text-green-700"
-        bgColor="bg-green-50 border-green-100" emptyMsg="No delivered orders yet"
-        orders={deliveredOrders} companyId={companyId}
-      />
+      <div ref={deliveredRef} className="scroll-mt-4">
+        <OrderSection
+          title="Delivered" icon={CheckCircle} iconColor="text-green-700"
+          bgColor="bg-green-50 border-green-100" emptyMsg="No delivered orders yet"
+          orders={deliveredOrders} companyId={companyId}
+        />
+      </div>
     </div>
   )
 }
