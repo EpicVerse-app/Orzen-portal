@@ -5,7 +5,7 @@ import { m as motion, AnimatePresence } from 'framer-motion'
 import {
   Package, CheckCircle, TrendingUp, Truck, Clock,
   Image as ImageIcon, ChevronDown, ChevronUp, Calendar,
-  SlidersHorizontal, X, ChevronRight, MapPin, Download,
+  SlidersHorizontal, X, ChevronRight, MapPin, Download, Search,
 } from 'lucide-react'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 import ImageCarousel from '@/components/ui/ImageCarousel'
@@ -486,6 +486,7 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
   const newOrdersRef  = useRef<HTMLDivElement>(null)
   const shippedRef    = useRef<HTMLDivElement>(null)
   const deliveredRef  = useRef<HTMLDivElement>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Combine all orders into one live list, split by status in render
   const allInitial   = [...newOrders, ...shippedOrders, ...deliveredOrders]
@@ -507,6 +508,17 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
     total:     liveOrders.length,
   }
 
+  // Search filter across all orders
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return []
+    return liveOrders.filter(o => {
+      const sid = shortId(o.id).toLowerCase()
+      const branchName = (o.branch as any)?.name?.toLowerCase() || ''
+      return sid.includes(q) || o.id.toLowerCase().includes(q) || branchName.includes(q)
+    })
+  }, [searchQuery, liveOrders])
+
   function scrollTo(ref: React.RefObject<HTMLDivElement | null>) {
     ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
@@ -523,6 +535,30 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <h1 className="text-2xl font-bold text-gray-900">Hello, {profile.full_name?.split(' ')[0]} 👋</h1>
         <p className="text-sm text-gray-400 mt-0.5">Here's your order overview</p>
+      </motion.div>
+
+      {/* Search bar */}
+      <motion.div variants={fadeUp} initial="hidden" animate="show">
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search by order ID or branch name..."
+            className="w-full pl-10 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100 transition-all shadow-sm"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        {searchQuery && (
+          <p className="text-xs text-gray-400 mt-2 ml-1">
+            {searchResults.length === 0 ? `No orders match "${searchQuery}"` : `${searchResults.length} order${searchResults.length !== 1 ? 's' : ''} found`}
+          </p>
+        )}
       </motion.div>
 
       {/* Stat cards */}
@@ -552,30 +588,59 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
         ))}
       </motion.div>
 
-      {/* New Orders */}
-      <motion.div variants={fadeUp} initial="hidden" animate="show" ref={newOrdersRef} className="scroll-mt-4">
-        <NewOrdersSection orders={liveNew} companyId={companyId} />
-      </motion.div>
+      {searchQuery ? (
+        /* ── Search results ─────────────────────────────── */
+        <motion.div variants={fadeUp} initial="hidden" animate="show">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+              <Search className="w-4 h-4 text-gray-500" />
+              <h2 className="text-sm font-semibold text-gray-700">
+                Search Results {searchResults.length > 0 && `(${searchResults.length})`}
+              </h2>
+            </div>
+            {searchResults.length === 0 ? (
+              <div className="px-5 py-10 text-center">
+                <Package className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+                <p className="text-sm text-gray-400">No orders match "{searchQuery}"</p>
+                <p className="text-xs text-gray-300 mt-1">Try searching by ORD-XXXXXX or branch name</p>
+              </div>
+            ) : (
+              <div className="p-3 space-y-2">
+                {searchResults.map(order => (
+                  <OrderCard key={order.id} order={order as Order} companyId={companyId} showShipButton={order.status === 'approved'} />
+                ))}
+              </div>
+            )}
+          </div>
+        </motion.div>
+      ) : (
+        <>
+          {/* New Orders */}
+          <motion.div variants={fadeUp} initial="hidden" animate="show" ref={newOrdersRef} className="scroll-mt-4">
+            <NewOrdersSection orders={liveNew} companyId={companyId} />
+          </motion.div>
 
-      {/* Waiting for Delivery */}
-      <motion.div variants={fadeUp} initial="hidden" animate="show" ref={shippedRef} className="scroll-mt-4"
-        style={{ transitionDelay: '0.05s' }}>
-        <OrderSection
-          title="Waiting for Delivery" icon={Truck} iconColor="text-purple-700"
-          bgColor="bg-purple-50 border-purple-100" emptyMsg="No orders waiting for delivery"
-          orders={liveShipped} companyId={companyId}
-        />
-      </motion.div>
+          {/* Waiting for Delivery */}
+          <motion.div variants={fadeUp} initial="hidden" animate="show" ref={shippedRef} className="scroll-mt-4"
+            style={{ transitionDelay: '0.05s' }}>
+            <OrderSection
+              title="Waiting for Delivery" icon={Truck} iconColor="text-purple-700"
+              bgColor="bg-purple-50 border-purple-100" emptyMsg="No orders waiting for delivery"
+              orders={liveShipped} companyId={companyId}
+            />
+          </motion.div>
 
-      {/* Delivered */}
-      <motion.div variants={fadeUp} initial="hidden" animate="show" ref={deliveredRef} className="scroll-mt-4"
-        style={{ transitionDelay: '0.1s' }}>
-        <OrderSection
-          title="Delivered" icon={CheckCircle} iconColor="text-green-700"
-          bgColor="bg-green-50 border-green-100" emptyMsg="No delivered orders yet"
-          orders={liveDelivered} companyId={companyId}
-        />
-      </motion.div>
+          {/* Delivered */}
+          <motion.div variants={fadeUp} initial="hidden" animate="show" ref={deliveredRef} className="scroll-mt-4"
+            style={{ transitionDelay: '0.1s' }}>
+            <OrderSection
+              title="Delivered" icon={CheckCircle} iconColor="text-green-700"
+              bgColor="bg-green-50 border-green-100" emptyMsg="No delivered orders yet"
+              orders={liveDelivered} companyId={companyId}
+            />
+          </motion.div>
+        </>
+      )}
     </div>
   )
 }
