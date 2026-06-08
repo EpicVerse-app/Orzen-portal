@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -191,9 +192,18 @@ export default function AppShell({ user, children, primaryColor, sidebarColor, b
           {backgroundImage && (
             <div className="fixed inset-0 z-0 pointer-events-none" style={{ backgroundColor: 'rgba(255,255,255,0.55)' }} />
           )}
-          <div className="relative z-10">
-            {children}
-          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+              className="relative z-10"
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
     </div>

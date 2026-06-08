@@ -1,12 +1,16 @@
 'use client'
 
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   CheckCircle, XCircle, Clock, AlertTriangle,
   Package, TrendingUp, Building2, Activity,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { AppUser, Order } from '@/types'
+import AnimatedNumber from '@/components/ui/AnimatedNumber'
+import { useRealtimeOrders } from '@/hooks/useRealtimeOrders'
+import { fadeUp, stagger, itemAnim, slideIn } from '@/lib/motion'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -26,50 +30,41 @@ interface Props {
   stats: Stats
 }
 
-// Format order ID as ORD-XXXX
 function shortId(id: string) {
   return 'ORD-' + id.replace(/-/g, '').slice(0, 6).toUpperCase()
 }
-
-// Format timestamp as "10:45 AM" or "Yesterday 10:45 AM"
 function formatTime(dateStr: string) {
   const date = new Date(dateStr)
-  const now  = new Date()
+  const now   = new Date()
   const isToday =
     date.getDate() === now.getDate() &&
     date.getMonth() === now.getMonth() &&
     date.getFullYear() === now.getFullYear()
-
   const yesterday = new Date(now)
   yesterday.setDate(now.getDate() - 1)
   const isYesterday =
     date.getDate() === yesterday.getDate() &&
     date.getMonth() === yesterday.getMonth() &&
     date.getFullYear() === yesterday.getFullYear()
-
   const time = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
   if (isToday)     return time
   if (isYesterday) return `Yesterday ${time}`
   return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ' ' + time
 }
-
-// Turn an order into a readable activity line
 function activityLine(order: Order) {
   const branch = (order.branch as any)?.name || 'Branch'
   const id     = shortId(order.id)
   switch (order.status) {
-    case 'submitted':  return `Order ${id} submitted by ${branch}`
-    case 'approved':   return `Order ${id} approved`
-    case 'rejected':   return `Order ${id} rejected`
-    case 'packing':    return `Order ${id} is being packed`
-    case 'loaded':     return `Order ${id} loaded for delivery`
-    case 'shipped':    return `Order ${id} shipped to ${branch}`
-    case 'delivered':  return `Order ${id} delivered to ${branch}`
-    default:           return `Order ${id} updated`
+    case 'submitted': return `Order ${id} submitted by ${branch}`
+    case 'approved':  return `Order ${id} approved`
+    case 'rejected':  return `Order ${id} rejected`
+    case 'packing':   return `Order ${id} is being packed`
+    case 'loaded':    return `Order ${id} loaded for delivery`
+    case 'shipped':   return `Order ${id} shipped to ${branch}`
+    case 'delivered': return `Order ${id} delivered to ${branch}`
+    default:          return `Order ${id} updated`
   }
 }
-
-// Dot color per status
 function activityDot(status: string) {
   switch (status) {
     case 'submitted': return 'bg-orange-400'
@@ -86,6 +81,9 @@ function activityDot(status: string) {
 export default function SuperManagerDashboard({ profile, pendingOrders, recentActivity, stats }: Props) {
   const router = useRouter()
   const [processing, setProcessing] = useState<string | null>(null)
+
+  // Live updates
+  useRealtimeOrders(profile.company_id)
 
   async function handleApproval(orderId: string, action: 'approved' | 'rejected') {
     setProcessing(orderId)
@@ -112,176 +110,172 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
     return `${Math.floor(hours / 24)}d ago`
   }
 
+  const STAT_CARDS = [
+    { href: '/dashboard/super/orders',               bg: 'bg-purple-50', border: 'border-gray-100',   hover: 'hover:border-purple-200', Icon: Package,   color: 'text-gray-800',    value: stats.total,    label: 'Total Orders' },
+    { href: '/dashboard/super/orders?filter=pending', bg: 'bg-orange-50', border: 'border-orange-100', hover: 'hover:border-orange-300', Icon: Clock,     color: 'text-orange-500',  value: stats.pending,  label: 'Pending' },
+    { href: '/dashboard/super/orders?filter=approved',bg: 'bg-green-50',  border: 'border-green-100',  hover: 'hover:border-green-300',  Icon: TrendingUp,color: 'text-green-600',   value: stats.approved, label: 'Approved' },
+    { href: '/dashboard/super/orders?filter=rejected',bg: 'bg-red-50',    border: 'border-red-100',    hover: 'hover:border-red-300',    Icon: XCircle,   color: 'text-red-500',     value: stats.rejected, label: 'Rejected' },
+    { href: '/dashboard/super/branches',             bg: 'bg-blue-50',   border: 'border-blue-100',   hover: 'hover:border-blue-300',   Icon: Building2, color: 'text-blue-600',    value: stats.branches, label: 'Branches', wide: true },
+  ]
+
   return (
     <div className="px-4 sm:px-6 py-5 space-y-6 max-w-6xl mx-auto">
 
-      {/* ── Greeting ─────────────────────────────────── */}
-      <div>
+      {/* Greeting */}
+      <motion.div variants={fadeUp} initial="hidden" animate="show">
         <h1 className="text-xl font-bold text-gray-800">
           Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}, {profile.full_name?.split(' ')[0]} 👋
         </h1>
         <p className="text-sm text-gray-400 mt-0.5">
           {profile.scope_state} Region · {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
-      </div>
+      </motion.div>
 
-      {/* ── Stats Cards ──────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <Link href="/dashboard/super/orders" className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3 hover:shadow-md hover:border-purple-200 transition-all">
-          <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
-            <Package className="w-5 h-5 text-purple-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
-            <p className="text-xs text-gray-400">Total Orders</p>
-          </div>
-        </Link>
+      {/* Stats */}
+      <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        {STAT_CARDS.map(({ href, bg, border, hover, Icon, color, value, label, wide }) => (
+          <motion.div key={label} variants={itemAnim} className={wide ? 'col-span-2 lg:col-span-1' : ''}>
+            <Link
+              href={href}
+              className={`bg-white rounded-2xl border ${border} shadow-sm px-4 py-4 flex items-center gap-3 ${hover} hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 block`}
+            >
+              <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center shrink-0`}>
+                <Icon className={`w-5 h-5 ${color}`} />
+              </div>
+              <div>
+                <AnimatedNumber value={value} className={`text-2xl font-bold ${color}`} />
+                <p className="text-xs text-gray-400">{label}</p>
+              </div>
+            </Link>
+          </motion.div>
+        ))}
+      </motion.div>
 
-        <Link href="/dashboard/super/orders?filter=pending" className="bg-white rounded-2xl border border-orange-100 shadow-sm px-4 py-4 flex items-center gap-3 hover:shadow-md hover:border-orange-300 transition-all">
-          <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center shrink-0">
-            <Clock className="w-5 h-5 text-orange-500" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-orange-500">{stats.pending}</p>
-            <p className="text-xs text-gray-400">Pending</p>
-          </div>
-        </Link>
-
-        <Link href="/dashboard/super/orders?filter=approved" className="bg-white rounded-2xl border border-green-100 shadow-sm px-4 py-4 flex items-center gap-3 hover:shadow-md hover:border-green-300 transition-all">
-          <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
-            <TrendingUp className="w-5 h-5 text-green-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-green-600">{stats.approved}</p>
-            <p className="text-xs text-gray-400">Approved</p>
-          </div>
-        </Link>
-
-        <Link href="/dashboard/super/orders?filter=rejected" className="bg-white rounded-2xl border border-red-100 shadow-sm px-4 py-4 flex items-center gap-3 hover:shadow-md hover:border-red-300 transition-all">
-          <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
-            <XCircle className="w-5 h-5 text-red-500" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-red-500">{stats.rejected}</p>
-            <p className="text-xs text-gray-400">Rejected</p>
-          </div>
-        </Link>
-
-        <Link href="/dashboard/super/branches" className="bg-white rounded-2xl border border-blue-100 shadow-sm px-4 py-4 flex items-center gap-3 hover:shadow-md hover:border-blue-300 transition-all col-span-2 lg:col-span-1">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-            <Building2 className="w-5 h-5 text-blue-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-blue-600">{stats.branches}</p>
-            <p className="text-xs text-gray-400">Branches</p>
-          </div>
-        </Link>
-      </div>
-
-      {/* ── Main Grid: Approvals + Activity ──────────── */}
+      {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
         {/* Pending Approvals */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+        <motion.div variants={fadeUp} initial="hidden" animate="show"
+          className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
           <div className="px-5 py-4 border-b border-gray-50 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-orange-500" />
-            <h2 className="text-sm font-semibold text-gray-700 flex-1">
-              Pending Approvals
-            </h2>
-            {pendingOrders.length > 0 && (
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-600">
-                {pendingOrders.length}
-              </span>
-            )}
+            <h2 className="text-sm font-semibold text-gray-700 flex-1">Pending Approvals</h2>
+            <AnimatePresence>
+              {pendingOrders.length > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  className="text-xs font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-600"
+                >
+                  {pendingOrders.length}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </div>
 
           {pendingOrders.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center py-12 text-center">
-              <CheckCircle className="w-10 h-10 text-green-300 mb-3" />
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex-1 flex flex-col items-center justify-center py-12 text-center"
+            >
+              <motion.div
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <CheckCircle className="w-10 h-10 text-green-300 mb-3" />
+              </motion.div>
               <p className="text-sm font-medium text-gray-500">All caught up!</p>
               <p className="text-xs text-gray-400 mt-1">No pending approvals</p>
-            </div>
+            </motion.div>
           ) : (
-            <div className="divide-y divide-gray-50 overflow-y-auto max-h-[520px]">
-              {pendingOrders.map((order) => {
-                const items = (order.items as any) || []
-                return (
-                  <div key={order.id} className="px-5 py-4">
-                    {/* Order header */}
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800">
-                          {(order.branch as any)?.name}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {(order.branch as any)?.city}
-                          {' · '}{items.length} {items.length === 1 ? 'item' : 'items'}
-                          {' · '}{getDaysAgo(order.created_at)}
-                        </p>
-                        <p className="text-[10px] text-gray-300 mt-0.5 font-mono">{shortId(order.id)}</p>
-                      </div>
-                      <Clock className="w-4 h-4 text-orange-300 shrink-0 mt-0.5" />
-                    </div>
-
-                    {/* Product list */}
-                    <div className="bg-gray-50 rounded-xl mb-3 divide-y divide-gray-100 overflow-hidden">
-                      {items.map((item: any) => (
-                        <div key={item.id} className="flex items-center gap-3 px-3 py-2.5">
-                          {/* Product image or placeholder */}
-                          {item.product?.image_url ? (
-                            <img
-                              src={item.product.image_url}
-                              alt={item.product?.name}
-                              className="w-8 h-8 rounded-lg object-cover shrink-0"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center shrink-0">
-                              <Package className="w-4 h-4 text-gray-400" />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-gray-700 truncate">
-                              {item.product?.name || 'Unknown product'}
-                            </p>
-                            <p className="text-[10px] text-gray-400">
-                              {item.product?.unit || '—'}
-                            </p>
-                          </div>
-                          <span className="text-xs font-bold text-gray-700 shrink-0 bg-white px-2 py-1 rounded-lg border border-gray-200">
-                            × {item.quantity}
-                          </span>
+            <motion.div variants={stagger} initial="hidden" animate="show" className="divide-y divide-gray-50 overflow-y-auto max-h-[520px]">
+              <AnimatePresence>
+                {pendingOrders.map((order) => {
+                  const items = (order.items as any) || []
+                  return (
+                    <motion.div
+                      key={order.id}
+                      variants={slideIn}
+                      exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
+                      layout
+                      className="px-5 py-4"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">{(order.branch as any)?.name}</p>
+                          <p className="text-xs text-gray-400">
+                            {(order.branch as any)?.city}
+                            {' · '}{items.length} {items.length === 1 ? 'item' : 'items'}
+                            {' · '}{getDaysAgo(order.created_at)}
+                          </p>
+                          <p className="text-[10px] text-gray-300 mt-0.5 font-mono">{shortId(order.id)}</p>
                         </div>
-                      ))}
-                    </div>
+                        <motion.div
+                          animate={{ rotate: [0, 10, -10, 0] }}
+                          transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+                        >
+                          <Clock className="w-4 h-4 text-orange-300 shrink-0 mt-0.5" />
+                        </motion.div>
+                      </div>
 
-                    {/* Approve / Reject */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleApproval(order.id, 'rejected')}
-                        disabled={processing === order.id}
-                        className="flex-1 flex items-center justify-center gap-1.5 border border-red-200 text-red-600 py-2 rounded-xl text-xs font-semibold hover:bg-red-50 transition-colors disabled:opacity-40"
-                      >
-                        <XCircle className="w-3.5 h-3.5" />
-                        Reject
-                      </button>
-                      <button
-                        onClick={() => handleApproval(order.id, 'approved')}
-                        disabled={processing === order.id}
-                        className="flex-1 flex items-center justify-center gap-1.5 bg-green-600 text-white py-2 rounded-xl text-xs font-semibold hover:bg-green-700 transition-colors disabled:opacity-40"
-                      >
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        Approve
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+                      <div className="bg-gray-50 rounded-xl mb-3 divide-y divide-gray-100 overflow-hidden">
+                        {items.map((item: any) => (
+                          <div key={item.id} className="flex items-center gap-3 px-3 py-2.5">
+                            {item.product?.image_url ? (
+                              <img src={item.product.image_url} alt={item.product?.name} className="w-8 h-8 rounded-lg object-cover shrink-0" />
+                            ) : (
+                              <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center shrink-0">
+                                <Package className="w-4 h-4 text-gray-400" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-gray-700 truncate">{item.product?.name || 'Unknown product'}</p>
+                              <p className="text-[10px] text-gray-400">{item.product?.unit || '—'}</p>
+                            </div>
+                            <span className="text-xs font-bold text-gray-700 shrink-0 bg-white px-2 py-1 rounded-lg border border-gray-200">
+                              × {item.quantity}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <motion.button
+                          whileTap={{ scale: 0.96 }}
+                          onClick={() => handleApproval(order.id, 'rejected')}
+                          disabled={processing === order.id}
+                          className="flex-1 flex items-center justify-center gap-1.5 border border-red-200 text-red-600 py-2 rounded-xl text-xs font-semibold hover:bg-red-50 transition-colors disabled:opacity-40"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          Reject
+                        </motion.button>
+                        <motion.button
+                          whileTap={{ scale: 0.96 }}
+                          onClick={() => handleApproval(order.id, 'approved')}
+                          disabled={processing === order.id}
+                          className="flex-1 flex items-center justify-center gap-1.5 bg-green-600 text-white py-2 rounded-xl text-xs font-semibold hover:bg-green-700 transition-colors disabled:opacity-40"
+                        >
+                          {processing === order.id ? (
+                            <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            <CheckCircle className="w-3.5 h-3.5" />
+                          )}
+                          Approve
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </AnimatePresence>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+        <motion.div variants={fadeUp} initial="hidden" animate="show"
+          className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
           <div className="px-5 py-4 border-b border-gray-50 flex items-center gap-2">
             <Activity className="w-4 h-4 text-blue-500" />
             <h2 className="text-sm font-semibold text-gray-700">Recent Activity</h2>
@@ -293,33 +287,35 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
             </div>
           ) : (
             <div className="overflow-y-auto max-h-[420px]">
-              <div className="px-5 py-3 space-y-0">
+              <motion.div variants={stagger} initial="hidden" animate="show" className="px-5 py-3 space-y-0">
                 {recentActivity.map((order, i) => (
-                  <div key={order.id} className="flex gap-3 py-3 border-b border-gray-50 last:border-0">
-                    {/* Timeline dot + line */}
+                  <motion.div
+                    key={order.id}
+                    variants={itemAnim}
+                    className="flex gap-3 py-3 border-b border-gray-50 last:border-0"
+                  >
                     <div className="flex flex-col items-center shrink-0 pt-1">
-                      <span className={`w-2 h-2 rounded-full shrink-0 ${activityDot(order.status)}`} />
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: i * 0.05 + 0.2 }}
+                        className={`w-2 h-2 rounded-full shrink-0 ${activityDot(order.status)}`}
+                      />
                       {i < recentActivity.length - 1 && (
                         <span className="w-px flex-1 bg-gray-100 mt-1" />
                       )}
                     </div>
-                    {/* Content */}
                     <div className="min-w-0 pb-1">
-                      <p className="text-xs text-gray-700 leading-snug">
-                        {activityLine(order)}
-                      </p>
-                      <p className="text-[10px] text-gray-400 mt-0.5">
-                        {formatTime(order.created_at)}
-                      </p>
+                      <p className="text-xs text-gray-700 leading-snug">{activityLine(order)}</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">{formatTime(order.created_at)}</p>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
-
     </div>
   )
 }

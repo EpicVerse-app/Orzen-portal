@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useRef, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Package, CheckCircle, TrendingUp, Truck, Clock,
   Image as ImageIcon, ChevronDown, ChevronUp, Calendar,
@@ -8,8 +9,11 @@ import {
 } from 'lucide-react'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 import ImageCarousel from '@/components/ui/ImageCarousel'
+import AnimatedNumber from '@/components/ui/AnimatedNumber'
 import { createClient } from '@/lib/supabase/client'
 import { sendOrderNotifications } from '@/app/actions/notifications'
+import { useRealtimeOrders } from '@/hooks/useRealtimeOrders'
+import { fadeUp, stagger, itemAnim } from '@/lib/motion'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 
@@ -130,7 +134,12 @@ function OrderCard({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <motion.div
+      layout
+      className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+      whileHover={{ boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}
+      transition={{ duration: 0.2 }}
+    >
       {/* Header */}
       <button
         onClick={() => setOpen(v => !v)}
@@ -158,82 +167,96 @@ function OrderCard({
             </span>
           </div>
         </div>
-        <div className="shrink-0 text-gray-400">
-          {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </div>
+        <motion.div
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+          className="shrink-0 text-gray-400"
+        >
+          <ChevronDown className="w-4 h-4" />
+        </motion.div>
       </button>
 
       {/* Expanded content */}
-      {open && (
-        <div className="border-t border-gray-100">
-          {/* Products */}
-          <div className="divide-y divide-gray-50">
-            {order.items?.map((item) => (
-              <div key={item.id} className="px-4 sm:px-5 py-3 flex items-center gap-3">
-                <ImageCarousel
-                  images={[item.product?.image_url, item.product?.image_url_2, item.product?.image_url_3]}
-                  alt={item.product?.name || ''}
-                  className="w-12 h-12 rounded-xl shrink-0"
-                  size={48}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 truncate">{item.product?.name}</p>
-                  {item.product?.category?.name && (
-                    <p className="text-[11px] text-gray-400 mt-0.5">{item.product.category.name}</p>
-                  )}
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-sm font-bold text-gray-800">×{item.quantity}</p>
-                  <p className="text-xs text-gray-400">{item.product?.unit}</p>
-                </div>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="content"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div className="border-t border-gray-100">
+              {/* Products */}
+              <div className="divide-y divide-gray-50">
+                {order.items?.map((item) => (
+                  <div key={item.id} className="px-4 sm:px-5 py-3 flex items-center gap-3">
+                    <ImageCarousel
+                      images={[item.product?.image_url, item.product?.image_url_2, item.product?.image_url_3]}
+                      alt={item.product?.name || ''}
+                      className="w-12 h-12 rounded-xl shrink-0"
+                      size={48}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">{item.product?.name}</p>
+                      {item.product?.category?.name && (
+                        <p className="text-[11px] text-gray-400 mt-0.5">{item.product.category.name}</p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-bold text-gray-800">×{item.quantity}</p>
+                      <p className="text-xs text-gray-400">{item.product?.unit}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {/* Delivery photo */}
-          {order.delivery_photo_url && (
-            <div className="px-4 sm:px-5 py-3 border-t border-gray-50">
-              <p className="text-[10px] text-gray-400 flex items-center gap-1 mb-1.5">
-                <ImageIcon className="w-3 h-3" /> Delivery Photo
-              </p>
-              <a href={order.delivery_photo_url} target="_blank" rel="noopener noreferrer">
-                <img
-                  src={order.delivery_photo_url} alt="Delivery"
-                  className="w-24 h-24 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity"
-                />
-              </a>
-            </div>
-          )}
+              {/* Delivery photo */}
+              {order.delivery_photo_url && (
+                <div className="px-4 sm:px-5 py-3 border-t border-gray-50">
+                  <p className="text-[10px] text-gray-400 flex items-center gap-1 mb-1.5">
+                    <ImageIcon className="w-3 h-3" /> Delivery Photo
+                  </p>
+                  <a href={order.delivery_photo_url} target="_blank" rel="noopener noreferrer">
+                    <img
+                      src={order.delivery_photo_url} alt="Delivery"
+                      className="w-24 h-24 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity"
+                    />
+                  </a>
+                </div>
+              )}
 
-          {/* Action buttons */}
-          <div className="px-4 sm:px-5 py-3 border-t border-gray-50 flex gap-2">
-            {/* Shipped button — only for approved (new) orders */}
-            {showShipButton && (
-              <button
-                onClick={markShipped}
-                disabled={shipping}
-                className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                {shipping ? (
-                  <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Updating…</>
-                ) : (
-                  <><Truck className="w-4 h-4" />Mark as Shipped</>
+              {/* Action buttons */}
+              <div className="px-4 sm:px-5 py-3 border-t border-gray-50 flex gap-2">
+                {showShipButton && (
+                  <motion.button
+                    onClick={markShipped}
+                    disabled={shipping}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    {shipping ? (
+                      <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Updating…</>
+                    ) : (
+                      <><Truck className="w-4 h-4" />Mark as Shipped</>
+                    )}
+                  </motion.button>
                 )}
-              </button>
-            )}
-
-            {/* Download button — always visible */}
-            <button
-              onClick={() => downloadOrder(order)}
-              className={`flex items-center justify-center gap-2 border border-gray-200 text-gray-600 py-2.5 px-4 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors ${showShipButton ? '' : 'flex-1'}`}
-            >
-              <Download className="w-4 h-4" />
-              Download
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+                <motion.button
+                  onClick={() => downloadOrder(order)}
+                  whileTap={{ scale: 0.97 }}
+                  className={`flex items-center justify-center gap-2 border border-gray-200 text-gray-600 py-2.5 px-4 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors ${showShipButton ? '' : 'flex-1'}`}
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   )
 }
 
@@ -307,45 +330,64 @@ function NewOrdersSection({ orders, companyId }: { orders: Order[]; companyId: s
                 </span>
               )}
             </button>
-
-            {filterOpen && (
-              <div className="absolute right-0 top-9 w-64 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-800">Filter by Product</p>
-                  <div className="flex items-center gap-2">
-                    {activeCount > 0 && <button onClick={clearAll} className="text-xs text-blue-500 hover:underline font-medium">Clear all</button>}
-                    <button onClick={() => setFilterOpen(false)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
-                  </div>
-                </div>
-                <div className="max-h-72 overflow-y-auto">
-                  {categoryMap.size === 0 ? (
-                    <p className="px-4 py-6 text-sm text-gray-400 text-center">No products found</p>
-                  ) : Array.from(categoryMap.values()).map(({ catId, catName, products }) => (
-                    <div key={catId}>
-                      <button onClick={() => toggleCategory(catId)} className="w-full px-4 py-2.5 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">{catName}</span>
-                        <ChevronRight className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedCats.has(catId) ? 'rotate-90' : ''}`} />
-                      </button>
-                      {expandedCats.has(catId) && (
-                        <div className="py-1">
-                          {Array.from(products.entries()).map(([prodId, prodName]) => (
-                            <label key={prodId} className="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors">
-                              <input type="checkbox" checked={selectedProducts.has(prodId)} onChange={() => toggleProduct(prodId)} className="w-4 h-4 rounded accent-blue-500 cursor-pointer" />
-                              <span className="text-sm text-gray-700">{prodName}</span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
+            <AnimatePresence>
+              {filterOpen && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-9 w-64 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden"
+                >
+                  <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                    <p className="text-sm font-semibold text-gray-800">Filter by Product</p>
+                    <div className="flex items-center gap-2">
+                      {activeCount > 0 && <button onClick={clearAll} className="text-xs text-blue-500 hover:underline font-medium">Clear all</button>}
+                      <button onClick={() => setFilterOpen(false)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
                     </div>
-                  ))}
-                </div>
-                {activeCount > 0 && (
-                  <div className="px-4 py-2.5 border-t border-gray-100 bg-blue-50">
-                    <p className="text-xs text-blue-600 font-medium">{activeCount} product{activeCount !== 1 ? 's' : ''} selected · {filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''}</p>
                   </div>
-                )}
-              </div>
-            )}
+                  <div className="max-h-72 overflow-y-auto">
+                    {categoryMap.size === 0 ? (
+                      <p className="px-4 py-6 text-sm text-gray-400 text-center">No products found</p>
+                    ) : Array.from(categoryMap.values()).map(({ catId, catName, products }) => (
+                      <div key={catId}>
+                        <button onClick={() => toggleCategory(catId)} className="w-full px-4 py-2.5 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors">
+                          <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">{catName}</span>
+                          <motion.div animate={{ rotate: expandedCats.has(catId) ? 90 : 0 }} transition={{ duration: 0.2 }}>
+                            <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                          </motion.div>
+                        </button>
+                        <AnimatePresence initial={false}>
+                          {expandedCats.has(catId) && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              style={{ overflow: 'hidden' }}
+                            >
+                              <div className="py-1">
+                                {Array.from(products.entries()).map(([prodId, prodName]) => (
+                                  <label key={prodId} className="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors">
+                                    <input type="checkbox" checked={selectedProducts.has(prodId)} onChange={() => toggleProduct(prodId)} className="w-4 h-4 rounded accent-blue-500 cursor-pointer" />
+                                    <span className="text-sm text-gray-700">{prodName}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    ))}
+                  </div>
+                  {activeCount > 0 && (
+                    <div className="px-4 py-2.5 border-t border-gray-100 bg-blue-50">
+                      <p className="text-xs text-blue-600 font-medium">{activeCount} product{activeCount !== 1 ? 's' : ''} selected · {filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''}</p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
       </div>
@@ -373,17 +415,24 @@ function NewOrdersSection({ orders, companyId }: { orders: Order[]; companyId: s
           <button onClick={clearAll} className="text-xs text-blue-500 mt-1 hover:underline">Clear filter</button>
         </div>
       ) : (
-        <div className="p-3 space-y-2">
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          animate="show"
+          className="p-3 space-y-2"
+        >
           {filteredOrders.map(order => (
-            <OrderCard key={order.id} order={order} companyId={companyId} showShipButton />
+            <motion.div key={order.id} variants={itemAnim}>
+              <OrderCard order={order} companyId={companyId} showShipButton />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
     </div>
   )
 }
 
-// ── Generic section (no filter) ─────────────────────────
+// ── Generic section ─────────────────────────────────────
 function OrderSection({ title, icon: Icon, iconColor, bgColor, emptyMsg, orders, companyId }: {
   title: string; icon: any; iconColor: string; bgColor: string; emptyMsg: string; orders: Order[]; companyId: string
 }) {
@@ -396,9 +445,18 @@ function OrderSection({ title, icon: Icon, iconColor, bgColor, emptyMsg, orders,
       {orders.length === 0 ? (
         <div className="px-5 py-8 text-center text-sm text-gray-400">{emptyMsg}</div>
       ) : (
-        <div className="p-3 space-y-2">
-          {orders.map(order => <OrderCard key={order.id} order={order} companyId={companyId} />)}
-        </div>
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          animate="show"
+          className="p-3 space-y-2"
+        >
+          {orders.map(order => (
+            <motion.div key={order.id} variants={itemAnim}>
+              <OrderCard order={order} companyId={companyId} />
+            </motion.div>
+          ))}
+        </motion.div>
       )}
     </div>
   )
@@ -409,6 +467,9 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
   const newOrdersRef  = useRef<HTMLDivElement>(null)
   const shippedRef    = useRef<HTMLDivElement>(null)
   const deliveredRef  = useRef<HTMLDivElement>(null)
+
+  // Live updates
+  useRealtimeOrders(companyId)
 
   function scrollTo(ref: React.RefObject<HTMLDivElement | null>) {
     ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -423,51 +484,62 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
 
   return (
     <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-6">
-      <div>
+      <motion.div variants={fadeUp} initial="hidden" animate="show">
         <h1 className="text-2xl font-bold text-gray-900">Hello, {profile.full_name?.split(' ')[0]} 👋</h1>
         <p className="text-sm text-gray-400 mt-0.5">Here's your order overview</p>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* Stat cards */}
+      <motion.div
+        variants={stagger}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+      >
         {STAT_CARDS.map(({ label, value, color, bg, border, Icon, ref }) => (
-          <button
+          <motion.button
             key={label}
+            variants={itemAnim}
             onClick={() => ref && scrollTo(ref)}
-            className={`bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3 text-left transition-all ${ref ? `cursor-pointer ${border} hover:shadow-md active:scale-95` : 'cursor-default'}`}
+            whileHover={ref ? { y: -2, boxShadow: '0 6px 20px rgba(0,0,0,0.08)' } : {}}
+            whileTap={ref ? { scale: 0.97 } : {}}
+            className={`bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3 text-left transition-colors ${ref ? `cursor-pointer ${border}` : 'cursor-default'}`}
           >
             <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}>
               <Icon className={`w-4 h-4 ${color}`} />
             </div>
             <div>
-              <p className={`text-xl font-bold ${color}`}>{value}</p>
+              <AnimatedNumber value={value} className={`text-xl font-bold ${color}`} />
               <p className="text-[10px] text-gray-400 leading-tight">{label}</p>
             </div>
-          </button>
+          </motion.button>
         ))}
-      </div>
+      </motion.div>
 
-      {/* New Orders (approved) — with Shipped + Download buttons + filter */}
-      <div ref={newOrdersRef} className="scroll-mt-4">
+      {/* New Orders */}
+      <motion.div variants={fadeUp} initial="hidden" animate="show" ref={newOrdersRef} className="scroll-mt-4">
         <NewOrdersSection orders={newOrders} companyId={companyId} />
-      </div>
+      </motion.div>
 
-      {/* Waiting for Delivery (shipped) — with Download button */}
-      <div ref={shippedRef} className="scroll-mt-4">
+      {/* Waiting for Delivery */}
+      <motion.div variants={fadeUp} initial="hidden" animate="show" ref={shippedRef} className="scroll-mt-4"
+        style={{ transitionDelay: '0.05s' }}>
         <OrderSection
           title="Waiting for Delivery" icon={Truck} iconColor="text-purple-700"
           bgColor="bg-purple-50 border-purple-100" emptyMsg="No orders waiting for delivery"
           orders={shippedOrders} companyId={companyId}
         />
-      </div>
+      </motion.div>
 
-      {/* Delivered — with Download button */}
-      <div ref={deliveredRef} className="scroll-mt-4">
+      {/* Delivered */}
+      <motion.div variants={fadeUp} initial="hidden" animate="show" ref={deliveredRef} className="scroll-mt-4"
+        style={{ transitionDelay: '0.1s' }}>
         <OrderSection
           title="Delivered" icon={CheckCircle} iconColor="text-green-700"
           bgColor="bg-green-50 border-green-100" emptyMsg="No delivered orders yet"
           orders={deliveredOrders} companyId={companyId}
         />
-      </div>
+      </motion.div>
     </div>
   )
 }
