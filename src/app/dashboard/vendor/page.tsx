@@ -20,7 +20,7 @@ export default async function VendorDashboardPage() {
     .from('orders')
     .select(`
       id, status, created_at,
-      loaded_photo_url, shipped_photo_url, delivery_photo_url,
+      delivery_photo_url,
       branch:branches(id, name, address, city, state),
       items:order_items(
         id, quantity,
@@ -35,7 +35,7 @@ export default async function VendorDashboardPage() {
 
   const stats = {
     waitingApproval: allOrders.filter(o => o.status === 'submitted').length,
-    inProcess:       allOrders.filter(o => ['approved','packing','loaded','shipped'].includes(o.status)).length,
+    inProcess:       allOrders.filter(o => o.status === 'approved').length,
     delivered:       allOrders.filter(o => o.status === 'delivered').length,
     total:           allOrders.length,
   }
