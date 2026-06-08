@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, ClipboardList, Truck,
   ShoppingCart, Headphones, ShoppingBag, History, X,
-  Menu, Bell, Package,
+  Menu, Bell, Package, Store, BarChart2, Eye,
 } from 'lucide-react'
 import { AppUser } from '@/types'
 import LogoutButton from '@/components/ui/LogoutButton'
@@ -120,10 +120,13 @@ export default function AppShell({ user, children, primaryColor, sidebarColor, b
                 </>
               ) : user.role === 'super_manager' ? (
                 <>
-                  <NavItem href="/dashboard/super"                 icon={LayoutDashboard} label="Dashboard"  exact={true} />
-                  <NavItem href="/dashboard/super/requests"        icon={Package}         label="Requests"   exact={false} />
-                  <NavItem href="/dashboard/super/orders"          icon={ClipboardList}   label="Orders"     exact={false} />
-                  <NavItem href="/dashboard/super/branches"        icon={Bell}            label="Branches"   exact={false} />
+                  <NavItem href="/dashboard/super"                icon={LayoutDashboard} label="Dashboard"       exact={true} />
+                  <NavItem href="/dashboard/super/requests"       icon={Package}         label="Requests"        exact={false} />
+                  <NavItem href="/dashboard/super/catalogue"      icon={ShoppingBag}     label="Order Materials" exact={false} />
+                  <NavItem href="/dashboard/super/view-order"     icon={ShoppingCart}    label="View Cart"       exact={false} />
+                  <NavItem href="/dashboard/super/branches"       icon={Store}           label="Stores"          exact={false} />
+                  <NavItem href="/dashboard/super/overview"       icon={Eye}             label="Overview"        exact={false} />
+                  <NavItem href="/dashboard/super/reports"        icon={BarChart2}       label="Reports"         exact={false} />
                 </>
               ) : (
                 <NavItem href="/dashboard/vendor"                  icon={LayoutDashboard} label="Dashboard"  exact={true} />
