@@ -1,32 +1,19 @@
 import { redirect } from 'next/navigation'
-import { unstable_cache } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getStoreProfile } from '@/lib/auth/getStoreProfile'
 import Link from 'next/link'
 import { Tag, ChevronRight } from 'lucide-react'
 
-// Cache categories per company for 60 seconds — they rarely change
-function getCachedCategories(companyId: string) {
-  return unstable_cache(
-    async () => {
-      const supabase = await createClient()
-      const { data } = await supabase
-        .from('categories')
-        .select('id, name')
-        .eq('company_id', companyId)
-        .order('name')
-      return data || []
-    },
-    [`categories-${companyId}`],
-    { revalidate: 60, tags: [`categories-${companyId}`] },
-  )()
-}
-
 export default async function CataloguePage() {
   const profile = await getStoreProfile()
   if (!profile || profile.role !== 'store_manager') redirect('/login')
 
-  const categories = await getCachedCategories(profile.company_id)
+  const supabase = await createClient()
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('id, name')
+    .eq('company_id', profile.company_id)
+    .order('name')
 
   return (
     <>
@@ -35,7 +22,7 @@ export default async function CataloguePage() {
         <p className="text-sm text-gray-500 mt-1">Select a category to browse products</p>
       </div>
 
-      {categories.length === 0 ? (
+      {!categories || categories.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-16 text-center">
           <Tag className="w-10 h-10 text-gray-200 mx-auto mb-3" />
           <p className="text-sm text-gray-400">No categories available yet</p>
