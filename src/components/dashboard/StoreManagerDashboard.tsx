@@ -48,7 +48,7 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
       {/* ── Page header + stats ─────────────────────────────────── */}
       <motion.div variants={fadeUp} initial="hidden" animate="show" className="mb-6">
         <div className="mb-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Store Dashboard</h1>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Store Dashboard</h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-0.5 leading-relaxed">
             {company?.name} — {branch?.name}, {branch?.city} &nbsp;·&nbsp; {today}
           </p>
@@ -70,12 +70,12 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
 
 
       {/* ── Bottom: My Orders + Delivery Status ─────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
         {/* My Orders — 2/3 */}
         <motion.div
           variants={fadeUp} initial="hidden" animate="show"
-          className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm"
+          className="md:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm"
         >
           <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <p className="text-xs font-bold tracking-widest uppercase" style={{ color: gold }}>
@@ -232,7 +232,7 @@ function StatChip({
         </div>
         {/* Number + label */}
         <div>
-          <p className="text-2xl sm:text-3xl font-bold leading-none" style={{ color }}>
+          <p className="text-xl sm:text-2xl md:text-3xl font-bold leading-none" style={{ color }}>
             <AnimatedNumber value={value} />
           </p>
           <p className="text-[10px] sm:text-xs text-gray-500 font-medium mt-0.5 leading-tight">{label}</p>

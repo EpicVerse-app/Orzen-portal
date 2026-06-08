@@ -531,7 +531,7 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
   ]
 
   return (
-    <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-6">
+    <div className="px-4 sm:px-6 lg:px-8 py-5 max-w-3xl mx-auto space-y-6">
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <h1 className="text-2xl font-bold text-gray-900">Hello, {profile.full_name?.split(' ')[0]} 👋</h1>
         <p className="text-sm text-gray-400 mt-0.5">Here's your order overview</p>
@@ -546,7 +546,7 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search by order ID or branch name..."
-            className="w-full pl-10 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100 transition-all shadow-sm"
+            className="w-full pl-10 pr-9 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100 transition-all shadow-sm"
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">

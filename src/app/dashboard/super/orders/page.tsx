@@ -62,7 +62,7 @@ export default async function SuperOrdersPage({
         <ChevronLeft className="w-4 h-4" />Dashboard
       </Link>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">Orders</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">Orders</h1>
       <p className="text-sm text-gray-400 mb-5">{allOrders.length} {FILTERS[activeFilter].label.toLowerCase()}</p>
 
       {/* Filter tabs */}
@@ -71,7 +71,7 @@ export default async function SuperOrdersPage({
           <Link
             key={key}
             href={key === 'all' ? '/dashboard/super/orders' : `/dashboard/super/orders?filter=${key}`}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
+            className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
               activeFilter === key
                 ? 'bg-gray-900 text-white'
                 : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-400'

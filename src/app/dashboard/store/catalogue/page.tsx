@@ -28,7 +28,7 @@ export default async function CataloguePage() {
           <p className="text-sm text-gray-400">No categories available yet</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           {categories.map((cat) => (
             <Link
               key={cat.id}

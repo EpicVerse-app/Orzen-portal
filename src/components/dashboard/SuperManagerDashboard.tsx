@@ -159,9 +159,9 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
       </motion.div>
 
       {/* Stats */}
-      <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {STAT_CARDS.map(({ href, bg, border, hover, Icon, color, value, label, wide }) => (
-          <motion.div key={label} variants={itemAnim} className={wide ? 'col-span-2 lg:col-span-1' : ''}>
+          <motion.div key={label} variants={itemAnim} className={wide ? 'col-span-2 md:col-span-1' : ''}>
             <Link
               href={href}
               className={`bg-white rounded-2xl border ${border} shadow-sm px-4 py-4 flex items-center gap-3 ${hover} hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 block`}
@@ -179,7 +179,7 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
       </motion.div>
 
       {/* Main grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
         {/* Pending Approvals */}
         <motion.div variants={fadeUp} initial="hidden" animate="show"
@@ -217,7 +217,7 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
               <p className="text-xs text-gray-400 mt-1">No pending approvals</p>
             </motion.div>
           ) : (
-            <motion.div variants={stagger} initial="hidden" animate="show" className="divide-y divide-gray-50 overflow-y-auto max-h-[520px]">
+            <motion.div variants={stagger} initial="hidden" animate="show" className="divide-y divide-gray-50 overflow-y-auto max-h-[60vh] sm:max-h-[520px]">
               <AnimatePresence>
                 {livePending.map((order) => {
                   const items = (order.items as any) || []
@@ -313,7 +313,7 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
               <p className="text-sm text-gray-400">No activity yet</p>
             </div>
           ) : (
-            <div className="overflow-y-auto max-h-[420px]">
+            <div className="overflow-y-auto max-h-[50vh] sm:max-h-[420px]">
               <motion.div variants={stagger} initial="hidden" animate="show" className="px-5 py-3 space-y-0">
                 {liveActivity.map((order, i) => (
                   <motion.div

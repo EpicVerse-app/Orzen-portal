@@ -29,7 +29,7 @@ export default async function SuperCataloguePage() {
           <ShoppingBag className="w-5 h-5" style={{ color: '#c9a84c' }} />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Order Materials</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Order Materials</h1>
           <p className="text-sm text-gray-500 mt-0.5">Select a category to browse products</p>
         </div>
       </div>
@@ -40,7 +40,7 @@ export default async function SuperCataloguePage() {
           <p className="text-sm text-gray-400">No categories available yet</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           {categories.map((cat) => (
             <Link
               key={cat.id}

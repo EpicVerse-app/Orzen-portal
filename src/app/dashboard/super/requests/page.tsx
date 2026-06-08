@@ -107,7 +107,7 @@ export default function SuperRequestsPage() {
     <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Requests</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Requests</h1>
           <p className="text-sm text-gray-400 mt-0.5">
             {orders.length === 0
               ? 'No pending requests'

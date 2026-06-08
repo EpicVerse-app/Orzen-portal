@@ -72,7 +72,7 @@ export default function ProductGrid({ products }: Props) {
 
   return (
     <>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4">
         {products.map((product) => {
           const cartQty  = getCartQty(product.id)
           const isInCart = cartQty > 0
@@ -98,8 +98,8 @@ export default function ProductGrid({ products }: Props) {
                 size={200}
               />
 
-              <div className="p-3 space-y-2">
-                <p className="text-sm font-semibold text-gray-800 truncate">{product.name}</p>
+              <div className="p-2 sm:p-3 space-y-2">
+                <p className="text-xs sm:text-sm font-semibold text-gray-800 truncate">{product.name}</p>
 
                 <input
                   type="number"
@@ -107,12 +107,12 @@ export default function ProductGrid({ products }: Props) {
                   value={quantities[product.id] || ''}
                   onChange={(e) => handleQtyChange(product.id, e.target.value)}
                   placeholder="Qty"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent"
+                  className="w-full h-10 border border-gray-200 rounded-lg px-2 sm:px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent"
                 />
 
                 <button
                   onClick={() => handleAddToOrder(product)}
-                  className={`w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                  className={`w-full flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold transition-colors active:scale-95 ${
                     isInCart
                       ? 'bg-[#c9a84c]/20 text-[#8a6f2e] hover:bg-[#c9a84c]/30'
                       : 'bg-[#1a1a1a] text-white hover:bg-[#2a2a2a]'

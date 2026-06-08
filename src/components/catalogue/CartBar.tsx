@@ -75,7 +75,7 @@ export default function CartBar({ branchId, companyId, userId }: Props) {
       {!open && total > 0 && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-6 right-6 z-50 bg-[#1a1a1a] text-white flex items-center gap-2 px-5 py-3 rounded-full shadow-lg hover:bg-[#2a2a2a] transition-colors"
+          className="fixed bottom-[84px] lg:bottom-6 right-4 lg:right-6 z-50 bg-[#1a1a1a] text-white flex items-center gap-2 px-5 py-3 rounded-full shadow-lg hover:bg-[#2a2a2a] transition-colors active:scale-95"
         >
           <ShoppingCart className="w-4 h-4" />
           <span className="text-sm font-semibold">View Order</span>
@@ -116,7 +116,7 @@ export default function CartBar({ branchId, companyId, userId }: Props) {
                     min="1"
                     value={item.quantity}
                     onChange={(e) => updateQty(item.product.id, parseInt(e.target.value) || 0)}
-                    className="w-16 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-[#c9a84c]"
+                    className="w-16 h-10 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-[#c9a84c]"
                   />
                   <button
                     onClick={() => removeItem(item.product.id)}

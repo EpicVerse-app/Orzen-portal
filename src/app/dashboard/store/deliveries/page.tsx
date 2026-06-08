@@ -28,7 +28,7 @@ export default async function DeliveryStatusPage() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Delivery Status</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Delivery Status</h1>
         <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
           <MapPin className="w-3.5 h-3.5" />
           <span>{(branch as any)?.name} — {(branch as any)?.city}</span>

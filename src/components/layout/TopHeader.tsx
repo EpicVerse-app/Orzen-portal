@@ -117,7 +117,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
         </Link>
 
         {/* Global search — centered absolutely, only on md+ to avoid overlap */}
-        <div className="absolute left-1/2 -translate-x-1/2 w-[280px] lg:w-[400px] hidden md:block pointer-events-auto">
+        <div className="absolute left-1/2 -translate-x-1/2 w-[200px] md:w-[300px] lg:w-[420px] hidden md:block pointer-events-auto">
           {user.role === 'store_manager' ? (
             <ProductSearchBar companyId={(Array.isArray(user.company) ? (user.company as any)[0] : user.company as any)?.id || ''} />
           ) : (
