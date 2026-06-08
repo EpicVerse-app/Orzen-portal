@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Package, Clock, MapPin, CheckCircle, TrendingUp, Truck, Image as ImageIcon, ChevronDown, ChevronUp, Calendar } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Package, Clock, MapPin, CheckCircle, TrendingUp, Truck, Image as ImageIcon, ChevronDown, ChevronUp, Calendar, Filter, X } from 'lucide-react'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 import ImageCarousel from '@/components/ui/ImageCarousel'
 
@@ -54,25 +54,19 @@ function OrderCard({ order }: { order: Order }) {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Header — always visible, click to toggle */}
       <button
         onClick={() => setOpen(v => !v)}
         className="w-full px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors text-left"
       >
         <div className="flex-1 min-w-0">
-          {/* Order ID + status row */}
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-bold text-gray-900">{shortId(order.id)}</p>
             <OrderStatusBadge status={order.status as any} />
           </div>
-
-          {/* Branch details */}
           <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
             <MapPin className="w-3 h-3 text-blue-400 shrink-0" />
             <span className="truncate">{order.branch?.name} — {order.branch?.address}, {order.branch?.city}, {order.branch?.state}</span>
           </div>
-
-          {/* Date + item count */}
           <div className="flex items-center gap-3 mt-1">
             <div className="flex items-center gap-1 text-[11px] text-gray-400">
               <Calendar className="w-3 h-3 shrink-0" />
@@ -84,14 +78,11 @@ function OrderCard({ order }: { order: Order }) {
             </span>
           </div>
         </div>
-
-        {/* Chevron */}
         <div className="shrink-0 text-gray-400">
           {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </div>
       </button>
 
-      {/* Expandable product list */}
       {open && (
         <div className="border-t border-gray-100">
           <div className="divide-y divide-gray-50">
@@ -114,29 +105,111 @@ function OrderCard({ order }: { order: Order }) {
             ))}
           </div>
 
-          {/* Delivery photo for delivered orders */}
           {order.delivery_photo_url && (
             <div className="px-4 sm:px-5 py-3 border-t border-gray-50">
               <p className="text-[10px] text-gray-400 flex items-center gap-1 mb-1.5">
                 <ImageIcon className="w-3 h-3" /> Delivery Confirmation Photo
               </p>
               <a href={order.delivery_photo_url} target="_blank" rel="noopener noreferrer">
-                <img
-                  src={order.delivery_photo_url}
-                  alt="Delivery"
-                  className="w-24 h-24 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity"
-                />
+                <img src={order.delivery_photo_url} alt="Delivery" className="w-24 h-24 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity" />
               </a>
             </div>
           )}
-
         </div>
       )}
     </div>
   )
 }
 
-// ── Section wrapper ─────────────────────────────────────
+// ── New Orders section with product filter ──────────────
+function NewOrdersSection({ orders }: { orders: Order[] }) {
+  const [selectedProduct, setSelectedProduct] = useState<string | null>(null)
+
+  // Collect all unique products from new orders
+  const allProducts = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>()
+    orders.forEach(o => o.items?.forEach(i => {
+      if (i.product?.id) map.set(i.product.id, { id: i.product.id, name: i.product.name })
+    }))
+    return Array.from(map.values())
+  }, [orders])
+
+  // Apply filter: only show orders that contain the selected product
+  const filteredOrders = selectedProduct
+    ? orders.filter(o => o.items?.some(i => i.product?.id === selectedProduct))
+    : orders
+
+  const hasFilter = allProducts.length > 1
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* Section header */}
+      <div className="px-5 py-3.5 bg-orange-50 border-b border-orange-100 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Clock className="w-4 h-4 text-orange-700" />
+          <h2 className="text-sm font-semibold text-orange-700">
+            New Orders ({filteredOrders.length}{selectedProduct ? ` of ${orders.length}` : ''})
+          </h2>
+        </div>
+        {hasFilter && (
+          <div className="flex items-center gap-1 text-xs text-orange-500">
+            <Filter className="w-3 h-3" />
+            <span>Filter by product</span>
+          </div>
+        )}
+      </div>
+
+      {/* Product filter chips — only if more than 1 unique product */}
+      {hasFilter && (
+        <div className="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2 overflow-x-auto">
+          {/* All chip */}
+          <button
+            onClick={() => setSelectedProduct(null)}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+              selectedProduct === null
+                ? 'bg-orange-500 text-white'
+                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+            }`}
+          >
+            All
+          </button>
+          {allProducts.map(p => (
+            <button
+              key={p.id}
+              onClick={() => setSelectedProduct(prev => prev === p.id ? null : p.id)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                selectedProduct === p.id
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-orange-100 hover:text-orange-700'
+              }`}
+            >
+              {p.name}
+              {selectedProduct === p.id && (
+                <X className="w-3 h-3" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Orders */}
+      {filteredOrders.length === 0 ? (
+        <div className="px-5 py-8 text-center">
+          <p className="text-sm text-gray-400">No orders contain this product</p>
+          <button onClick={() => setSelectedProduct(null)} className="text-xs text-orange-500 mt-1 hover:underline">
+            Clear filter
+          </button>
+        </div>
+      ) : (
+        <div className="p-3 space-y-2">
+          {filteredOrders.map(order => <OrderCard key={order.id} order={order} />)}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Generic section (no filter) ─────────────────────────
 function OrderSection({
   title, count, icon: Icon, iconColor, bgColor, emptyMsg, orders,
 }: {
@@ -167,7 +240,7 @@ export default function VendorDashboard({ profile, orders, stats }: Props) {
 
   const STAT_CARDS = [
     { label: 'Waiting Approval', value: stats.waitingApproval, color: 'text-orange-500', bg: 'bg-orange-50',  Icon: Clock },
-    { label: 'Waiting Delivery',  value: stats.inProcess,       color: 'text-blue-600',   bg: 'bg-blue-50',    Icon: TrendingUp },
+    { label: 'Waiting Delivery', value: stats.inProcess,       color: 'text-blue-600',   bg: 'bg-blue-50',    Icon: TrendingUp },
     { label: 'Delivered',        value: stats.delivered,       color: 'text-green-600',  bg: 'bg-green-50',   Icon: CheckCircle },
     { label: 'Total Orders',     value: stats.total,           color: 'text-gray-700',   bg: 'bg-gray-100',   Icon: Package },
   ]
@@ -197,18 +270,10 @@ export default function VendorDashboard({ profile, orders, stats }: Props) {
         ))}
       </div>
 
-      {/* New orders — waiting for approval */}
-      <OrderSection
-        title="New Orders"
-        count={waitingOrders.length}
-        icon={Clock}
-        iconColor="text-orange-700"
-        bgColor="bg-orange-50 border-orange-100"
-        emptyMsg="No new orders"
-        orders={waitingOrders}
-      />
+      {/* New Orders — with product filter */}
+      <NewOrdersSection orders={waitingOrders} />
 
-      {/* Waiting for delivery — approved by manager */}
+      {/* Waiting for Delivery */}
       <OrderSection
         title="Waiting for Delivery"
         count={activeOrders.length}
