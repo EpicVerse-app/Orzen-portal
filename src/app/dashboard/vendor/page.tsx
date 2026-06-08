@@ -16,6 +16,7 @@ export default async function VendorDashboardPage() {
 
   if (!profile || profile.role !== 'vendor') redirect('/dashboard')
 
+  // Fetch only what's needed — no delivered older than 30 days
   const { data: orders } = await supabase
     .from('orders')
     .select(`
@@ -29,7 +30,8 @@ export default async function VendorDashboardPage() {
     `)
     .eq('company_id', profile.company_id)
     .in('status', ['approved', 'shipped', 'delivered'])
-    .order('created_at', { ascending: true })
+    .order('created_at', { ascending: false })
+    .limit(50)
 
   const allOrders       = (orders || []) as any[]
   const newOrders       = allOrders.filter(o => o.status === 'approved')
