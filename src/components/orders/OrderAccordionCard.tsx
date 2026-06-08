@@ -60,7 +60,7 @@ export default function OrderAccordionCard({
 
         {/* Right: status + chevron */}
         <div className="flex items-center gap-2 shrink-0">
-          <OrderStatusBadge status={status} />
+          <OrderStatusBadge status={status as any} />
           <ChevronDown
             className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           />
