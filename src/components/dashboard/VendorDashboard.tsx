@@ -202,8 +202,8 @@ function NewOrdersSection({ orders }: { orders: Order[] }) {
           </h2>
         </div>
 
-        {/* Filter button */}
-        <div className="relative" ref={panelRef}>
+        {/* Filter button — only show when there are orders */}
+        <div className="relative" ref={panelRef} style={{ display: orders.length === 0 ? 'none' : 'block' }}>
           <button
             onClick={() => setFilterOpen(v => !v)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
@@ -293,7 +293,7 @@ function NewOrdersSection({ orders }: { orders: Order[] }) {
       </div>
 
       {/* Active filter chips */}
-      {activeCount > 0 && (
+      {activeCount > 0 && orders.length > 0 && (
         <div className="px-4 py-2 border-b border-gray-50 flex items-center gap-2 flex-wrap">
           {Array.from(selectedProducts).map(prodId => {
             let name = prodId
@@ -311,7 +311,9 @@ function NewOrdersSection({ orders }: { orders: Order[] }) {
       )}
 
       {/* Orders list */}
-      {filteredOrders.length === 0 ? (
+      {orders.length === 0 ? (
+        <div className="px-5 py-8 text-center text-sm text-gray-400">No new orders</div>
+      ) : filteredOrders.length === 0 ? (
         <div className="px-5 py-8 text-center">
           <p className="text-sm text-gray-400">No orders match the selected filter</p>
           <button onClick={clearAll} className="text-xs text-orange-500 mt-1 hover:underline">Clear filter</button>
