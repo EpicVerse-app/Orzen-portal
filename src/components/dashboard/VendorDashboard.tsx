@@ -2,18 +2,17 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react'
 import {
-  Package, Clock, MapPin, CheckCircle, TrendingUp, Truck,
+  Package, CheckCircle, TrendingUp, Truck,
   Image as ImageIcon, ChevronDown, ChevronUp, Calendar,
-  SlidersHorizontal, X, ChevronRight,
+  SlidersHorizontal, X, ChevronRight, MapPin,
 } from 'lucide-react'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 import ImageCarousel from '@/components/ui/ImageCarousel'
 
 interface Stats {
-  total: number
-  waitingApproval: number
-  inProcess: number
+  newOrders: number
   delivered: number
+  total: number
 }
 
 interface OrderItem {
@@ -41,7 +40,8 @@ interface Order {
 
 interface Props {
   profile: { id: string; full_name: string; company_id: string; company: any }
-  orders: Order[]
+  newOrders: Order[]
+  deliveredOrders: Order[]
   stats: Stats
 }
 
@@ -68,7 +68,9 @@ function OrderCard({ order }: { order: Order }) {
           </div>
           <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
             <MapPin className="w-3 h-3 text-blue-400 shrink-0" />
-            <span className="truncate">{order.branch?.name} — {order.branch?.address}, {order.branch?.city}, {order.branch?.state}</span>
+            <span className="truncate">
+              {order.branch?.name} — {order.branch?.address}, {order.branch?.city}, {order.branch?.state}
+            </span>
           </div>
           <div className="flex items-center gap-3 mt-1">
             <div className="flex items-center gap-1 text-[11px] text-gray-400">
@@ -114,11 +116,13 @@ function OrderCard({ order }: { order: Order }) {
           {order.delivery_photo_url && (
             <div className="px-4 sm:px-5 py-3 border-t border-gray-50">
               <p className="text-[10px] text-gray-400 flex items-center gap-1 mb-1.5">
-                <ImageIcon className="w-3 h-3" /> Delivery Confirmation Photo
+                <ImageIcon className="w-3 h-3" /> Delivery Photo
               </p>
               <a href={order.delivery_photo_url} target="_blank" rel="noopener noreferrer">
-                <img src={order.delivery_photo_url} alt="Delivery"
-                  className="w-24 h-24 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity" />
+                <img
+                  src={order.delivery_photo_url} alt="Delivery"
+                  className="w-24 h-24 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity"
+                />
               </a>
             </div>
           )}
@@ -128,14 +132,13 @@ function OrderCard({ order }: { order: Order }) {
   )
 }
 
-// ── New Orders section with category+product filter ─────
+// ── New Orders section with product filter ──────────────
 function NewOrdersSection({ orders }: { orders: Order[] }) {
-  const [filterOpen, setFilterOpen]         = useState(false)
+  const [filterOpen, setFilterOpen]             = useState(false)
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set())
-  const [expandedCats, setExpandedCats]     = useState<Set<string>>(new Set())
+  const [expandedCats, setExpandedCats]         = useState<Set<string>>(new Set())
   const panelRef = useRef<HTMLDivElement>(null)
 
-  // Build category → products map from all new orders
   const categoryMap = useMemo(() => {
     const map = new Map<string, { catId: string; catName: string; products: Map<string, string> }>()
     orders.forEach(o => o.items?.forEach(i => {
@@ -146,14 +149,13 @@ function NewOrdersSection({ orders }: { orders: Order[] }) {
       if (!prodId) return
       if (!map.has(catId)) {
         map.set(catId, { catId, catName, products: new Map() })
-        setExpandedCats(prev => new Set([...prev, catId]))   // expand by default
+        setExpandedCats(prev => new Set([...prev, catId]))
       }
       map.get(catId)!.products.set(prodId, prodName)
     }))
     return map
   }, [orders])
 
-  // Close panel on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
@@ -180,11 +182,8 @@ function NewOrdersSection({ orders }: { orders: Order[] }) {
     })
   }
 
-  function clearAll() {
-    setSelectedProducts(new Set())
-  }
+  function clearAll() { setSelectedProducts(new Set()) }
 
-  // Filter orders
   const filteredOrders = selectedProducts.size > 0
     ? orders.filter(o => o.items?.some(i => i.product?.id && selectedProducts.has(i.product.id)))
     : orders
@@ -193,103 +192,95 @@ function NewOrdersSection({ orders }: { orders: Order[] }) {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Section header */}
-      <div className="px-5 py-3.5 bg-orange-50 border-b border-orange-100 flex items-center justify-between gap-2">
+      {/* Header */}
+      <div className="px-5 py-3.5 bg-blue-50 border-b border-blue-100 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-orange-700" />
-          <h2 className="text-sm font-semibold text-orange-700">
+          <Truck className="w-4 h-4 text-blue-700" />
+          <h2 className="text-sm font-semibold text-blue-700">
             New Orders ({filteredOrders.length}{activeCount > 0 ? ` of ${orders.length}` : ''})
           </h2>
         </div>
 
-        {/* Filter button — only show when there are orders */}
-        <div className="relative" ref={panelRef} style={{ display: orders.length === 0 ? 'none' : 'block' }}>
-          <button
-            onClick={() => setFilterOpen(v => !v)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
-              activeCount > 0
-                ? 'bg-orange-500 text-white'
-                : 'bg-white border border-orange-200 text-orange-600 hover:bg-orange-100'
-            }`}
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            Filter
-            {activeCount > 0 && (
-              <span className="bg-white text-orange-600 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
-                {activeCount}
-              </span>
-            )}
-          </button>
+        {/* Filter button — only when there are orders */}
+        {orders.length > 0 && (
+          <div className="relative" ref={panelRef}>
+            <button
+              onClick={() => setFilterOpen(v => !v)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+                activeCount > 0
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white border border-blue-200 text-blue-600 hover:bg-blue-100'
+              }`}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              Filter
+              {activeCount > 0 && (
+                <span className="bg-white text-blue-600 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
+                  {activeCount}
+                </span>
+              )}
+            </button>
 
-          {/* Filter dropdown panel */}
-          {filterOpen && (
-            <div className="absolute right-0 top-9 w-64 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden">
-              {/* Panel header */}
-              <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-800">Filter by Product</p>
-                <div className="flex items-center gap-2">
-                  {activeCount > 0 && (
-                    <button onClick={clearAll} className="text-xs text-orange-500 hover:underline font-medium">
-                      Clear all
-                    </button>
-                  )}
-                  <button onClick={() => setFilterOpen(false)} className="text-gray-400 hover:text-gray-600">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Category + product list */}
-              <div className="max-h-72 overflow-y-auto">
-                {categoryMap.size === 0 ? (
-                  <p className="px-4 py-6 text-sm text-gray-400 text-center">No products found</p>
-                ) : (
-                  Array.from(categoryMap.values()).map(({ catId, catName, products }) => (
-                    <div key={catId}>
-                      {/* Category row */}
-                      <button
-                        onClick={() => toggleCategory(catId)}
-                        className="w-full px-4 py-2.5 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
-                      >
-                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">{catName}</span>
-                        <ChevronRight className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedCats.has(catId) ? 'rotate-90' : ''}`} />
+            {filterOpen && (
+              <div className="absolute right-0 top-9 w-64 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-800">Filter by Product</p>
+                  <div className="flex items-center gap-2">
+                    {activeCount > 0 && (
+                      <button onClick={clearAll} className="text-xs text-blue-500 hover:underline font-medium">
+                        Clear all
                       </button>
+                    )}
+                    <button onClick={() => setFilterOpen(false)} className="text-gray-400 hover:text-gray-600">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
 
-                      {/* Products under category */}
-                      {expandedCats.has(catId) && (
-                        <div className="py-1">
-                          {Array.from(products.entries()).map(([prodId, prodName]) => (
-                            <label
-                              key={prodId}
-                              className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 cursor-pointer transition-colors"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedProducts.has(prodId)}
-                                onChange={() => toggleProduct(prodId)}
-                                className="w-4 h-4 rounded accent-orange-500 cursor-pointer"
-                              />
-                              <span className="text-sm text-gray-700">{prodName}</span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))
+                <div className="max-h-72 overflow-y-auto">
+                  {categoryMap.size === 0 ? (
+                    <p className="px-4 py-6 text-sm text-gray-400 text-center">No products found</p>
+                  ) : (
+                    Array.from(categoryMap.values()).map(({ catId, catName, products }) => (
+                      <div key={catId}>
+                        <button
+                          onClick={() => toggleCategory(catId)}
+                          className="w-full px-4 py-2.5 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+                        >
+                          <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">{catName}</span>
+                          <ChevronRight className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedCats.has(catId) ? 'rotate-90' : ''}`} />
+                        </button>
+                        {expandedCats.has(catId) && (
+                          <div className="py-1">
+                            {Array.from(products.entries()).map(([prodId, prodName]) => (
+                              <label key={prodId} className="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedProducts.has(prodId)}
+                                  onChange={() => toggleProduct(prodId)}
+                                  className="w-4 h-4 rounded accent-blue-500 cursor-pointer"
+                                />
+                                <span className="text-sm text-gray-700">{prodName}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {activeCount > 0 && (
+                  <div className="px-4 py-2.5 border-t border-gray-100 bg-blue-50">
+                    <p className="text-xs text-blue-600 font-medium">
+                      {activeCount} product{activeCount !== 1 ? 's' : ''} selected · {filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
                 )}
               </div>
-
-              {/* Footer */}
-              {activeCount > 0 && (
-                <div className="px-4 py-2.5 border-t border-gray-100 bg-orange-50">
-                  <p className="text-xs text-orange-600 font-medium">
-                    {activeCount} product{activeCount !== 1 ? 's' : ''} selected · showing {filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Active filter chips */}
@@ -299,24 +290,22 @@ function NewOrdersSection({ orders }: { orders: Order[] }) {
             let name = prodId
             categoryMap.forEach(cat => { if (cat.products.has(prodId)) name = cat.products.get(prodId)! })
             return (
-              <span key={prodId} className="flex items-center gap-1 bg-orange-100 text-orange-700 text-xs font-medium px-2.5 py-1 rounded-full">
+              <span key={prodId} className="flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full">
                 {name}
-                <button onClick={() => toggleProduct(prodId)} className="hover:text-orange-900">
-                  <X className="w-3 h-3" />
-                </button>
+                <button onClick={() => toggleProduct(prodId)} className="hover:text-blue-900"><X className="w-3 h-3" /></button>
               </span>
             )
           })}
         </div>
       )}
 
-      {/* Orders list */}
+      {/* Orders */}
       {orders.length === 0 ? (
         <div className="px-5 py-8 text-center text-sm text-gray-400">No new orders</div>
       ) : filteredOrders.length === 0 ? (
         <div className="px-5 py-8 text-center">
           <p className="text-sm text-gray-400">No orders match the selected filter</p>
-          <button onClick={clearAll} className="text-xs text-orange-500 mt-1 hover:underline">Clear filter</button>
+          <button onClick={clearAll} className="text-xs text-blue-500 mt-1 hover:underline">Clear filter</button>
         </div>
       ) : (
         <div className="p-3 space-y-2">
@@ -327,18 +316,16 @@ function NewOrdersSection({ orders }: { orders: Order[] }) {
   )
 }
 
-// ── Generic section (no filter) ─────────────────────────
-function OrderSection({ title, count, icon: Icon, iconColor, bgColor, emptyMsg, orders }: {
-  title: string; count: number; icon: any; iconColor: string; bgColor: string; emptyMsg: string; orders: Order[]
-}) {
+// ── Delivered section ───────────────────────────────────
+function DeliveredSection({ orders }: { orders: Order[] }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className={`px-5 py-3.5 ${bgColor} border-b flex items-center gap-2`}>
-        <Icon className={`w-4 h-4 ${iconColor}`} />
-        <h2 className={`text-sm font-semibold ${iconColor}`}>{title} ({count})</h2>
+      <div className="px-5 py-3.5 bg-green-50 border-b border-green-100 flex items-center gap-2">
+        <CheckCircle className="w-4 h-4 text-green-700" />
+        <h2 className="text-sm font-semibold text-green-700">Delivered ({orders.length})</h2>
       </div>
       {orders.length === 0 ? (
-        <div className="px-5 py-8 text-center text-sm text-gray-400">{emptyMsg}</div>
+        <div className="px-5 py-8 text-center text-sm text-gray-400">No delivered orders yet</div>
       ) : (
         <div className="p-3 space-y-2">
           {orders.map(order => <OrderCard key={order.id} order={order} />)}
@@ -349,16 +336,11 @@ function OrderSection({ title, count, icon: Icon, iconColor, bgColor, emptyMsg, 
 }
 
 // ── Main dashboard ──────────────────────────────────────
-export default function VendorDashboard({ profile, orders, stats }: Props) {
-  const waitingOrders   = orders.filter(o => o.status === 'submitted')
-  const activeOrders    = orders.filter(o => o.status === 'approved')
-  const deliveredOrders = orders.filter(o => o.status === 'delivered')
-
+export default function VendorDashboard({ profile, newOrders, deliveredOrders, stats }: Props) {
   const STAT_CARDS = [
-    { label: 'Waiting Approval', value: stats.waitingApproval, color: 'text-orange-500', bg: 'bg-orange-50',  Icon: Clock },
-    { label: 'Waiting Delivery', value: stats.inProcess,       color: 'text-blue-600',   bg: 'bg-blue-50',    Icon: TrendingUp },
-    { label: 'Delivered',        value: stats.delivered,       color: 'text-green-600',  bg: 'bg-green-50',   Icon: CheckCircle },
-    { label: 'Total Orders',     value: stats.total,           color: 'text-gray-700',   bg: 'bg-gray-100',   Icon: Package },
+    { label: 'New Orders', value: stats.newOrders, color: 'text-blue-600',  bg: 'bg-blue-50',   Icon: TrendingUp },
+    { label: 'Delivered',  value: stats.delivered, color: 'text-green-600', bg: 'bg-green-50',  Icon: CheckCircle },
+    { label: 'Total',      value: stats.total,     color: 'text-gray-700',  bg: 'bg-gray-100',  Icon: Package },
   ]
 
   return (
@@ -368,7 +350,8 @@ export default function VendorDashboard({ profile, orders, stats }: Props) {
         <p className="text-sm text-gray-400 mt-0.5">Here's your order overview</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
         {STAT_CARDS.map(({ label, value, color, bg, Icon }) => (
           <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3">
             <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}>
@@ -382,19 +365,11 @@ export default function VendorDashboard({ profile, orders, stats }: Props) {
         ))}
       </div>
 
-      <NewOrdersSection orders={waitingOrders} />
+      {/* New Orders (approved) with filter */}
+      <NewOrdersSection orders={newOrders} />
 
-      <OrderSection
-        title="Waiting for Delivery" count={activeOrders.length}
-        icon={Truck} iconColor="text-blue-700" bgColor="bg-blue-50 border-blue-100"
-        emptyMsg="No orders waiting for delivery" orders={activeOrders}
-      />
-
-      <OrderSection
-        title="Delivered" count={deliveredOrders.length}
-        icon={CheckCircle} iconColor="text-green-700" bgColor="bg-green-50 border-green-100"
-        emptyMsg="No delivered orders yet" orders={deliveredOrders}
-      />
+      {/* Delivered */}
+      <DeliveredSection orders={deliveredOrders} />
     </div>
   )
 }
