@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
+import type { Variants } from 'framer-motion'
 import OrderAccordionCard from '@/components/orders/OrderAccordionCard'
 import { Package, Image as ImageIcon, Search, X } from 'lucide-react'
 
@@ -9,11 +10,11 @@ function shortId(id: string) {
   return 'ORD-' + id.replace(/-/g, '').slice(0, 6).toUpperCase()
 }
 
-const list = {
+const list: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.06 } },
 }
-const item = {
+const item: Variants = {
   hidden: { opacity: 0, y: 12 },
   show:   { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] } },
 }
