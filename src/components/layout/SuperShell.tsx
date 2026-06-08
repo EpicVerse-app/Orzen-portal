@@ -8,6 +8,7 @@ import {
   LayoutDashboard, CheckCircle, FileText, Building2,
   ShoppingBag, Users, BarChart2, Settings, Circle,
   ClipboardList, Truck, Bell, LogOut, User, ChevronDown,
+  Package, ShoppingCart, Store, Eye,
 } from 'lucide-react'
 import { AppUser } from '@/types'
 import { createClient } from '@/lib/supabase/client'
@@ -15,20 +16,22 @@ import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import SuperSearchBar from '@/components/layout/SuperSearchBar'
 
-// Map DB icon name → Lucide component
+// Map DB icon name → Lucide component (kept for backward compat)
 const ICON_MAP: Record<string, React.ElementType> = {
-  LayoutDashboard,
-  CheckCircle,
-  FileText,
-  Building2,
-  ShoppingBag,
-  Users,
-  BarChart2,
-  Settings,
-  ClipboardList,
-  Truck,
-  Bell,
+  LayoutDashboard, CheckCircle, FileText, Building2,
+  ShoppingBag, Users, BarChart2, Settings, ClipboardList, Truck, Bell,
 }
+
+// Hardcoded nav — always in this order regardless of DB
+const SUPER_NAV = [
+  { label: 'Dashboard',       path: '/dashboard/super',               icon: LayoutDashboard, exact: true  },
+  { label: 'Requests',        path: '/dashboard/super/requests',      icon: Package,         exact: false },
+  { label: 'Order Materials', path: '/dashboard/super/catalogue',     icon: ShoppingBag,     exact: false },
+  { label: 'View Cart',       path: '/dashboard/super/view-order',    icon: ShoppingCart,    exact: false },
+  { label: 'Stores',          path: '/dashboard/super/branches',      icon: Store,           exact: false },
+  { label: 'Overview',        path: '/dashboard/super/overview',      icon: Eye,             exact: false },
+  { label: 'Reports',         path: '/dashboard/super/reports',       icon: BarChart2,       exact: false },
+]
 
 interface MenuItem {
   id: string
@@ -120,22 +123,17 @@ export default function SuperShell({
     return pathname.startsWith(path + '/')
   }
 
-  function NavItem({ item }: { item: MenuItem }) {
-    const Icon = ICON_MAP[item.icon] || Circle
-    const active = isActive(item.path)
-
+  function NavItem({ label, path, icon: Icon, exact = false }: { label: string; path: string; icon: React.ElementType; exact?: boolean }) {
+    const active = exact ? pathname === path : (pathname === path || pathname.startsWith(path + '/'))
     return (
       <div className="relative">
         {active && (
-          <span
-            className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full"
-            style={{ backgroundColor: gold }}
-          />
+          <span className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full" style={{ backgroundColor: gold }} />
         )}
         <Link
-          href={item.path}
+          href={path}
           onClick={() => setSidebarOpen(false)}
-          className="flex items-center gap-3 pl-5 pr-3 py-2.5 rounded-lg text-sm transition-colors"
+          className="flex items-center gap-3 pl-5 pr-3 py-3 rounded-lg text-sm transition-colors active:opacity-70"
           style={
             active
               ? { color: '#fff', fontWeight: 600, backgroundColor: 'rgba(255,255,255,0.08)' }
@@ -143,7 +141,7 @@ export default function SuperShell({
           }
         >
           <Icon className="w-4 h-4 shrink-0" style={active ? { color: gold } : {}} />
-          <span className="flex-1">{item.name}</span>
+          <span className="flex-1">{label}</span>
         </Link>
       </div>
     )
@@ -282,8 +280,8 @@ export default function SuperShell({
               Menu
             </p>
             <div className="space-y-0.5">
-              {menus.map((item) => (
-                <NavItem key={item.id} item={item} />
+              {SUPER_NAV.map((item) => (
+                <NavItem key={item.path} label={item.label} path={item.path} icon={item.icon} exact={item.exact} />
               ))}
             </div>
           </nav>
