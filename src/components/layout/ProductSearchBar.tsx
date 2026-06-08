@@ -12,6 +12,7 @@ interface Product {
   name: string
   image_url: string | null
   unit: string
+  category_id: string | null
   category: { name: string } | null
 }
 
@@ -51,7 +52,7 @@ export default function ProductSearchBar({ companyId, placeholder = 'Search prod
     const supabase = createClient()
     const { data } = await supabase
       .from('products')
-      .select('id, name, image_url, unit, category:categories(name)')
+      .select('id, name, image_url, unit, category_id, category:categories(name)')
       .eq('company_id', companyId)
       .ilike('name', `%${q.trim()}%`)
       .order('name')
@@ -144,43 +145,37 @@ export default function ProductSearchBar({ companyId, placeholder = 'Search prod
                   const inCart = isInCart(product.id)
                   const qty    = getQty(product.id)
                   return (
-                    <div key={product.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50/80 transition-colors">
-                      {/* Image */}
-                      <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
-                        {product.image_url
-                          ? <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-                          : <Package className="w-4 h-4 text-gray-300" />}
-                      </div>
-
-                      {/* Name + category */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-800 truncate">{product.name}</p>
-                        <p className="text-xs text-gray-400">
-                          {(product.category as any)?.name} · {product.unit}
-                        </p>
-                      </div>
+                    <div key={product.id} className="flex items-center gap-2 px-4 py-3 hover:bg-gray-50/80 transition-colors">
+                      {/* Image + Name — clickable link to category page */}
+                      <Link
+                        href={product.category_id ? `/dashboard/store/catalogue/${product.category_id}` : '/dashboard/store/catalogue'}
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-3 flex-1 min-w-0 group"
+                      >
+                        <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0 flex items-center justify-center group-hover:opacity-80 transition-opacity">
+                          {product.image_url
+                            ? <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                            : <Package className="w-4 h-4 text-gray-300" />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-800 truncate group-hover:underline">{product.name}</p>
+                          <p className="text-xs text-gray-400">{(product.category as any)?.name} · {product.unit}</p>
+                        </div>
+                      </Link>
 
                       {/* Qty stepper + Add */}
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          onClick={() => setQty(product.id, qty - 1)}
-                          className="w-6 h-6 rounded-md border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors"
-                        >
+                        <button onClick={() => setQty(product.id, qty - 1)} className="w-6 h-6 rounded-md border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors">
                           <Minus className="w-3 h-3 text-gray-500" />
                         </button>
                         <span className="text-sm font-bold text-gray-700 w-6 text-center">{qty}</span>
-                        <button
-                          onClick={() => setQty(product.id, qty + 1)}
-                          className="w-6 h-6 rounded-md border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors"
-                        >
+                        <button onClick={() => setQty(product.id, qty + 1)} className="w-6 h-6 rounded-md border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors">
                           <Plus className="w-3 h-3 text-gray-500" />
                         </button>
                         <button
                           onClick={() => handleAdd(product)}
                           className={`ml-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                            inCart
-                              ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                              : 'bg-gray-900 text-white hover:bg-gray-700'
+                            inCart ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-900 text-white hover:bg-gray-700'
                           }`}
                         >
                           {inCart ? '✓ Update' : 'Add'}
