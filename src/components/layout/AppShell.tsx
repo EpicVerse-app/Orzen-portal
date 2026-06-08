@@ -118,13 +118,11 @@ export default function AppShell({ user, children, primaryColor, sidebarColor, b
             </p>
 
             <div className="space-y-0.5">
-              <NavItem href="/dashboard/store"         icon={LayoutDashboard} label="Dashboard"       exact={true} />
-              <NavItem href="/dashboard/store/orders"  icon={ClipboardList}   label="My Orders"       exact={false} />
-              <NavItem href="/dashboard/store/deliveries" icon={Truck}        label="Delivery Status" exact={false} />
-
-              <NavItem href="/dashboard/store/catalogue" icon={ShoppingBag} label="Order Materials" exact={false} />
-
-              <NavItem href="/dashboard/store/view-order" icon={ShoppingCart} label="View Order"     exact={false} badge={cartCount} />
+              <NavItem href="/dashboard/store"             icon={LayoutDashboard} label="Dashboard"       exact={true} />
+              <NavItem href="/dashboard/store/catalogue"   icon={ShoppingBag}     label="Order Materials" exact={false} />
+              <NavItem href="/dashboard/store/orders"      icon={ClipboardList}   label="My Orders"       exact={false} />
+              <NavItem href="/dashboard/store/view-order"  icon={ShoppingCart}    label="View Cart"       exact={false} badge={cartCount} />
+              <NavItem href="/dashboard/store/deliveries"  icon={Truck}           label="Delivery Status" exact={false} />
             </div>
           </nav>
 
