@@ -14,7 +14,7 @@ async function fetchStoreOrder(id: string) {
   const { data } = await supabase.from('orders').select(STORE_ORDER_SELECT).eq('id', id).single()
   return (data as any) ?? null
 }
-import { Package, Headphones } from 'lucide-react'
+import { Package, Headphones, ClipboardList, Truck, CheckCircle2, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { m as motion } from 'framer-motion'
 
@@ -57,12 +57,12 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
         {/* Stats chips */}
         <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-3 gap-2 sm:gap-3">
           {[
-            { label: 'Open Orders', value: openOrders.length },
-            { label: 'In Delivery',  value: inDelivery.length },
-            { label: 'To Receive',   value: toReceive.length },
-          ].map(({ label, value }) => (
+            { label: 'Open Orders', value: openOrders.length, href: '/dashboard/store/orders',          icon: ClipboardList },
+            { label: 'In Delivery', value: inDelivery.length, href: '/dashboard/store/deliveries',      icon: Truck },
+            { label: 'To Receive',  value: toReceive.length,  href: '/dashboard/store/delivery-history', icon: CheckCircle2 },
+          ].map(({ label, value, href, icon }) => (
             <motion.div key={label} variants={itemAnim}>
-              <StatChip label={label} value={value} color={primaryColor} />
+              <StatChip label={label} value={value} color={primaryColor} href={href} icon={icon} />
             </motion.div>
           ))}
         </motion.div>
@@ -203,17 +203,41 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
 }
 
 /* ── Stat chip ─────────────────────────────────────────────── */
-function StatChip({ label, value, color }: { label: string; value: number; color: string }) {
+function StatChip({
+  label, value, color, href, icon: Icon,
+}: {
+  label: string; value: number; color: string; href: string; icon: React.ElementType
+}) {
   return (
     <motion.div
-      whileHover={{ y: -2, boxShadow: '0 6px 20px rgba(0,0,0,0.08)' }}
-      transition={{ duration: 0.2 }}
-      className="bg-white rounded-xl border border-gray-200 shadow-sm px-3 py-3 sm:px-5 sm:py-3.5 flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:gap-4"
+      whileHover={{ y: -3, boxShadow: '0 8px 24px rgba(0,0,0,0.10)' }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ duration: 0.18 }}
     >
-      <p className="text-2xl sm:text-3xl font-bold leading-none" style={{ color }}>
-        <AnimatedNumber value={value} />
-      </p>
-      <p className="text-[10px] sm:text-xs text-gray-500 font-medium leading-tight text-center sm:text-left">{label}</p>
+      <Link
+        href={href}
+        className="group bg-white rounded-xl border border-gray-200 shadow-sm px-3 py-3 sm:px-4 sm:py-4 flex flex-col gap-2 hover:border-gray-300 transition-colors min-h-[72px] sm:min-h-[80px] block"
+      >
+        {/* Top row: icon + arrow */}
+        <div className="flex items-center justify-between">
+          <div
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{ backgroundColor: `${color}18` }}
+          >
+            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color }} />
+          </div>
+          <ChevronRight
+            className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-400 group-hover:translate-x-0.5 transition-all"
+          />
+        </div>
+        {/* Number + label */}
+        <div>
+          <p className="text-2xl sm:text-3xl font-bold leading-none" style={{ color }}>
+            <AnimatedNumber value={value} />
+          </p>
+          <p className="text-[10px] sm:text-xs text-gray-500 font-medium mt-0.5 leading-tight">{label}</p>
+        </div>
+      </Link>
     </motion.div>
   )
 }
