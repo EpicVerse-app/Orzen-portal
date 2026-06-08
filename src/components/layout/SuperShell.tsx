@@ -15,6 +15,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import SuperSearchBar from '@/components/layout/SuperSearchBar'
+import CatalogueNavItem from '@/components/layout/CatalogueNavItem'
 
 // Map DB icon name → Lucide component (kept for backward compat)
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -280,9 +281,18 @@ export default function SuperShell({
               Menu
             </p>
             <div className="space-y-0.5">
-              {SUPER_NAV.map((item) => (
-                <NavItem key={item.path} label={item.label} path={item.path} icon={item.icon} exact={item.exact} />
-              ))}
+              {SUPER_NAV.map((item) =>
+                item.label === 'Order Materials' ? (
+                  <CatalogueNavItem
+                    key={item.path}
+                    companyId={(user as any).company_id}
+                    baseUrl="/dashboard/super/catalogue"
+                    onNavigate={() => setSidebarOpen(false)}
+                  />
+                ) : (
+                  <NavItem key={item.path} label={item.label} path={item.path} icon={item.icon} exact={item.exact} />
+                )
+              )}
             </div>
           </nav>
 

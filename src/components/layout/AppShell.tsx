@@ -13,6 +13,7 @@ import { AppUser } from '@/types'
 import LogoutButton from '@/components/ui/LogoutButton'
 import TopHeader from '@/components/layout/TopHeader'
 import { useCartStore } from '@/store/cartStore'
+import CatalogueNavItem from '@/components/layout/CatalogueNavItem'
 
 interface Props {
   user: AppUser
@@ -112,7 +113,11 @@ export default function AppShell({ user, children, primaryColor, sidebarColor, b
               {isStore ? (
                 <>
                   <NavItem href="/dashboard/store"                 icon={LayoutDashboard} label="Dashboard"        exact={true} />
-                  <NavItem href="/dashboard/store/catalogue"       icon={ShoppingBag}     label="Order Materials"  exact={false} />
+                  <CatalogueNavItem
+                    companyId={(user as any).company_id}
+                    baseUrl="/dashboard/store/catalogue"
+                    onNavigate={() => setSidebarOpen(false)}
+                  />
                   <NavItem href="/dashboard/store/orders"          icon={ClipboardList}   label="My Orders"        exact={false} />
                   <NavItem href="/dashboard/store/view-order"      icon={ShoppingCart}    label="View Cart"        exact={false} badge={cartCount} />
                   <NavItem href="/dashboard/store/deliveries"      icon={Truck}           label="Delivery Status"  exact={true} />
@@ -122,7 +127,11 @@ export default function AppShell({ user, children, primaryColor, sidebarColor, b
                 <>
                   <NavItem href="/dashboard/super"                icon={LayoutDashboard} label="Dashboard"       exact={true} />
                   <NavItem href="/dashboard/super/requests"       icon={Package}         label="Requests"        exact={false} />
-                  <NavItem href="/dashboard/super/catalogue"      icon={ShoppingBag}     label="Order Materials" exact={false} />
+                  <CatalogueNavItem
+                    companyId={(user as any).company_id}
+                    baseUrl="/dashboard/super/catalogue"
+                    onNavigate={() => setSidebarOpen(false)}
+                  />
                   <NavItem href="/dashboard/super/view-order"     icon={ShoppingCart}    label="View Cart"       exact={false} />
                   <NavItem href="/dashboard/super/branches"       icon={Store}           label="Stores"          exact={false} />
                   <NavItem href="/dashboard/super/overview"       icon={Eye}             label="Overview"        exact={false} />
