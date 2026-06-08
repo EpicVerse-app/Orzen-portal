@@ -7,6 +7,7 @@ import { AppUser } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
+import ProductSearchBar from '@/components/layout/ProductSearchBar'
 
 interface Props {
   user: AppUser
@@ -116,29 +117,33 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
         </Link>
 
         {/* Global search — centered absolutely, only on md+ to avoid overlap */}
-        <form
-          onSubmit={handleSearch}
-          className="absolute left-1/2 -translate-x-1/2 w-[260px] lg:w-[380px] hidden md:flex items-center rounded-lg px-3 gap-2 pointer-events-auto"
-          style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
-        >
-          <Search className="w-4 h-4 text-gray-400 shrink-0" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search orders & materials..."
-            className="bg-transparent text-sm text-white placeholder-gray-500 outline-none w-full py-2"
-          />
-          {searchQuery ? (
-            <button type="button" onClick={() => setSearchQuery('')}>
-              <X className="w-3.5 h-3.5 text-gray-500 hover:text-white" />
-            </button>
+        <div className="absolute left-1/2 -translate-x-1/2 w-[280px] lg:w-[400px] hidden md:block pointer-events-auto">
+          {user.role === 'store_manager' ? (
+            <ProductSearchBar companyId={(Array.isArray(user.company) ? (user.company as any)[0] : user.company as any)?.id || ''} />
           ) : (
-            <button type="submit" className="shrink-0">
-              <Search className="w-3.5 h-3.5 text-gray-500 hover:text-white" />
-            </button>
+            <form
+              onSubmit={handleSearch}
+              className="flex items-center rounded-lg px-3 gap-2 h-9"
+              style={{ backgroundColor: 'rgba(0,0,0,0.22)' }}
+            >
+              <Search className="w-4 h-4 text-gray-400 shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search orders..."
+                className="bg-transparent text-sm text-white placeholder-gray-400 outline-none w-full"
+              />
+              {searchQuery ? (
+                <button type="button" onClick={() => setSearchQuery('')}>
+                  <X className="w-3.5 h-3.5 text-gray-500 hover:text-white" />
+                </button>
+              ) : (
+                <button type="submit"><Search className="w-3.5 h-3.5 text-gray-500 hover:text-white" /></button>
+              )}
+            </form>
           )}
-        </form>
+        </div>
 
         {/* Mobile/tablet search toggle (hidden on md+) */}
         <button className="md:hidden text-gray-400 hover:text-white p-1" onClick={() => setShowSearch(!showSearch)}>
@@ -233,21 +238,28 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
       {/* Mobile search bar */}
       {showSearch && (
         <div className="fixed top-20 left-0 right-0 z-40 px-4 py-3 md:hidden" style={{ backgroundColor: headerBg }}>
-          <form onSubmit={handleSearch} className="flex items-center rounded-lg px-3 gap-2" style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
-            <Search className="w-4 h-4 text-gray-400 shrink-0" />
-            <input
-              ref={searchRef}
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search orders, catalogue..."
-              className="bg-transparent text-sm text-white placeholder-gray-500 outline-none w-full py-2.5"
+          {user.role === 'store_manager' ? (
+            <ProductSearchBar
+              companyId={(Array.isArray(user.company) ? (user.company as any)[0] : user.company as any)?.id || ''}
+              placeholder="Search products to order..."
             />
-            {searchQuery
-              ? <button type="submit" className="shrink-0"><Search className="w-4 h-4 text-gray-300 hover:text-white" /></button>
-              : <button type="button" onClick={() => setShowSearch(false)}><X className="w-4 h-4 text-gray-400" /></button>
-            }
-          </form>
+          ) : (
+            <form onSubmit={handleSearch} className="flex items-center rounded-lg px-3 gap-2" style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
+              <Search className="w-4 h-4 text-gray-400 shrink-0" />
+              <input
+                ref={searchRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search orders..."
+                className="bg-transparent text-sm text-white placeholder-gray-500 outline-none w-full py-2.5"
+              />
+              {searchQuery
+                ? <button type="submit" className="shrink-0"><Search className="w-4 h-4 text-gray-300 hover:text-white" /></button>
+                : <button type="button" onClick={() => setShowSearch(false)}><X className="w-4 h-4 text-gray-400" /></button>
+              }
+            </form>
+          )}
         </div>
       )}
 
