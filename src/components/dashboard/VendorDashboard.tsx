@@ -130,18 +130,6 @@ function OrderCard({ order }: { order: Order }) {
             </div>
           )}
 
-          {/* Footer note */}
-          <div className="px-4 sm:px-5 py-2.5 bg-gray-50 border-t border-gray-50">
-            {order.status === 'submitted' && (
-              <p className="text-xs text-orange-500 font-medium">⏳ Waiting for manager approval</p>
-            )}
-            {order.status === 'approved' && (
-              <p className="text-xs text-blue-600 font-medium">📦 Approved — waiting for store to confirm delivery</p>
-            )}
-            {order.status === 'delivered' && (
-              <p className="text-xs text-green-600 font-medium">✅ Delivered and confirmed</p>
-            )}
-          </div>
         </div>
       )}
     </div>

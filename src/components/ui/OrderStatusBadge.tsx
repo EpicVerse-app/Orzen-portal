@@ -2,7 +2,7 @@ import { OrderStatus } from '@/types'
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; bg: string; color: string }> = {
   submitted:  { label: 'In Approval', bg: '#ede9f8', color: '#6d3fc0' },
-  approved:   { label: 'In Approval', bg: '#ede9f8', color: '#6d3fc0' },
+  approved:   { label: 'Approved',    bg: '#dcfce7', color: '#15803d' },
   rejected:   { label: 'Rejected',    bg: '#fee2e2', color: '#b91c1c' },
   packing:    { label: 'Packing',     bg: '#dbeafe', color: '#1d4ed8' },
   loaded:     { label: 'In Transit',  bg: '#fef9c3', color: '#a16207' },
