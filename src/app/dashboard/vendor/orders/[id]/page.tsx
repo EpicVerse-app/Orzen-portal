@@ -57,6 +57,9 @@ export default async function VendorOrderDetailPage({
         ) : order.status === 'shipped' ? (
           <VendorShipPhotoUpload
             orderId={order.id}
+            companyId={profile.company_id}
+            branchId={(order.branch as any)?.id}
+            shortId={'ORD-' + order.id.replace(/-/g, '').slice(0, 6).toUpperCase()}
             existingPhotoUrl={(order as any).shipped_photo_url}
           />
         ) : null

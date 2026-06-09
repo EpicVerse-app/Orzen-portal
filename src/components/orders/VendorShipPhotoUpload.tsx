@@ -3,15 +3,19 @@
 import { useState } from 'react'
 import { Camera, CheckCircle2, ImageIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { sendOrderNotifications } from '@/app/actions/notifications'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 
 interface Props {
   orderId:          string
+  companyId:        string
+  branchId:         string
+  shortId:          string
   existingPhotoUrl?: string | null
 }
 
-export default function VendorShipPhotoUpload({ orderId, existingPhotoUrl }: Props) {
+export default function VendorShipPhotoUpload({ orderId, companyId, branchId, shortId, existingPhotoUrl }: Props) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview]     = useState<string | null>(existingPhotoUrl || null)
   const router = useRouter()
@@ -34,9 +38,10 @@ export default function VendorShipPhotoUpload({ orderId, existingPhotoUrl }: Pro
 
     const { data: { publicUrl } } = supabase.storage.from('order-photos').getPublicUrl(path)
 
+    // Save photo URL + mark order as delivered in one update
     const { error } = await supabase
       .from('orders')
-      .update({ shipped_photo_url: publicUrl })
+      .update({ shipped_photo_url: publicUrl, status: 'delivered' })
       .eq('id', orderId)
 
     if (error) {
@@ -45,8 +50,18 @@ export default function VendorShipPhotoUpload({ orderId, existingPhotoUrl }: Pro
       return
     }
 
+    await sendOrderNotifications({
+      orderId,
+      companyId,
+      title:       'Order Delivered',
+      message:     `Order ${shortId} has been delivered`,
+      type:        'order_delivered',
+      targetRoles: ['super_manager', 'store_manager'],
+      branchId,
+    })
+
     setPreview(publicUrl)
-    toast.success('Photo uploaded!')
+    toast.success('Delivery confirmed with photo!')
     router.refresh()
     setUploading(false)
   }
@@ -55,9 +70,10 @@ export default function VendorShipPhotoUpload({ orderId, existingPhotoUrl }: Pro
     <div className="space-y-2">
       <p className="text-xs font-semibold text-gray-500 flex items-center gap-1.5">
         <ImageIcon className="w-3.5 h-3.5" />
-        Shipment Photo
+        Upload Delivery Photo
         {preview && <CheckCircle2 className="w-3.5 h-3.5 text-green-500 ml-1" />}
       </p>
+      <p className="text-[11px] text-gray-400">Uploading the photo will automatically mark this order as delivered.</p>
 
       <div className="flex items-center gap-3">
         {/* Preview */}
@@ -65,7 +81,7 @@ export default function VendorShipPhotoUpload({ orderId, existingPhotoUrl }: Pro
           <a href={preview} target="_blank" rel="noopener noreferrer" className="shrink-0">
             <img
               src={preview}
-              alt="Shipped"
+              alt="Delivery"
               className="w-16 h-16 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity"
             />
           </a>
@@ -74,14 +90,16 @@ export default function VendorShipPhotoUpload({ orderId, existingPhotoUrl }: Pro
         {/* Upload button */}
         <label className="cursor-pointer">
           <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors border ${
-            preview
-              ? 'border-gray-200 text-gray-600 hover:bg-gray-50'
-              : 'bg-blue-600 text-white hover:bg-blue-700 border-transparent'
+            uploading
+              ? 'bg-blue-400 text-white border-transparent cursor-not-allowed'
+              : preview
+                ? 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                : 'bg-blue-600 text-white hover:bg-blue-700 border-transparent'
           }`}>
             {uploading ? (
-              <><div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />Uploading…</>
+              <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Uploading…</>
             ) : (
-              <><Camera className="w-4 h-4" />{preview ? 'Replace Photo' : 'Upload Photo'}</>
+              <><Camera className="w-4 h-4" />{preview ? 'Replace Photo' : 'Upload Delivery Photo'}</>
             )}
           </div>
           <input

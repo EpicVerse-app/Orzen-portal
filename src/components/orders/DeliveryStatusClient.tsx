@@ -3,7 +3,6 @@
 import { m } from 'framer-motion'
 import type { Variants } from 'framer-motion'
 import OrderAccordionCard from '@/components/orders/OrderAccordionCard'
-import MarkReceivedButton from '@/components/orders/MarkReceivedButton'
 import { Package, Image as ImageIcon } from 'lucide-react'
 
 function shortId(id: string) {
@@ -16,9 +15,9 @@ const item: Variants = {
   show:   { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] } },
 }
 
-interface Props { orders: any[]; companyId: string; branchId: string }
+interface Props { orders: any[] }
 
-export default function DeliveryStatusClient({ orders, companyId, branchId }: Props) {
+export default function DeliveryStatusClient({ orders }: Props) {
   if (orders.length === 0) {
     return (
       <m.div
@@ -89,14 +88,8 @@ export default function DeliveryStatusClient({ orders, companyId, branchId }: Pr
                 </div>
               </div>
             )}
-            <div className="px-4 sm:px-6 py-3 bg-gray-50 border-t border-gray-50 flex items-center justify-between gap-2 flex-wrap">
+            <div className="px-4 sm:px-6 py-2 bg-gray-50 border-t border-gray-50">
               <p className="text-[10px] text-gray-300">{order.status}</p>
-              <MarkReceivedButton
-                orderId={order.id}
-                companyId={companyId}
-                branchId={branchId}
-                shortId={shortId(order.id)}
-              />
             </div>
           </OrderAccordionCard>
         </m.div>

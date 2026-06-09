@@ -272,6 +272,9 @@ function OrderCard({
                 <div className="px-4 sm:px-5 py-3 border-t border-gray-50">
                   <VendorShipPhotoUpload
                     orderId={order.id}
+                    companyId={companyId}
+                    branchId={order.branch?.id}
+                    shortId={shortId(order.id)}
                     existingPhotoUrl={order.shipped_photo_url}
                   />
                 </div>

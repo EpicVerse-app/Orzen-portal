@@ -2,7 +2,6 @@ import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getStoreProfile } from '@/lib/auth/getStoreProfile'
 import OrderDetailView from '@/components/orders/OrderDetailView'
-import MarkReceivedButton from '@/components/orders/MarkReceivedButton'
 
 export default async function StoreOrderDetailPage({
   params,
@@ -34,21 +33,11 @@ export default async function StoreOrderDetailPage({
 
   if (!order) notFound()
 
-  const actions = order.status === 'shipped' ? (
-    <MarkReceivedButton
-      orderId={order.id}
-      companyId={(profile as any).company_id}
-      branchId={(profile as any).branch_id}
-      shortId={'ORD-' + order.id.replace(/-/g, '').slice(0, 6).toUpperCase()}
-    />
-  ) : null
-
   return (
     <OrderDetailView
       order={order as any}
       backHref="/dashboard/store/orders"
       backLabel="My Orders"
-      actions={actions}
     />
   )
 }

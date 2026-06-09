@@ -34,11 +34,7 @@ export default async function DeliveryStatusPage() {
           <span>{(branch as any)?.name} — {(branch as any)?.city}</span>
         </div>
       </div>
-      <DeliveryStatusClient
-        orders={orders || []}
-        companyId={(profile as any).company_id}
-        branchId={(profile as any).branch_id}
-      />
+      <DeliveryStatusClient orders={orders || []} />
     </>
   )
 }
