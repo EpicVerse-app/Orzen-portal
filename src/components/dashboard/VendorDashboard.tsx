@@ -125,22 +125,22 @@ function OrderCard({
 }) {
   const [open, setOpen]         = useState(false)
   const [shipping, setShipping] = useState(false)
-  const router      = useRouter()
-  const clickCount  = useRef(0)
-  const clickTimer  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const router     = useRouter()
+  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  function handleHeaderClick() {
-    clickCount.current += 1
-    if (clickCount.current === 1) {
-      clickTimer.current = setTimeout(() => {
-        clickCount.current = 0
-        setOpen(o => !o)
-      }, 280)
-    } else {
+  function handleHeaderClick(e: React.MouseEvent) {
+    if (e.detail >= 2) {
+      // Double-click → navigate to order detail
       if (clickTimer.current) clearTimeout(clickTimer.current)
-      clickCount.current = 0
       router.push(`/dashboard/vendor/orders/${order.id}`)
+      return
     }
+    // Single click → toggle accordion after short delay
+    // (delay lets a follow-up double-click cancel it)
+    if (clickTimer.current) clearTimeout(clickTimer.current)
+    clickTimer.current = setTimeout(() => {
+      setOpen(o => !o)
+    }, 250)
   }
 
   async function markShipped() {

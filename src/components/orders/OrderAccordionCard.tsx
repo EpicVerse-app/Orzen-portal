@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, type MouseEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { m, AnimatePresence } from 'framer-motion'
 import { ChevronDown, MapPin, Calendar, ExternalLink } from 'lucide-react'
@@ -32,26 +32,22 @@ export default function OrderAccordionCard({
   itemCount, totalQty, defaultOpen = false, detailHref, children,
 }: Props) {
   const [open, setOpen] = useState(defaultOpen)
-  const router          = useRouter()
-  const clickCount      = useRef(0)
-  const clickTimer      = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const router     = useRouter()
+  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  function handleHeaderClick() {
-    clickCount.current += 1
-
-    if (clickCount.current === 1) {
-      // Wait to see if a second click comes
-      clickTimer.current = setTimeout(() => {
-        clickCount.current = 0
-        setOpen(o => !o)             // single click → toggle accordion
-      }, 280)
-    } else {
-      // Second click within 280ms → double-click → open full page
+  function handleHeaderClick(e: React.MouseEvent) {
+    if (e.detail >= 2) {
+      // Double-click → navigate to full order page
       if (clickTimer.current) clearTimeout(clickTimer.current)
-      clickCount.current = 0
       if (detailHref) router.push(detailHref)
-      else setOpen(o => !o)          // fallback if no href
+      else setOpen(o => !o)
+      return
     }
+    // Single click → toggle accordion after short delay
+    if (clickTimer.current) clearTimeout(clickTimer.current)
+    clickTimer.current = setTimeout(() => {
+      setOpen(o => !o)
+    }, 250)
   }
 
   return (
