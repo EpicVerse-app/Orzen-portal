@@ -8,12 +8,11 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { AppUser, Order } from '@/types'
-import AnimatedNumber from '@/components/ui/AnimatedNumber'
+import AnimatedStatCard from '@/components/ui/AnimatedStatCard'
 import { useLiveOrders } from '@/hooks/useRealtimeOrders'
 import { fadeUp, stagger, itemAnim, slideIn } from '@/lib/motion'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 
 const SUPER_ORDER_SELECT = `
   id, status, created_at,
@@ -159,24 +158,13 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
       </motion.div>
 
       {/* Stats */}
-      <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        {STAT_CARDS.map(({ href, bg, border, hover, Icon, color, value, label, wide }) => (
-          <motion.div key={label} variants={itemAnim} className={wide ? 'col-span-2 md:col-span-1' : ''}>
-            <Link
-              href={href}
-              className={`bg-white rounded-2xl border ${border} shadow-sm px-4 py-4 flex items-center gap-3 ${hover} hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 block`}
-            >
-              <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center shrink-0`}>
-                <Icon className={`w-5 h-5 ${color}`} />
-              </div>
-              <div>
-                <AnimatedNumber value={value} className={`text-2xl font-bold ${color}`} />
-                <p className="text-xs text-gray-400">{label}</p>
-              </div>
-            </Link>
-          </motion.div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        {STAT_CARDS.map(({ href, bg, Icon, color, value, label, wide }, i) => (
+          <div key={label} className={wide ? 'col-span-2 md:col-span-1' : ''}>
+            <AnimatedStatCard label={label} value={value} icon={Icon} color={color} bg={bg} href={href} index={i} />
+          </div>
         ))}
-      </motion.div>
+      </div>
 
       {/* Main grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

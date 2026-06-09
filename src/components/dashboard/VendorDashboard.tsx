@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 import ImageCarousel from '@/components/ui/ImageCarousel'
-import AnimatedNumber from '@/components/ui/AnimatedNumber'
+import AnimatedStatCard from '@/components/ui/AnimatedStatCard'
 import { createClient } from '@/lib/supabase/client'
 import { sendOrderNotifications } from '@/app/actions/notifications'
 import { useLiveOrders } from '@/hooks/useRealtimeOrders'
@@ -596,31 +596,20 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
       </motion.div>
 
       {/* Stat cards */}
-      <motion.div
-        variants={stagger}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-2 md:grid-cols-4 gap-3"
-      >
-        {STAT_CARDS.map(({ label, value, color, bg, border, Icon, ref }) => (
-          <motion.button
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {STAT_CARDS.map(({ label, value, color, bg, Icon, ref }, i) => (
+          <AnimatedStatCard
             key={label}
-            variants={itemAnim}
-            onClick={() => ref && scrollTo(ref)}
-            whileHover={ref ? { y: -2, boxShadow: '0 6px 20px rgba(0,0,0,0.08)' } : {}}
-            whileTap={ref ? { scale: 0.97 } : {}}
-            className={`bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3 text-left transition-colors ${ref ? `cursor-pointer ${border}` : 'cursor-default'}`}
-          >
-            <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}>
-              <Icon className={`w-4 h-4 ${color}`} />
-            </div>
-            <div>
-              <AnimatedNumber value={value} className={`text-xl font-bold ${color}`} />
-              <p className="text-[10px] text-gray-400 leading-tight">{label}</p>
-            </div>
-          </motion.button>
+            label={label}
+            value={value}
+            icon={Icon}
+            color={color}
+            bg={bg}
+            index={i}
+            onClick={ref ? () => scrollTo(ref) : undefined}
+          />
         ))}
-      </motion.div>
+      </div>
 
       {searchQuery ? (
         /* ── Search results ─────────────────────────────── */

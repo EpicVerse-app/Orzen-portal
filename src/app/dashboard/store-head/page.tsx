@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Package, Clock, CheckCircle, Truck, AlertCircle, ChevronRight, Building2, MapPin } from 'lucide-react'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
+import AnimatedStatCard from '@/components/ui/AnimatedStatCard'
 
 function shortId(id: string) {
   return 'ORD-' + id.replace(/-/g, '').slice(0, 6).toUpperCase()
@@ -61,14 +62,8 @@ export default async function StoreHeadDashboard() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {STATS.map(({ label, value, icon: Icon, color, bg, href }) => (
-          <Link key={label} href={href} className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 hover:shadow-md hover:-translate-y-0.5 transition-all">
-            <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center mb-3`}>
-              <Icon className={`w-4 h-4 ${color}`} />
-            </div>
-            <p className={`text-2xl font-bold ${color}`}>{value}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5 leading-tight">{label}</p>
-          </Link>
+        {STATS.map(({ label, value, icon, color, bg, href }, i) => (
+          <AnimatedStatCard key={label} label={label} value={value} icon={icon} color={color} bg={bg} href={href} index={i} />
         ))}
       </div>
 

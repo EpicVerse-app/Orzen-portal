@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { m } from 'framer-motion'
 import {
   Menu, Headphones,
   LayoutDashboard, CheckCircle, FileText, Building2,
@@ -378,7 +379,14 @@ export default function SuperShell({
 
         {/* Main content */}
         <main className="flex-1 lg:ml-56 min-w-0 overflow-x-hidden">
-          {children}
+          <m.div
+            key={pathname}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            {children}
+          </m.div>
         </main>
       </div>
     </div>
