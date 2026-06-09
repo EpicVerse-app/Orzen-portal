@@ -73,17 +73,18 @@ export default async function SuperBranchesPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {stateBranches.map((branch) => (
-                  <div
+                  <Link
                     key={branch.id}
-                    className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4"
+                    href={`/dashboard/super/branches/${branch.id}`}
+                    className="group bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4 hover:border-blue-200 hover:shadow-md transition-all"
                   >
                     {/* Branch name + region badge */}
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
                           <Building2 className="w-4 h-4 text-blue-500" />
                         </div>
-                        <p className="text-sm font-semibold text-gray-800">{branch.name}</p>
+                        <p className="text-sm font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">{branch.name}</p>
                       </div>
                       {branch.region && (
                         <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-600">
@@ -99,7 +100,7 @@ export default async function SuperBranchesPage() {
                         {branch.address && `${branch.address}, `}{branch.city}, {branch.state}
                       </p>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
