@@ -10,6 +10,21 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
+const MAROON      = '#5C1030'
+const MAROON_DARK = '#470C25'
+const GOLD        = '#C9A84C'
+
+function MalabarLogoMark({ size = 36 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="24" cy="24" r="22" stroke="white" strokeWidth="1.5" />
+      <text x="24" y="20" textAnchor="middle" fill="white" fontSize="7" fontFamily="Georgia, serif" fontWeight="bold" letterSpacing="0.5">MALABAR</text>
+      <text x="24" y="29" textAnchor="middle" fill="white" fontSize="14" fontFamily="Georgia, serif" fontWeight="bold">M</text>
+      <text x="24" y="37.5" textAnchor="middle" fill="white" fontSize="4.5" fontFamily="Georgia, serif" letterSpacing="0.3">GOLD &amp; DIAMONDS</text>
+    </svg>
+  )
+}
+
 interface Props {
   user: any
   children: React.ReactNode
@@ -26,9 +41,8 @@ export default function VendorShell({ user, children, primaryColor, sidebarColor
   const [unreadCount, setUnreadCount]   = useState(0)
   const profileRef  = useRef<HTMLDivElement>(null)
 
-  const headerBg  = primaryColor || '#5B2D8E'
-  const sidebarBg = sidebarColor || '#2D1B4E'
-  const gold      = '#c9a84c'
+  const sidebarBg = MAROON_DARK
+  const gold      = GOLD
 
   const company  = Array.isArray(user.company) ? user.company[0] : user.company
   const initials = user.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
@@ -73,38 +87,43 @@ export default function VendorShell({ user, children, primaryColor, sidebarColor
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* ── Header ──────────────────────────────────────── */}
+      {/* ── Malabar Top Brand Header ── */}
       <header
-        className="h-20 flex items-center px-3 sm:px-4 gap-3 fixed top-0 left-0 right-0 z-50"
-        style={{ backgroundColor: headerBg }}
+        className="h-14 flex items-center px-4 sm:px-6 gap-3 fixed top-0 left-0 right-0 z-50 shadow-md"
+        style={{ backgroundColor: MAROON }}
       >
+        {/* Mobile hamburger */}
         <button
-          className="lg:hidden text-white/70 hover:text-white p-1 shrink-0"
+          className="lg:hidden p-1.5 rounded-lg hover:bg-white/10 transition-colors mr-1 shrink-0"
           onClick={() => setSidebarOpen(!sidebarOpen)}
         >
-          <Menu className="w-5 h-5" />
+          <Menu className="w-5 h-5 text-white" />
         </button>
 
-        <Link href="/dashboard/vendor" className="shrink-0 hover:opacity-80 transition-opacity">
-          {logoUrl ? (
-            <img src={logoUrl} alt={company?.name} className="h-14 sm:h-16 w-auto object-contain max-w-[260px] sm:max-w-[380px]" />
-          ) : (
-            <p className="text-sm font-extrabold tracking-widest uppercase" style={{ color: gold }}>
-              {company?.name}
+        {/* Logo + brand */}
+        <div className="flex items-center gap-3 shrink-0">
+          <MalabarLogoMark size={38} />
+          <div className="w-px h-7 bg-white/25 mx-1" />
+          <div>
+            <p className="text-white text-[11px] font-semibold tracking-[0.18em] uppercase leading-none">
+              Visual Merchandising
             </p>
-          )}
-        </Link>
+            <p className="text-white/45 text-[9px] tracking-[0.12em] uppercase mt-0.5">
+              Vendor Portal
+            </p>
+          </div>
+        </div>
 
         <div className="flex-1" />
 
         {/* Notification bell */}
         <Link
           href="/dashboard/vendor/notifications"
-          className="relative p-1.5 text-white/70 hover:text-white transition-colors shrink-0"
+          className="relative p-2 rounded-lg hover:bg-white/10 transition-colors shrink-0"
         >
-          <Bell className="w-5 h-5" />
+          <Bell className="w-5 h-5 text-white/70 hover:text-white transition-colors" />
           {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+            <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -147,11 +166,11 @@ export default function VendorShell({ user, children, primaryColor, sidebarColor
         </div>
       </header>
 
-      <div className="flex flex-1 pt-20">
+      <div className="flex flex-1 pt-14">
         {/* ── Sidebar ─────────────────────────────────────── */}
         <aside
           className={`
-            w-56 fixed top-20 bottom-0 left-0 z-40 flex flex-col
+            w-56 fixed top-14 bottom-0 left-0 z-40 flex flex-col
             transition-transform duration-200 ease-in-out
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           `}
