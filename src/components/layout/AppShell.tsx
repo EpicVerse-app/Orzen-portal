@@ -95,11 +95,11 @@ export default function AppShell({ user, children, primaryColor, sidebarColor, b
         logoUrl={logoUrl}
       />
 
-      <div className="flex flex-1 pt-14">
+      <div className="flex flex-1 pt-16">
         {/* ── Sidebar ────────────────────────────────────────── */}
         <aside
           className={`
-            w-60 fixed top-14 bottom-0 left-0 z-40 flex flex-col
+            w-60 fixed top-16 bottom-0 left-0 z-40 flex flex-col
             transition-transform duration-250 ease-in-out
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           `}

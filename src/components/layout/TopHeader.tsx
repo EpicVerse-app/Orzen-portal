@@ -85,7 +85,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
   return (
     <>
       <header
-        className="text-white h-14 flex items-center px-3 sm:px-4 gap-2 sm:gap-3 fixed top-0 left-0 right-0 z-50"
+        className="text-white h-16 flex items-center px-3 sm:px-4 gap-2 sm:gap-3 fixed top-0 left-0 right-0 z-50"
         style={{ backgroundColor: headerBg }}
       >
         {/* Mobile menu toggle */}
@@ -99,7 +99,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
             <img
               src={logoUrl}
               alt={companyName}
-              className="h-11 w-auto object-contain max-w-[200px] sm:max-w-[280px]"
+              className="h-13 w-auto object-contain max-w-[200px] sm:max-w-[300px]"
             />
           ) : (
             /* Fallback: text */
@@ -237,7 +237,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
 
       {/* Mobile search bar */}
       {showSearch && (
-        <div className="fixed top-14 left-0 right-0 z-40 px-4 py-3 md:hidden" style={{ backgroundColor: headerBg }}>
+        <div className="fixed top-16 left-0 right-0 z-40 px-4 py-3 md:hidden" style={{ backgroundColor: headerBg }}>
           {user.role === 'store_manager' ? (
             <ProductSearchBar
               companyId={(Array.isArray(user.company) ? (user.company as any)[0] : user.company as any)?.id || ''}
