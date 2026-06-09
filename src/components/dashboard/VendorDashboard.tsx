@@ -531,7 +531,7 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
   ]
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-5 max-w-3xl mx-auto space-y-6">
+    <div className="px-4 sm:px-6 lg:px-8 py-5 max-w-7xl mx-auto space-y-6">
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <h1 className="text-2xl font-bold text-gray-900">Hello, {profile.full_name?.split(' ')[0]} 👋</h1>
         <p className="text-sm text-gray-400 mt-0.5">Here's your order overview</p>
@@ -566,7 +566,7 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
         variants={stagger}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+        className="grid grid-cols-2 md:grid-cols-4 gap-3"
       >
         {STAT_CARDS.map(({ label, value, color, bg, border, Icon, ref }) => (
           <motion.button
@@ -614,32 +614,36 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
           </div>
         </motion.div>
       ) : (
-        <>
-          {/* New Orders */}
+        /* ── Two-column split: New Orders | Waiting + Delivered ── */
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+
+          {/* LEFT — New Orders */}
           <motion.div variants={fadeUp} initial="hidden" animate="show" ref={newOrdersRef} className="scroll-mt-4">
             <NewOrdersSection orders={liveNew} companyId={companyId} />
           </motion.div>
 
-          {/* Waiting for Delivery */}
-          <motion.div variants={fadeUp} initial="hidden" animate="show" ref={shippedRef} className="scroll-mt-4"
-            style={{ transitionDelay: '0.05s' }}>
-            <OrderSection
-              title="Waiting for Delivery" icon={Truck} iconColor="text-purple-700"
-              bgColor="bg-purple-50 border-purple-100" emptyMsg="No orders waiting for delivery"
-              orders={liveShipped} companyId={companyId}
-            />
-          </motion.div>
+          {/* RIGHT — Waiting for Delivery + Delivered stacked */}
+          <div className="space-y-5">
+            <motion.div variants={fadeUp} initial="hidden" animate="show" ref={shippedRef} className="scroll-mt-4"
+              style={{ transitionDelay: '0.06s' }}>
+              <OrderSection
+                title="Waiting for Delivery" icon={Truck} iconColor="text-purple-700"
+                bgColor="bg-purple-50 border-purple-100" emptyMsg="No orders waiting for delivery"
+                orders={liveShipped} companyId={companyId}
+              />
+            </motion.div>
 
-          {/* Delivered */}
-          <motion.div variants={fadeUp} initial="hidden" animate="show" ref={deliveredRef} className="scroll-mt-4"
-            style={{ transitionDelay: '0.1s' }}>
-            <OrderSection
-              title="Delivered" icon={CheckCircle} iconColor="text-green-700"
-              bgColor="bg-green-50 border-green-100" emptyMsg="No delivered orders yet"
-              orders={liveDelivered} companyId={companyId}
-            />
-          </motion.div>
-        </>
+            <motion.div variants={fadeUp} initial="hidden" animate="show" ref={deliveredRef} className="scroll-mt-4"
+              style={{ transitionDelay: '0.12s' }}>
+              <OrderSection
+                title="Delivered" icon={CheckCircle} iconColor="text-green-700"
+                bgColor="bg-green-50 border-green-100" emptyMsg="No delivered orders yet"
+                orders={liveDelivered} companyId={companyId}
+              />
+            </motion.div>
+          </div>
+
+        </div>
       )}
     </div>
   )
