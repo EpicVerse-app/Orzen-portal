@@ -169,7 +169,7 @@ export default function SuperShell({
             <img
               src={logoUrl}
               alt={company?.name}
-              className="h-10 w-auto object-contain max-w-[160px] sm:max-w-[220px]"
+              className="h-11 w-auto object-contain max-w-[200px] sm:max-w-[280px]"
             />
           ) : (
             <p className="text-sm font-extrabold tracking-widest uppercase" style={{ color: gold }}>
