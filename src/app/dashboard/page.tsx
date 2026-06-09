@@ -4,6 +4,7 @@ import { UserRole } from '@/types'
 
 const ROLE_REDIRECTS: Record<UserRole, string> = {
   store_manager: '/dashboard/store',
+  store_head:    '/dashboard/store-head',
   super_manager: '/dashboard/super',
   mvm:           '/dashboard/mvm',
   hvm:           '/dashboard/hvm',

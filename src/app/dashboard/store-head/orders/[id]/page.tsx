@@ -1,8 +1,9 @@
 import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import OrderDetailView from '@/components/orders/OrderDetailView'
+import StoreHeadOrderActions from '@/components/orders/StoreHeadOrderActions'
 
-export default async function SuperOrderDetailPage({
+export default async function StoreHeadOrderDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
@@ -15,18 +16,18 @@ export default async function SuperOrderDetailPage({
 
   const { data: profile } = await supabase
     .from('users')
-    .select('id, role, company_id')
+    .select('id, role, company_id, branch_id')
     .eq('id', user.id)
     .single()
 
-  if (!profile || profile.role !== 'super_manager') redirect('/dashboard')
+  if (!profile || profile.role !== 'store_head') redirect('/dashboard')
 
   const { data: order } = await supabase
     .from('orders')
     .select(`
       id, status, created_at,
       loaded_photo_url, shipped_photo_url, delivery_photo_url,
-      branch:branches(name, city, state, address),
+      branch:branches(id, name, city, state, address),
       items:order_items(
         id, quantity,
         product:products(id, name, unit, image_url, image_url_2, image_url_3,
@@ -35,17 +36,26 @@ export default async function SuperOrderDetailPage({
       )
     `)
     .eq('id', id)
-    .eq('company_id', profile.company_id)
+    .eq('branch_id', profile.branch_id)
     .single()
 
   if (!order) notFound()
 
-  // RM is read-only — no actions
   return (
     <OrderDetailView
       order={order as any}
-      backHref="/dashboard/super/orders"
+      backHref="/dashboard/store-head/orders"
       backLabel="Orders"
+      actions={
+        order.status === 'submitted' ? (
+          <StoreHeadOrderActions
+            orderId={order.id}
+            companyId={profile.company_id}
+            approverId={profile.id}
+            branchId={(order.branch as any)?.id}
+          />
+        ) : null
+      }
     />
   )
 }

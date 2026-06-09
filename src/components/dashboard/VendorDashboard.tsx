@@ -163,7 +163,7 @@ function OrderCard({
       title:       'Order Shipped',
       message:     `Order ${shortId(order.id)} has been shipped`,
       type:        'order_shipped',
-      targetRoles: ['super_manager', 'store_manager'],
+      targetRoles: ['store_head', 'store_manager'],
       branchId:    order.branch?.id,
     })
 

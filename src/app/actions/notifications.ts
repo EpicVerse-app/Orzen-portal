@@ -21,11 +21,12 @@ interface NotifyPayload {
 
 /** Where each role lands based on notification type */
 function getRedirectPath(role: string, type: string): string {
-  if (role === 'super_manager') {
+  if (role === 'store_head') {
     return type === 'order_submitted'
-      ? '/dashboard/super/requests'
-      : '/dashboard/super/orders'
+      ? '/dashboard/store-head/requests'
+      : '/dashboard/store-head/orders'
   }
+  if (role === 'super_manager') return '/dashboard/super/orders'
   if (role === 'vendor') return '/dashboard/vendor'
   if (role === 'store_manager') return '/dashboard/store/orders'
   return '/dashboard'
@@ -48,7 +49,11 @@ export async function sendOrderNotifications({
     type UserRow = { id: string; full_name: string; email: string | null; role: string }
     const recipients: UserRow[] = []
 
-    const companyRoles = targetRoles.filter(r => r !== 'store_manager')
+    // store_head and store_manager are branch-scoped; all other roles are company-scoped
+    const branchScopedRoles = ['store_manager', 'store_head']
+    const companyRoles = targetRoles.filter(r => !branchScopedRoles.includes(r))
+    const branchRoles  = targetRoles.filter(r => branchScopedRoles.includes(r))
+
     if (companyRoles.length > 0) {
       const { data } = await adminClient
         .from('users')
@@ -58,12 +63,12 @@ export async function sendOrderNotifications({
       ;(data || []).forEach(u => recipients.push(u as UserRow))
     }
 
-    if (targetRoles.includes('store_manager') && branchId) {
+    if (branchRoles.length > 0 && branchId) {
       const { data } = await adminClient
         .from('users')
         .select('id, full_name, email, role')
         .eq('branch_id', branchId)
-        .eq('role', 'store_manager')
+        .in('role', branchRoles)
       ;(data || []).forEach(u => recipients.push(u as UserRow))
     }
 

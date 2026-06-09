@@ -56,7 +56,7 @@ export default function VendorShipPhotoUpload({ orderId, companyId, branchId, sh
       title:       'Order Delivered',
       message:     `Order ${shortId} has been delivered`,
       type:        'order_delivered',
-      targetRoles: ['super_manager', 'store_manager'],
+      targetRoles: ['store_head', 'store_manager'],
       branchId,
     })
 

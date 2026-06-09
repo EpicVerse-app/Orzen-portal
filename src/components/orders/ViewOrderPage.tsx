@@ -69,7 +69,7 @@ export default function ViewOrderPage({ branchId, companyId, userId, branch }: P
       return
     }
 
-    // Notify super managers + vendors via server action
+    // Notify store head for this branch
     const sid = 'ORD-' + order.id.replace(/-/g, '').slice(0, 6).toUpperCase()
     await sendOrderNotifications({
       orderId:     order.id,
@@ -77,7 +77,8 @@ export default function ViewOrderPage({ branchId, companyId, userId, branch }: P
       title:       'New Order Submitted',
       message:     `Order ${sid} from ${branch?.name} is waiting for approval`,
       type:        'order_submitted',
-      targetRoles: ['super_manager', 'vendor'],
+      targetRoles: ['store_head'],
+      branchId,
     })
 
     clearCart()

@@ -38,7 +38,7 @@ export default function VendorOrderActions({ orderId, companyId, branchId }: Pro
       title:       'Order Shipped',
       message:     `Order ${sid} has been shipped`,
       type:        'order_shipped',
-      targetRoles: ['super_manager', 'store_manager'],
+      targetRoles: ['store_head', 'store_manager'],
       branchId,
     })
 
