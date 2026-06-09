@@ -10,8 +10,8 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
-const MAROON      = '#5C1030'
-const MAROON_DARK = '#470C25'
+const MAROON      = '#570439'
+const MAROON_DARK = '#570439'
 const GOLD        = '#C9A84C'
 
 function MalabarLogoMark({ size = 36 }: { size?: number }) {
