@@ -71,6 +71,11 @@ export default function AdminShell({ user, children, logoUrl }: Props) {
     return () => document.removeEventListener('mousedown', handle)
   }, [])
 
+  // Prefetch all nav routes so clicks are instant
+  useEffect(() => {
+    NAV.forEach(item => router.prefetch(item.path))
+  }, [])
+
   // Fetch unread + bell shake
   useEffect(() => {
     async function fetchUnread() {
@@ -314,9 +319,9 @@ export default function AdminShell({ user, children, logoUrl }: Props) {
         <main className="flex-1 lg:ml-56 min-w-0 overflow-x-hidden">
           <m.div
             key={pathname}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.1 }}
           >
             {children}
           </m.div>

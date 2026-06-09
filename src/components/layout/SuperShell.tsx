@@ -87,6 +87,11 @@ export default function SuperShell({
     .slice(0, 2)
     .toUpperCase()
 
+  // Prefetch all nav routes so clicks are instant
+  useEffect(() => {
+    SUPER_NAV.forEach(item => router.prefetch(item.path))
+  }, [])
+
   // Close dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -381,9 +386,9 @@ export default function SuperShell({
         <main className="flex-1 lg:ml-56 min-w-0 overflow-x-hidden">
           <m.div
             key={pathname}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.1 }}
           >
             {children}
           </m.div>

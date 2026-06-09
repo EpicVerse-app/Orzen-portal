@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { m } from 'framer-motion'
 import {
   Menu, LayoutDashboard, Bell, LogOut,
@@ -46,6 +46,7 @@ interface Props {
 
 export default function VendorShell({ user, children, primaryColor, sidebarColor, logoUrl }: Props) {
   const pathname    = usePathname()
+  const router      = useRouter()
   const [sidebarOpen, setSidebarOpen]   = useState(false)
   const [showProfile, setShowProfile]   = useState(false)
   const [showNotifs,  setShowNotifs]    = useState(false)
@@ -60,6 +61,12 @@ export default function VendorShell({ user, children, primaryColor, sidebarColor
 
   const company  = Array.isArray(user.company) ? user.company[0] : user.company
   const initials = user.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+
+  // Prefetch nav routes so clicks are instant
+  useEffect(() => {
+    router.prefetch('/dashboard/vendor')
+    router.prefetch('/dashboard/vendor/notifications')
+  }, [])
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -305,9 +312,9 @@ export default function VendorShell({ user, children, primaryColor, sidebarColor
         <main className="flex-1 lg:ml-56 min-w-0 overflow-x-hidden">
           <m.div
             key={pathname}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.1 }}
           >
             {children}
           </m.div>

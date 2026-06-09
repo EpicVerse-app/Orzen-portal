@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, ClipboardList, Truck,
   ShoppingCart, Headphones, ShoppingBag, History, X,
@@ -35,9 +35,20 @@ const STORE_BOTTOM_NAV = [
 
 export default function AppShell({ user, children, primaryColor, sidebarColor, backgroundImage, logoUrl }: Props) {
   const pathname = usePathname()
+  const router   = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { items } = useCartStore()
   const cartCount  = items.length
+
+  // Prefetch nav routes so clicks are instant
+  useEffect(() => {
+    const routes = user.role === 'store_manager'
+      ? ['/dashboard/store', '/dashboard/store/catalogue', '/dashboard/store/orders', '/dashboard/store/view-order', '/dashboard/store/deliveries', '/dashboard/store/delivery-history', '/dashboard/store/notifications']
+      : user.role === 'super_manager'
+      ? ['/dashboard/super', '/dashboard/super/requests', '/dashboard/super/catalogue', '/dashboard/super/view-order', '/dashboard/super/branches', '/dashboard/super/overview', '/dashboard/super/reports', '/dashboard/super/notifications']
+      : ['/dashboard/vendor', '/dashboard/vendor/notifications']
+    routes.forEach(r => router.prefetch(r))
+  }, [user.role])
 
   const sidebarBg = sidebarColor || '#111111'
   const primary   = primaryColor || '#1a1a1a'
@@ -201,9 +212,9 @@ export default function AppShell({ user, children, primaryColor, sidebarColor, b
           )}
           <m.div
             key={pathname}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.1 }}
             className="relative z-10"
           >
             {children}
