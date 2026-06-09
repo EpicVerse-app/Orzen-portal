@@ -7,7 +7,7 @@ import { m } from 'framer-motion'
 import {
   LayoutDashboard, Package, ClipboardList, Truck,
   Bell, Menu, X, LogOut, ShieldCheck, Headphones,
-  ChevronDown, User, Settings,
+  ChevronDown, User,
 } from 'lucide-react'
 import { AppUser } from '@/types'
 import { createClient } from '@/lib/supabase/client'
@@ -18,10 +18,11 @@ const MAROON = '#570439'
 const GOLD   = '#C9A84C'
 
 const NAV = [
-  { label: 'Dashboard',  path: '/dashboard/store-head',            icon: LayoutDashboard, exact: true  },
-  { label: 'Requests',   path: '/dashboard/store-head/requests',   icon: Package,         exact: false },
-  { label: 'Orders',     path: '/dashboard/store-head/orders',     icon: ClipboardList,   exact: false },
-  { label: 'Deliveries', path: '/dashboard/store-head/deliveries', icon: Truck,           exact: false },
+  { label: 'Dashboard',     path: '/dashboard/store-head',                icon: LayoutDashboard, exact: true  },
+  { label: 'Requests',      path: '/dashboard/store-head/requests',       icon: Package,         exact: false },
+  { label: 'Orders',        path: '/dashboard/store-head/orders',         icon: ClipboardList,   exact: false },
+  { label: 'Deliveries',    path: '/dashboard/store-head/deliveries',     icon: Truck,           exact: false },
+  { label: 'Notifications', path: '/dashboard/store-head/notifications',  icon: Bell,            exact: false },
 ]
 
 function MalabarLogoMark({ size = 40 }: { size?: number }) {
