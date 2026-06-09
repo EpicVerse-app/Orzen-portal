@@ -152,6 +152,7 @@ input, textarea, select {
   transform-origin: left;
   transition: transform 0.2s ease;
   border-radius: 0.75rem;
+  pointer-events: none;   /* never block clicks on the Link beneath */
 }
 .nav-item:hover::before { transform: scaleX(1); }
 
