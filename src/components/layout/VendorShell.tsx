@@ -112,7 +112,11 @@ export default function VendorShell({ user, children, primaryColor, sidebarColor
 
         {/* Logo + brand */}
         <div className="flex items-center gap-3 shrink-0">
-          <MalabarLogoMark size={38} />
+          {logoUrl ? (
+            <img src={logoUrl} alt="Malabar" className="h-8 w-auto object-contain" />
+          ) : (
+            <MalabarLogoMark size={38} />
+          )}
           <div className="w-px h-7 bg-white/25 mx-1" />
           <div>
             <p className="text-white text-[11px] font-semibold tracking-[0.18em] uppercase leading-none">
