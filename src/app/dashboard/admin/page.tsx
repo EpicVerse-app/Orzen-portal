@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Store, Users, ShoppingBag, Truck, Package, CheckCircle, Clock, BarChart2, ChevronRight, Calendar } from 'lucide-react'
-import AnimatedStatCard from '@/components/ui/AnimatedStatCard'
+import { Package, BarChart2, ChevronRight, Calendar, Store, Users } from 'lucide-react'
+import AdminDashboardStats from '@/components/admin/AdminDashboardStats'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 
 function shortId(id: string) { return 'ORD-' + id.replace(/-/g, '').slice(0, 6).toUpperCase() }
@@ -38,14 +38,6 @@ export default async function AdminDashboardPage() {
     supabase.from('users').select('id,full_name,role,email').eq('company_id', cid).order('created_at', { ascending: false }).limit(5),
   ])
 
-  const STATS = [
-    { label: 'Total Branches',   value: branchCount   || 0, icon: Store,       href: '/dashboard/admin/branches', color: 'text-blue-600',   bg: 'bg-blue-50'   },
-    { label: 'Total Users',      value: userCount     || 0, icon: Users,       href: '/dashboard/admin/users',    color: 'text-violet-600', bg: 'bg-violet-50' },
-    { label: 'All Orders',       value: orderTotal    || 0, icon: ShoppingBag, href: '/dashboard/admin/orders',   color: 'text-orange-600', bg: 'bg-orange-50' },
-    { label: 'Pending Approval', value: orderPending  || 0, icon: Clock,       href: '/dashboard/admin/orders',   color: 'text-yellow-600', bg: 'bg-yellow-50' },
-    { label: 'In Transit',       value: orderShipped  || 0, icon: Truck,       href: '/dashboard/admin/orders',   color: 'text-purple-600', bg: 'bg-purple-50' },
-    { label: 'Delivered',        value: orderDelivered|| 0, icon: CheckCircle, href: '/dashboard/admin/orders',   color: 'text-green-600',  bg: 'bg-green-50'  },
-  ]
 
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
@@ -68,11 +60,14 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Animated Stats grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {STATS.map((s, i) => (
-          <AnimatedStatCard key={s.label} {...s} index={i} />
-        ))}
-      </div>
+      <AdminDashboardStats
+        branchCount={branchCount || 0}
+        userCount={userCount || 0}
+        orderTotal={orderTotal || 0}
+        orderPending={orderPending || 0}
+        orderShipped={orderShipped || 0}
+        orderDelivered={orderDelivered || 0}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent Orders */}

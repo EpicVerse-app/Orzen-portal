@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Package, Clock, CheckCircle, Truck, AlertCircle, ChevronRight, Building2, MapPin } from 'lucide-react'
+import { Package, ChevronRight, Building2, MapPin, AlertCircle } from 'lucide-react'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
-import AnimatedStatCard from '@/components/ui/AnimatedStatCard'
+import StoreHeadDashboardStats from '@/components/store-head/StoreHeadDashboardStats'
 
 function shortId(id: string) {
   return 'ORD-' + id.replace(/-/g, '').slice(0, 6).toUpperCase()
@@ -40,12 +40,6 @@ export default async function StoreHeadDashboard() {
   const inTransit    = allOrders.filter(o => o.status === 'shipped')
   const recent       = allOrders.slice(0, 6)
 
-  const STATS = [
-    { label: 'Pending Approval', value: pending.length,   icon: AlertCircle, color: 'text-orange-600', bg: 'bg-orange-50', href: '/dashboard/store-head/requests' },
-    { label: 'Active Orders',    value: active.length,    icon: Clock,       color: 'text-blue-600',   bg: 'bg-blue-50',   href: '/dashboard/store-head/orders' },
-    { label: 'In Transit',       value: inTransit.length, icon: Truck,       color: 'text-purple-600', bg: 'bg-purple-50', href: '/dashboard/store-head/deliveries' },
-    { label: 'Delivered',        value: delivered.length, icon: CheckCircle, color: 'text-green-600',  bg: 'bg-green-50',  href: '/dashboard/store-head/orders' },
-  ]
 
   return (
     <div className="px-4 sm:px-6 py-5 max-w-4xl mx-auto space-y-6">
@@ -61,11 +55,12 @@ export default async function StoreHeadDashboard() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {STATS.map(({ label, value, icon, color, bg, href }, i) => (
-          <AnimatedStatCard key={label} label={label} value={value} icon={icon} color={color} bg={bg} href={href} index={i} />
-        ))}
-      </div>
+      <StoreHeadDashboardStats
+        pendingCount={pending.length}
+        activeCount={active.length}
+        inTransitCount={inTransit.length}
+        deliveredCount={delivered.length}
+      />
 
       {/* Pending approvals — action required */}
       {pending.length > 0 && (
