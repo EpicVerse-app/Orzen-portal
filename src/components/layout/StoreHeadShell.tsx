@@ -177,7 +177,7 @@ export default function StoreHeadShell({ user, children, logoUrl }: Props) {
         {/* Logo + brand */}
         <div className="flex items-center gap-3 shrink-0">
           {logoUrl
-            ? <img src={logoUrl} alt="Malabar" className="h-9 object-contain" />
+            ? <img src={logoUrl} alt="Malabar" className="h-10 w-auto object-contain" />
             : <MalabarLogoMark size={38} />
           }
         </div>

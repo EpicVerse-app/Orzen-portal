@@ -99,7 +99,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
             <img
               src={logoUrl}
               alt={companyName}
-              className="h-8 w-auto object-contain max-w-[160px] sm:max-w-[220px]"
+              className="h-10 w-auto object-contain max-w-[160px] sm:max-w-[220px]"
             />
           ) : (
             /* Fallback: text */
