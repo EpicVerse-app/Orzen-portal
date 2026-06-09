@@ -10,37 +10,23 @@ export default async function AdminProductsPage() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select(`
-      id, full_name, role, company_id,
-      company:companies(id, name, primary_color, sidebar_color, logo_url)
-    `)
+    .select('id, full_name, role, company_id, company:companies(id, name)')
     .eq('id', user.id)
     .single()
 
   if (!profile || !['admin', 'super_manager'].includes(profile.role)) redirect('/login')
 
-  const company = Array.isArray(profile.company) ? profile.company[0] : profile.company as any
-
-  // Fetch categories with products for this company
   const { data: categories } = await supabase
     .from('categories')
-    .select(`
-      id, name, description,
-      products(id, name, unit, image_url)
-    `)
+    .select('id, name, description, products(id, name, unit, image_url)')
     .eq('company_id', profile.company_id)
     .order('name')
-
-  const primaryColor = (company as any)?.primary_color || '#5B2D8E'
-  const logoUrl      = (company as any)?.logo_url      || null
 
   return (
     <ProductManager
       profile={profile as any}
       categories={(categories || []) as any}
       companyId={profile.company_id}
-      primaryColor={primaryColor}
-      logoUrl={logoUrl}
     />
   )
 }

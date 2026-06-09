@@ -36,18 +36,12 @@ export default function ImageEditor({ categories, products }: Props) {
 
   return (
     <div className="min-h-screen bg-[#f0ede8]">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Product Image Manager</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Paste an image URL next to each product and click Save</p>
-        </div>
-        <a href="/dashboard/store" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">
-          ← Back to Dashboard
-        </a>
+      <div className="px-4 sm:px-6 py-5">
+        <h1 className="text-xl font-bold text-gray-900">Product Image Manager</h1>
+        <p className="text-sm text-gray-400 mt-0.5">Paste an image URL next to each product and click Save</p>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-6 space-y-4">
+      <div className="max-w-4xl mx-auto px-6 pb-6 space-y-4">
         {categories.map((cat) => {
           const catProducts = products.filter(p => p.category_id === cat.id)
           const withImage   = catProducts.filter(p => urls[p.id]).length

@@ -4,9 +4,7 @@ import { useState, useRef } from 'react'
 import { Plus, Trash2, ChevronDown, ChevronUp, Package, FolderPlus, X, Upload, ImageIcon } from 'lucide-react'
 import { addProductAction, deleteProductAction, addCategoryAction, deleteCategoryAction } from '@/app/dashboard/admin/products/actions'
 import { createClient } from '@/lib/supabase/client'
-import LogoutButton from '@/components/ui/LogoutButton'
 import toast from 'react-hot-toast'
-import Link from 'next/link'
 
 interface Product {
   id: string
@@ -26,11 +24,9 @@ interface Props {
   profile: any
   categories: Category[]
   companyId: string
-  primaryColor: string
-  logoUrl: string | null
 }
 
-export default function ProductManager({ profile, categories, companyId, primaryColor, logoUrl }: Props) {
+export default function ProductManager({ profile, categories, companyId }: Props) {
   const [expandedCat, setExpandedCat]       = useState<string | null>(categories[0]?.id || null)
   const [showAddProduct, setShowAddProduct]   = useState<string | null>(null)
   const [showAddCategory, setShowAddCategory] = useState(false)
@@ -46,8 +42,9 @@ export default function ProductManager({ profile, categories, companyId, primary
     useRef<HTMLInputElement>(null),
   ]
 
-  const gold = '#c9a84c'
-  const company = Array.isArray(profile.company) ? profile.company[0] : profile.company
+  const gold         = '#c9a84c'
+  const primaryColor = '#570439'
+  const company      = Array.isArray(profile.company) ? profile.company[0] : profile.company
 
   function handleImageSelect(slot: number, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -157,35 +154,7 @@ export default function ProductManager({ profile, categories, companyId, primary
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div
-        className="h-20 flex items-center px-4 gap-3 sticky top-0 z-50"
-        style={{ backgroundColor: primaryColor }}
-      >
-        {logoUrl ? (
-          <img src={logoUrl} alt={company?.name} className="h-14 sm:h-16 w-auto object-contain max-w-[260px] sm:max-w-[380px]" />
-        ) : (
-          <p className="text-sm font-extrabold tracking-widest uppercase" style={{ color: gold }}>
-            {company?.name}
-          </p>
-        )}
-        <div className="flex-1" />
-        <span
-          className="text-xs font-semibold px-3 py-1 rounded-full hidden sm:block"
-          style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff' }}
-        >
-          Admin
-        </span>
-        <Link
-          href="/dashboard/super"
-          className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
-          style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff' }}
-        >
-          ← Dashboard
-        </Link>
-        <LogoutButton />
-      </div>
+    <div className="bg-gray-50 min-h-screen">
 
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
 
