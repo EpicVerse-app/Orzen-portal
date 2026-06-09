@@ -68,8 +68,8 @@ export default function SuperShell({
   const [unreadCount, setUnreadCount] = useState(0)
   const profileRef = useRef<HTMLDivElement>(null)
 
-  const headerBg = primaryColor || '#5B2D8E'
-  const sidebarBg = sidebarColor || '#2D1B4E'
+  const headerBg = primaryColor || '#570439'
+  const sidebarBg = sidebarColor || '#570439'
   const gold = '#c9a84c'
 
   const company = Array.isArray(user.company)
@@ -152,7 +152,7 @@ export default function SuperShell({
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* ── Header ─────────────────────────────────────────── */}
       <header
-        className="h-20 flex items-center px-3 sm:px-4 gap-3 fixed top-0 left-0 right-0 z-50"
+        className="h-14 flex items-center px-3 sm:px-4 gap-3 fixed top-0 left-0 right-0 z-50"
         style={{ backgroundColor: headerBg }}
       >
         {/* Mobile hamburger */}
@@ -169,7 +169,7 @@ export default function SuperShell({
             <img
               src={logoUrl}
               alt={company?.name}
-              className="h-14 sm:h-16 w-auto object-contain max-w-[260px] sm:max-w-[380px]"
+              className="h-8 w-auto object-contain max-w-[160px] sm:max-w-[220px]"
             />
           ) : (
             <p className="text-sm font-extrabold tracking-widest uppercase" style={{ color: gold }}>
@@ -262,11 +262,11 @@ export default function SuperShell({
         </div>
       </header>
 
-      <div className="flex flex-1 pt-20">
+      <div className="flex flex-1 pt-14">
         {/* ── Sidebar ────────────────────────────────────────── */}
         <aside
           className={`
-            w-56 fixed top-20 bottom-0 left-0 z-40 flex flex-col
+            w-56 fixed top-14 bottom-0 left-0 z-40 flex flex-col
             transition-transform duration-200 ease-in-out
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           `}

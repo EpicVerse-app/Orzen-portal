@@ -79,13 +79,13 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
   const line2       = words.slice(1).join(' ')
 
   const initials  = user.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
-  const headerBg  = headerColor || '#1a1a1a'
+  const headerBg  = headerColor || '#570439'
   const gold      = '#c9a84c'
 
   return (
     <>
       <header
-        className="text-white h-20 flex items-center px-3 sm:px-4 gap-2 sm:gap-3 fixed top-0 left-0 right-0 z-50"
+        className="text-white h-14 flex items-center px-3 sm:px-4 gap-2 sm:gap-3 fixed top-0 left-0 right-0 z-50"
         style={{ backgroundColor: headerBg }}
       >
         {/* Mobile menu toggle */}
@@ -99,7 +99,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
             <img
               src={logoUrl}
               alt={companyName}
-              className="h-14 sm:h-16 w-auto object-contain max-w-[260px] sm:max-w-[380px]"
+              className="h-8 w-auto object-contain max-w-[160px] sm:max-w-[220px]"
             />
           ) : (
             /* Fallback: text */
@@ -237,7 +237,7 @@ export default function TopHeader({ user, onMenuToggle, headerColor, logoUrl }: 
 
       {/* Mobile search bar */}
       {showSearch && (
-        <div className="fixed top-20 left-0 right-0 z-40 px-4 py-3 md:hidden" style={{ backgroundColor: headerBg }}>
+        <div className="fixed top-14 left-0 right-0 z-40 px-4 py-3 md:hidden" style={{ backgroundColor: headerBg }}>
           {user.role === 'store_manager' ? (
             <ProductSearchBar
               companyId={(Array.isArray(user.company) ? (user.company as any)[0] : user.company as any)?.id || ''}
