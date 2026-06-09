@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Package, Store, Users,
-  ShoppingBag, Image, BarChart2, Settings,
+  ShoppingBag, BarChart2, Settings,
   Menu, Bell, LogOut, ChevronDown, Headphones, X,
   User, Shield,
 } from 'lucide-react'
@@ -20,7 +20,6 @@ const GOLD        = '#C9A84C'
 const NAV = [
   { label: 'Dashboard',  path: '/dashboard/admin',          icon: LayoutDashboard, exact: true  },
   { label: 'Products',   path: '/dashboard/admin/products', icon: Package,         exact: false },
-  { label: 'Images',     path: '/dashboard/admin/images',   icon: Image,           exact: false },
   { label: 'Branches',   path: '/dashboard/admin/branches', icon: Store,           exact: false },
   { label: 'Users',      path: '/dashboard/admin/users',    icon: Users,           exact: false },
   { label: 'Orders',     path: '/dashboard/admin/orders',   icon: ShoppingBag,     exact: false },
