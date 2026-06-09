@@ -170,15 +170,6 @@ export default function StoreHeadShell({ user, children, logoUrl }: Props) {
             ? <img src={logoUrl} alt="Malabar" className="h-9 object-contain" />
             : <MalabarLogoMark size={38} />
           }
-          <div className="w-px h-7 bg-white/25 mx-1" />
-          <div>
-            <p className="text-white text-[11px] font-semibold tracking-[0.18em] uppercase leading-none">
-              Visual Merchandising
-            </p>
-            <p className="text-[9px] tracking-[0.12em] uppercase mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
-              Store Head Portal
-            </p>
-          </div>
         </div>
 
         <div className="flex-1" />
