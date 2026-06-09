@@ -2,6 +2,7 @@ import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import OrderDetailView from '@/components/orders/OrderDetailView'
 import VendorOrderActions from '@/components/orders/VendorOrderActions'
+import VendorShipPhotoUpload from '@/components/orders/VendorShipPhotoUpload'
 
 export default async function VendorOrderDetailPage({
   params,
@@ -52,6 +53,11 @@ export default async function VendorOrderDetailPage({
             orderId={order.id}
             companyId={profile.company_id}
             branchId={(order.branch as any)?.id}
+          />
+        ) : order.status === 'shipped' ? (
+          <VendorShipPhotoUpload
+            orderId={order.id}
+            existingPhotoUrl={(order as any).shipped_photo_url}
           />
         ) : null
       }

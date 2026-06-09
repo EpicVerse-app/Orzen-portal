@@ -14,11 +14,12 @@ import { createClient } from '@/lib/supabase/client'
 import { sendOrderNotifications } from '@/app/actions/notifications'
 import { useLiveOrders } from '@/hooks/useRealtimeOrders'
 import { fadeUp, stagger, itemAnim } from '@/lib/motion'
+import VendorShipPhotoUpload from '@/components/orders/VendorShipPhotoUpload'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 
 const ORDER_SELECT = `
-  id, status, created_at, delivery_photo_url,
+  id, status, created_at, shipped_photo_url, delivery_photo_url,
   branch:branches(id, name, address, city, state),
   items:order_items(
     id, quantity,
@@ -61,6 +62,7 @@ interface Order {
   id: string
   status: string
   created_at: string
+  shipped_photo_url?: string | null
   delivery_photo_url?: string | null
   branch: { id: string; name: string; address: string; city: string; state: string }
   items: OrderItem[]
@@ -114,10 +116,12 @@ function OrderCard({
   order,
   companyId,
   showShipButton = false,
+  showPhotoUpload = false,
 }: {
   order: Order
   companyId: string
   showShipButton?: boolean
+  showPhotoUpload?: boolean
 }) {
   const [open, setOpen]         = useState(false)
   const [shipping, setShipping] = useState(false)
@@ -260,6 +264,16 @@ function OrderCard({
                       className="w-24 h-24 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity"
                     />
                   </a>
+                </div>
+              )}
+
+              {/* Shipment photo upload (vendor — Waiting for Delivery) */}
+              {showPhotoUpload && (
+                <div className="px-4 sm:px-5 py-3 border-t border-gray-50">
+                  <VendorShipPhotoUpload
+                    orderId={order.id}
+                    existingPhotoUrl={order.shipped_photo_url}
+                  />
                 </div>
               )}
 
@@ -469,8 +483,8 @@ function NewOrdersSection({ orders, companyId }: { orders: Order[]; companyId: s
 }
 
 // ── Generic section ─────────────────────────────────────
-function OrderSection({ title, icon: Icon, iconColor, bgColor, emptyMsg, orders, companyId }: {
-  title: string; icon: any; iconColor: string; bgColor: string; emptyMsg: string; orders: Order[]; companyId: string
+function OrderSection({ title, icon: Icon, iconColor, bgColor, emptyMsg, orders, companyId, showPhotoUpload = false }: {
+  title: string; icon: any; iconColor: string; bgColor: string; emptyMsg: string; orders: Order[]; companyId: string; showPhotoUpload?: boolean
 }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -489,7 +503,7 @@ function OrderSection({ title, icon: Icon, iconColor, bgColor, emptyMsg, orders,
         >
           {orders.map(order => (
             <motion.div key={order.id} variants={itemAnim}>
-              <OrderCard order={order} companyId={companyId} />
+              <OrderCard order={order} companyId={companyId} showPhotoUpload={showPhotoUpload} />
             </motion.div>
           ))}
         </motion.div>
@@ -624,7 +638,7 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
             ) : (
               <div className="p-3 space-y-2">
                 {searchResults.map(order => (
-                  <OrderCard key={order.id} order={order as Order} companyId={companyId} showShipButton={order.status === 'approved'} />
+                  <OrderCard key={order.id} order={order as Order} companyId={companyId} showShipButton={order.status === 'approved'} showPhotoUpload={order.status === 'shipped'} />
                 ))}
               </div>
             )}
@@ -646,7 +660,7 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
               <OrderSection
                 title="Waiting for Delivery" icon={Truck} iconColor="text-purple-700"
                 bgColor="bg-purple-50 border-purple-100" emptyMsg="No orders waiting for delivery"
-                orders={liveShipped} companyId={companyId}
+                orders={liveShipped} companyId={companyId} showPhotoUpload
               />
             </motion.div>
 

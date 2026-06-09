@@ -1,0 +1,102 @@
+'use client'
+
+import { useState } from 'react'
+import { Camera, CheckCircle2, ImageIcon } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import toast from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
+
+interface Props {
+  orderId:          string
+  existingPhotoUrl?: string | null
+}
+
+export default function VendorShipPhotoUpload({ orderId, existingPhotoUrl }: Props) {
+  const [uploading, setUploading] = useState(false)
+  const [preview, setPreview]     = useState<string | null>(existingPhotoUrl || null)
+  const router = useRouter()
+
+  async function handleUpload(file: File) {
+    setUploading(true)
+    const supabase = createClient()
+    const ext  = file.name.split('.').pop() || 'jpg'
+    const path = `delivery/${orderId}/shipped_${Date.now()}.${ext}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('order-photos')
+      .upload(path, file, { upsert: true })
+
+    if (uploadError) {
+      toast.error('Photo upload failed.')
+      setUploading(false)
+      return
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from('order-photos').getPublicUrl(path)
+
+    const { error } = await supabase
+      .from('orders')
+      .update({ shipped_photo_url: publicUrl })
+      .eq('id', orderId)
+
+    if (error) {
+      toast.error('Failed to save photo.')
+      setUploading(false)
+      return
+    }
+
+    setPreview(publicUrl)
+    toast.success('Photo uploaded!')
+    router.refresh()
+    setUploading(false)
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold text-gray-500 flex items-center gap-1.5">
+        <ImageIcon className="w-3.5 h-3.5" />
+        Shipment Photo
+        {preview && <CheckCircle2 className="w-3.5 h-3.5 text-green-500 ml-1" />}
+      </p>
+
+      <div className="flex items-center gap-3">
+        {/* Preview */}
+        {preview && (
+          <a href={preview} target="_blank" rel="noopener noreferrer" className="shrink-0">
+            <img
+              src={preview}
+              alt="Shipped"
+              className="w-16 h-16 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity"
+            />
+          </a>
+        )}
+
+        {/* Upload button */}
+        <label className="cursor-pointer">
+          <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors border ${
+            preview
+              ? 'border-gray-200 text-gray-600 hover:bg-gray-50'
+              : 'bg-blue-600 text-white hover:bg-blue-700 border-transparent'
+          }`}>
+            {uploading ? (
+              <><div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />Uploading…</>
+            ) : (
+              <><Camera className="w-4 h-4" />{preview ? 'Replace Photo' : 'Upload Photo'}</>
+            )}
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            disabled={uploading}
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) handleUpload(file)
+            }}
+          />
+        </label>
+      </div>
+    </div>
+  )
+}

@@ -3,7 +3,7 @@
 import { m } from 'framer-motion'
 import type { Variants } from 'framer-motion'
 import OrderAccordionCard from '@/components/orders/OrderAccordionCard'
-import DeliveryReceiveButton from '@/components/orders/DeliveryReceiveButton'
+import MarkReceivedButton from '@/components/orders/MarkReceivedButton'
 import { Package, Image as ImageIcon } from 'lucide-react'
 
 function shortId(id: string) {
@@ -91,7 +91,7 @@ export default function DeliveryStatusClient({ orders, companyId, branchId }: Pr
             )}
             <div className="px-4 sm:px-6 py-3 bg-gray-50 border-t border-gray-50 flex items-center justify-between gap-2 flex-wrap">
               <p className="text-[10px] text-gray-300">{order.status}</p>
-              <DeliveryReceiveButton
+              <MarkReceivedButton
                 orderId={order.id}
                 companyId={companyId}
                 branchId={branchId}
