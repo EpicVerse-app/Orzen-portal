@@ -110,22 +110,13 @@ export default function VendorShell({ user, children, primaryColor, sidebarColor
           <Menu className="w-5 h-5 text-white" />
         </button>
 
-        {/* Logo + brand */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Logo */}
+        <div className="flex items-center shrink-0">
           {logoUrl ? (
             <img src={logoUrl} alt="Malabar" className="h-8 w-auto object-contain" />
           ) : (
             <MalabarLogoMark size={38} />
           )}
-          <div className="w-px h-7 bg-white/25 mx-1" />
-          <div>
-            <p className="text-white text-[11px] font-semibold tracking-[0.18em] uppercase leading-none">
-              Visual Merchandising
-            </p>
-            <p className="text-white/45 text-[9px] tracking-[0.12em] uppercase mt-0.5">
-              Vendor Portal
-            </p>
-          </div>
         </div>
 
         <div className="flex-1" />
