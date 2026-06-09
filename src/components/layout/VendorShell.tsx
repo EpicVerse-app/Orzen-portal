@@ -14,13 +14,23 @@ const MAROON      = '#570439'
 const MAROON_DARK = '#570439'
 const GOLD        = '#C9A84C'
 
-function MalabarLogoMark({ size = 36 }: { size?: number }) {
+function MalabarLogoMark({ size = 40 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="24" cy="24" r="22" stroke="white" strokeWidth="1.5" />
-      <text x="24" y="20" textAnchor="middle" fill="white" fontSize="7" fontFamily="Georgia, serif" fontWeight="bold" letterSpacing="0.5">MALABAR</text>
-      <text x="24" y="29" textAnchor="middle" fill="white" fontSize="14" fontFamily="Georgia, serif" fontWeight="bold">M</text>
-      <text x="24" y="37.5" textAnchor="middle" fill="white" fontSize="4.5" fontFamily="Georgia, serif" letterSpacing="0.3">GOLD &amp; DIAMONDS</text>
+    <svg width={size} height={size} viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="30" cy="30" r="28" stroke="white" strokeWidth="1.5" />
+      {/* MALABAR */}
+      <text x="30" y="21" textAnchor="middle" fill="white" fontSize="7.5"
+        fontFamily="Arial, sans-serif" fontWeight="700" letterSpacing="1.5">MALABAR</text>
+      {/* divider line */}
+      <line x1="12" y1="24" x2="48" y2="24" stroke="white" strokeWidth="0.6" strokeOpacity="0.5" />
+      {/* M */}
+      <text x="30" y="38" textAnchor="middle" fill="white" fontSize="18"
+        fontFamily="Georgia, serif" fontWeight="700">M</text>
+      {/* divider line */}
+      <line x1="12" y1="41" x2="48" y2="41" stroke="white" strokeWidth="0.6" strokeOpacity="0.5" />
+      {/* GOLD & DIAMONDS */}
+      <text x="30" y="49" textAnchor="middle" fill="white" fontSize="5"
+        fontFamily="Arial, sans-serif" letterSpacing="0.8">GOLD &amp; DIAMONDS</text>
     </svg>
   )
 }
