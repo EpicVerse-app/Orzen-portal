@@ -101,6 +101,7 @@ export default async function SuperOrdersPage({
                 status={order.status}
                 itemCount={(order.items as any)?.length || 0}
                 totalQty={(order.items as any)?.reduce((s: number, i: any) => s + i.quantity, 0) || 0}
+                detailHref={`/dashboard/super/orders/${order.id}`}
               >
                 {/* Product list */}
                 <div className="divide-y divide-gray-50">

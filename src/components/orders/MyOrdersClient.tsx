@@ -108,6 +108,7 @@ export default function MyOrdersClient({ orders, initialSearch = '' }: Props) {
                 status={order.status}
                 itemCount={order.items?.length || 0}
                 totalQty={order.items?.reduce((s: number, i: any) => s + i.quantity, 0) || 0}
+                detailHref={`/dashboard/store/orders/${order.id}`}
               >
                 <div className="divide-y divide-gray-50">
                   {order.items?.map((itm: any) => (

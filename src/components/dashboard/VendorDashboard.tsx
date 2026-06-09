@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { m as motion, AnimatePresence } from 'framer-motion'
 import {
   Package, CheckCircle, TrendingUp, Truck, Clock,
@@ -121,7 +121,23 @@ function OrderCard({
 }) {
   const [open, setOpen]         = useState(false)
   const [shipping, setShipping] = useState(false)
-  const router = useRouter()
+  const router      = useRouter()
+  const clickCount  = useRef(0)
+  const clickTimer  = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function handleHeaderClick() {
+    clickCount.current += 1
+    if (clickCount.current === 1) {
+      clickTimer.current = setTimeout(() => {
+        clickCount.current = 0
+        setOpen(o => !o)
+      }, 280)
+    } else {
+      if (clickTimer.current) clearTimeout(clickTimer.current)
+      clickCount.current = 0
+      router.push(`/dashboard/vendor/orders/${order.id}`)
+    }
+  }
 
   async function markShipped() {
     setShipping(true)
@@ -161,7 +177,7 @@ function OrderCard({
     >
       {/* Header */}
       <button
-        onClick={() => setOpen(v => !v)}
+        onClick={handleHeaderClick}
         className="w-full px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors text-left"
       >
         <div className="flex-1 min-w-0">
@@ -175,7 +191,7 @@ function OrderCard({
               {order.branch?.name} — {order.branch?.address}, {order.branch?.city}, {order.branch?.state}
             </span>
           </div>
-          <div className="flex items-center gap-3 mt-1">
+          <div className="flex items-center gap-3 mt-1 flex-wrap">
             <div className="flex items-center gap-1 text-[11px] text-gray-400">
               <Calendar className="w-3 h-3 shrink-0" />
               {formatDate(order.created_at)}
@@ -184,6 +200,7 @@ function OrderCard({
               {order.items?.length} product{order.items?.length !== 1 ? 's' : ''}&nbsp;·&nbsp;
               {order.items?.reduce((s, i) => s + i.quantity, 0)} items
             </span>
+            <span className="text-[10px] text-gray-300 hidden sm:inline">double-click to open</span>
           </div>
         </div>
         <motion.div

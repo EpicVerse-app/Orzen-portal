@@ -139,6 +139,7 @@ export default function SuperRequestsPage() {
               status={order.status}
               itemCount={order.items?.length || 0}
               totalQty={order.items?.reduce((s, i) => s + i.quantity, 0) || 0}
+              detailHref={`/dashboard/super/orders/${order.id}`}
             >
               {/* Product list */}
               <div className="divide-y divide-gray-50">
