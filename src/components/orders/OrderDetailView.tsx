@@ -60,7 +60,7 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
   const totalQty = order.items.reduce((s, i) => s + i.quantity, 0)
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
+    <div className="space-y-4">
 
       {/* Back */}
       <Link
@@ -86,7 +86,7 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
           <OrderStatusBadge status={order.status as any} />
         </div>
 
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {/* Branch */}
           {order.branch && (
             <div className="flex items-start gap-2.5 bg-gray-50 rounded-xl px-4 py-3">
