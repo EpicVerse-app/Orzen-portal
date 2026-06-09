@@ -201,7 +201,7 @@ export default async function BranchDetailPage({
           ) : (
             <div className="p-5 space-y-3">
               {STATUS_ORDER.filter(s => statusCount[s] > 0).map(status => {
-                const pct = Math.round((statusCount[s] / totalOrders) * 100)
+                const pct = Math.round((statusCount[status] / totalOrders) * 100)
                 return (
                   <div key={status}>
                     <div className="flex items-center justify-between mb-1">
