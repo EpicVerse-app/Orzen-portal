@@ -64,9 +64,12 @@ export default function SuperShell({
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
+  const [showNotifs,  setShowNotifs]  = useState(false)
   const [loggingOut, setLoggingOut]   = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [bellRing,    setBellRing]    = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
+  const notifRef   = useRef<HTMLDivElement>(null)
 
   const headerBg = primaryColor || '#570439'
   const sidebarBg = sidebarColor || '#570439'
@@ -83,18 +86,17 @@ export default function SuperShell({
     .slice(0, 2)
     .toUpperCase()
 
-  // Close profile dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
-        setShowProfile(false)
-      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setShowProfile(false)
+      if (notifRef.current   && !notifRef.current.contains(e.target as Node))   setShowNotifs(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  // Fetch unread notification count
+  // Fetch unread notification count + bell shake
   useEffect(() => {
     async function fetchUnread() {
       const supabase = createClient()
@@ -103,7 +105,9 @@ export default function SuperShell({
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('is_read', false)
-      setUnreadCount(count || 0)
+      const c = count || 0
+      setUnreadCount(c)
+      if (c > 0) { setBellRing(true); setTimeout(() => setBellRing(false), 700) }
     }
     fetchUnread()
   }, [user.id])
@@ -184,35 +188,53 @@ export default function SuperShell({
         <SuperSearchBar companyId={(user as any).company_id} />
 
         {/* Notification bell */}
-        <Link
-          href="/dashboard/super/notifications"
-          className="relative p-1.5 text-white/70 hover:text-white transition-colors shrink-0"
-        >
-          <Bell className="w-5 h-5" />
-          {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
+        <div ref={notifRef} className="relative shrink-0">
+          <button onClick={() => { setShowNotifs(!showNotifs); setShowProfile(false) }}
+            className="relative p-1.5 rounded-lg hover:bg-white/10 transition-colors">
+            <Bell className={`w-5 h-5 text-white/70 ${bellRing ? 'animate-bell' : ''}`} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center pulse-ring">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+          {showNotifs && (
+            <div className="animate-dropdown absolute right-0 top-11 w-72 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
+                <p className="text-sm font-bold text-gray-800">Notifications</p>
+                {unreadCount > 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600">{unreadCount} new</span>}
+              </div>
+              <div className="px-4 py-8 text-center">
+                <Bell className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+                <p className="text-sm text-gray-400">{unreadCount === 0 ? 'All caught up!' : `${unreadCount} unread`}</p>
+              </div>
+              <div className="border-t border-gray-100 px-4 py-2">
+                <Link href="/dashboard/super/notifications" onClick={() => setShowNotifs(false)}
+                  className="text-xs font-semibold hover:underline" style={{ color: '#570439' }}>
+                  View all →
+                </Link>
+              </div>
+            </div>
           )}
-        </Link>
+        </div>
 
         {/* Profile dropdown */}
         <div ref={profileRef} className="relative shrink-0">
           <button
-            onClick={() => setShowProfile(!showProfile)}
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            onClick={() => { setShowProfile(!showProfile); setShowNotifs(false) }}
+            className="flex items-center gap-2 hover:opacity-90 transition-opacity group"
           >
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ring-2 ring-white/20 group-hover:ring-white/40 transition-all"
               style={{ backgroundColor: gold, color: '#000' }}
             >
               {initials}
             </div>
-            <ChevronDown className="w-3.5 h-3.5 text-white/60 hidden sm:block" />
+            <ChevronDown className={`w-3.5 h-3.5 text-white/60 hidden sm:block transition-transform duration-200 ${showProfile ? 'rotate-180' : ''}`} />
           </button>
 
           {showProfile && (
-            <div className="absolute right-0 top-11 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
+            <div className="animate-dropdown absolute right-0 top-11 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
               {/* User info */}
               <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
                 <p className="text-sm font-semibold text-gray-800">{user.full_name}</p>
@@ -348,7 +370,8 @@ export default function SuperShell({
         {/* Mobile overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+            className="fixed inset-0 bg-black/50 z-30 lg:hidden animate-fade-in"
+            style={{ backdropFilter: 'blur(2px)' }}
             onClick={() => setSidebarOpen(false)}
           />
         )}

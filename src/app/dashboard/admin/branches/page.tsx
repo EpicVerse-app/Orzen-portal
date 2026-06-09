@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Store, MapPin, ChevronRight, Users, ShoppingBag, ArrowLeft } from 'lucide-react'
+import BranchesGrid from '@/components/admin/BranchesGrid'
 
 export default async function AdminBranchesPage({
   searchParams,
@@ -178,58 +179,29 @@ export default async function AdminBranchesPage({
   }
 
   // ── LEVEL 1: Show all states ──
-  const states: Record<string, any[]> = {}
+  const statesMap: Record<string, any[]> = {}
   allBranches.forEach(b => {
     const s = b.state || 'Other'
-    if (!states[s]) states[s] = []
-    states[s].push(b)
+    if (!statesMap[s]) statesMap[s] = []
+    statesMap[s].push(b)
   })
+
+  const statesData = Object.entries(statesMap).map(([state, stateBranches]) => ({
+    state,
+    stores: stateBranches,
+    regions: [...new Set(stateBranches.map((b: any) => b.region).filter(Boolean))] as string[],
+    totalOrders: stateBranches.reduce((s: number, b: any) => s + (ordersByBranch[b.id] || 0), 0),
+  }))
 
   return (
     <div className="px-4 sm:px-6 py-6 max-w-5xl mx-auto">
-      <div className="mb-6">
+      <div className="mb-6 animate-fade-in-up stagger-1" style={{ opacity: 0 }}>
         <h1 className="text-2xl font-bold text-gray-900">Branches</h1>
         <p className="text-sm text-gray-400 mt-0.5">
-          {allBranches.length} stores · {Object.keys(states).length} states
+          {allBranches.length} stores · {statesData.length} states
         </p>
       </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Object.entries(states).map(([state, stateBranches]) => {
-          const regions = [...new Set(stateBranches.map(b => b.region).filter(Boolean))]
-          const totalOrders = stateBranches.reduce((s, b) => s + (ordersByBranch[b.id] || 0), 0)
-          return (
-            <Link key={state} href={`/dashboard/admin/branches?state=${encodeURIComponent(state)}`}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:-translate-y-0.5 transition-all group">
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(87,4,57,0.1)' }}>
-                  <MapPin className="w-5 h-5" style={{ color: '#570439' }} />
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 group-hover:translate-x-0.5 transition-all" />
-              </div>
-              <h3 className="text-base font-bold text-gray-800 group-hover:text-[#570439] transition-colors">{state}</h3>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {stateBranches.length} store{stateBranches.length !== 1 ? 's' : ''} · {regions.length} region{regions.length !== 1 ? 's' : ''}
-              </p>
-              {regions.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {regions.slice(0, 4).map(r => (
-                    <span key={r} className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 capitalize">{r}</span>
-                  ))}
-                </div>
-              )}
-              <div className="mt-3 pt-3 border-t border-gray-50 flex items-center gap-4">
-                <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
-                  <Store className="w-3 h-3" /> {stateBranches.length}
-                </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
-                  <ShoppingBag className="w-3 h-3" /> {totalOrders} orders
-                </div>
-              </div>
-            </Link>
-          )
-        })}
-      </div>
+      <BranchesGrid states={statesData} />
     </div>
   )
 }
