@@ -37,6 +37,33 @@ export async function addProductAction(formData: FormData) {
   return { success: true }
 }
 
+export async function updateProductAction(formData: FormData) {
+  const supabase = await createClient()
+
+  const product_id  = formData.get('product_id') as string
+  const name        = formData.get('name') as string
+  const unit        = formData.get('unit') as string
+  const image_url   = (formData.get('image_url')   as string) || null
+  const image_url_2 = (formData.get('image_url_2') as string) || null
+  const image_url_3 = (formData.get('image_url_3') as string) || null
+  const priceRaw    = formData.get('price') as string
+  const price       = priceRaw ? parseFloat(priceRaw) : 0
+
+  if (!product_id || !name || !unit) {
+    return { error: 'Name and unit are required.' }
+  }
+
+  const { error } = await supabase
+    .from('products')
+    .update({ name, unit, price, image_url, image_url_2, image_url_3 })
+    .eq('id', product_id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/admin/products')
+  return { success: true }
+}
+
 export async function deleteProductAction(productId: string) {
   const supabase = await createClient()
 

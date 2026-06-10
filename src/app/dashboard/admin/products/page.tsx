@@ -18,7 +18,7 @@ export default async function AdminProductsPage() {
 
   const { data: categories } = await supabase
     .from('categories')
-    .select('id, name, description, products(id, name, unit, price, image_url)')
+    .select('id, name, description, products(id, name, unit, price, image_url, image_url_2, image_url_3)')
     .eq('company_id', profile.company_id)
     .order('name')
 
