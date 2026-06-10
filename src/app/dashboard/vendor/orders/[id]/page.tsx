@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import OrderDetailView from '@/components/orders/OrderDetailView'
 import VendorOrderActions from '@/components/orders/VendorOrderActions'
 import VendorShipPhotoUpload from '@/components/orders/VendorShipPhotoUpload'
+import VendorOrderDownloadButton from '@/components/orders/VendorOrderDownloadButton'
 
 export default async function VendorOrderDetailPage({
   params,
@@ -42,27 +43,47 @@ export default async function VendorOrderDetailPage({
 
   if (!order) notFound()
 
+  const downloadBtn = (
+    <VendorOrderDownloadButton
+      orderId={order.id}
+      createdAt={order.created_at}
+      status={order.status}
+      branch={order.branch as any}
+      items={(order.items as any[]).map(i => ({
+        quantity: i.quantity,
+        product: {
+          name:     i.product?.name,
+          unit:     i.product?.unit,
+          category: i.product?.category,
+        },
+      }))}
+    />
+  )
+
   return (
     <OrderDetailView
       order={order as any}
       backHref="/dashboard/vendor"
       backLabel="Dashboard"
       actions={
-        order.status === 'approved' ? (
-          <VendorOrderActions
-            orderId={order.id}
-            companyId={profile.company_id}
-            branchId={(order.branch as any)?.id}
-          />
-        ) : order.status === 'shipped' ? (
-          <VendorShipPhotoUpload
-            orderId={order.id}
-            companyId={profile.company_id}
-            branchId={(order.branch as any)?.id}
-            shortId={'ORD-' + order.id.replace(/-/g, '').slice(0, 6).toUpperCase()}
-            existingPhotoUrl={(order as any).shipped_photo_url}
-          />
-        ) : null
+        <div className="space-y-3">
+          {order.status === 'approved' ? (
+            <VendorOrderActions
+              orderId={order.id}
+              companyId={profile.company_id}
+              branchId={(order.branch as any)?.id}
+            />
+          ) : order.status === 'shipped' ? (
+            <VendorShipPhotoUpload
+              orderId={order.id}
+              companyId={profile.company_id}
+              branchId={(order.branch as any)?.id}
+              shortId={'ORD-' + order.id.replace(/-/g, '').slice(0, 6).toUpperCase()}
+              existingPhotoUrl={(order as any).shipped_photo_url}
+            />
+          ) : null}
+          {downloadBtn}
+        </div>
       }
     />
   )
