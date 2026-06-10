@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useCartStore } from '@/store/cartStore'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Trash2, ShoppingCart, Building2, Package, ChevronDown } from 'lucide-react'
+import { Trash2, ShoppingCart, Building2, Package } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -101,34 +101,22 @@ export default function SuperViewOrderPage({ companyId, userId, branches }: Prop
         </div>
       ) : (
         <>
-          {/* Branch selector */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Building2 className="w-4 h-4 text-gray-500" />
-              <h2 className="text-sm font-semibold text-gray-700">Select Branch</h2>
-              <span className="text-xs text-red-400 font-medium">*required</span>
+          {/* Selected store display */}
+          <div className="bg-white rounded-2xl border border-green-200 shadow-sm p-4 mb-4 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
+              <Building2 className="w-4 h-4 text-green-600" />
             </div>
-            <div className="relative">
-              <select
-                value={selectedBranchId}
-                onChange={(e) => setSelectedBranchId(e.target.value)}
-                className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent pr-10"
-              >
-                <option value="">— Choose a branch —</option>
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name} — {b.city}, {b.state}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Ordering for</p>
+              {selectedBranch ? (
+                <>
+                  <p className="text-sm font-bold text-gray-800 truncate">{selectedBranch.name}</p>
+                  <p className="text-xs text-gray-400">{selectedBranch.city}, {selectedBranch.state}</p>
+                </>
+              ) : (
+                <p className="text-sm text-orange-500 font-semibold">No store selected — <a href="/dashboard/super/catalogue" className="underline">go back to select</a></p>
+              )}
             </div>
-            {selectedBranch && (
-              <p className="text-xs text-green-600 font-medium mt-2 flex items-center gap-1">
-                <Building2 className="w-3 h-3" />
-                Ordering for: {selectedBranch.name}, {selectedBranch.city}
-              </p>
-            )}
           </div>
 
           {/* Order items */}
