@@ -4,8 +4,8 @@ import Link from 'next/link'
 import {
   ChevronLeft, MapPin, Calendar, Package,
   Image as ImageIcon, Hash, AlertTriangle, Store,
+  Check, X,
 } from 'lucide-react'
-import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 import ImageCarousel from '@/components/ui/ImageCarousel'
 
 interface OrderItem {
@@ -43,26 +43,58 @@ interface Props {
   order: OrderDetail
   backHref: string
   backLabel?: string
-  /** Extra action buttons rendered in the left panel */
   actions?: React.ReactNode
 }
 
+// ── Status timeline config ───────────────────────────────────────────────────
+const STEPS = [
+  { key: 'submitted', label: 'Submitted',  sub: 'Order placed by store' },
+  { key: 'approved',  label: 'Approved',   sub: 'Approved by store head' },
+  { key: 'packing',   label: 'Packing',    sub: 'Vendor preparing order' },
+  { key: 'loaded',    label: 'Loaded',     sub: 'Items loaded for dispatch' },
+  { key: 'shipped',   label: 'Shipped',    sub: 'Out for delivery' },
+  { key: 'delivered', label: 'Delivered',  sub: 'Received at store' },
+]
+
+const STATUS_RANK: Record<string, number> = {
+  submitted: 0,
+  approved:  1,
+  packing:   2,
+  loaded:    3,
+  shipped:   4,
+  delivered: 5,
+  closed:    5,
+  rejected:  -1,
+}
+
+type StepState = 'done' | 'active' | 'pending'
+
+function getStepState(stepKey: string, orderStatus: string): StepState {
+  if (orderStatus === 'rejected') {
+    return stepKey === 'submitted' ? 'done' : 'pending'
+  }
+  const rank = STATUS_RANK[orderStatus] ?? 0
+  const idx  = STEPS.findIndex(s => s.key === stepKey)
+  if (idx < rank)  return 'done'
+  if (idx === rank) return 'active'
+  return 'pending'
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
 function shortId(id: string) {
   return 'ORD-' + id.replace(/-/g, '').slice(0, 6).toUpperCase()
 }
 function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString('en-IN', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  })
+  return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 function fmtTime(d: string) {
-  return new Date(d).toLocaleTimeString('en-IN', {
-    hour: '2-digit', minute: '2-digit',
-  })
+  return new Date(d).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
 }
 
+// ── Component ────────────────────────────────────────────────────────────────
 export default function OrderDetailView({ order, backHref, backLabel = 'Back', actions }: Props) {
-  const totalQty = order.items.reduce((s, i) => s + i.quantity, 0)
+  const totalQty   = order.items.reduce((s, i) => s + i.quantity, 0)
+  const isRejected = order.status === 'rejected'
 
   return (
     <div className="space-y-4">
@@ -79,33 +111,131 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
       {/* Two-column layout */}
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 lg:items-start">
 
-        {/* ── LEFT PANEL ─────────────────────────────────── */}
+        {/* ── LEFT PANEL ──────────────────────────────────────── */}
         <div className="lg:w-96 xl:w-[420px] shrink-0 space-y-3 lg:sticky lg:top-6">
 
-          {/* Order ID + Status */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
+          {/* Order ID + status */}
+          <div className="bg-white rounded-2xl border border-gray-200 px-5 py-4">
             <div className="flex items-center justify-between gap-3 mb-2">
               <div className="flex items-center gap-2">
                 <Hash className="w-4 h-4 text-gray-300" />
-                <h1 className="text-lg font-bold text-gray-900 tracking-tight">
-                  {shortId(order.id)}
-                </h1>
+                <h1 className="text-lg font-bold text-gray-900 tracking-tight">{shortId(order.id)}</h1>
               </div>
-              <OrderStatusBadge status={order.status as any} />
+              {/* B&W status badge */}
+              <span className={`text-xs font-bold px-3 py-1 rounded-full border ${
+                isRejected
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : order.status === 'delivered' || order.status === 'closed'
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : 'bg-white text-gray-900 border-gray-900'
+              } capitalize`}>
+                {order.status === 'closed' ? 'Delivered' : order.status}
+              </span>
             </div>
             <p className="text-[10px] text-gray-300 font-mono break-all">{order.id}</p>
           </div>
 
-          {/* Store details */}
-          {order.branch && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                  <Store className="w-3.5 h-3.5 text-blue-500" />
+          {/* ── Status timeline ─────────────────────────────── */}
+          <div className="bg-white rounded-2xl border border-gray-200 px-5 py-5">
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-5">
+              Order Progress
+            </p>
+
+            {isRejected ? (
+              /* Rejected path */
+              <div className="flex flex-col gap-0">
+                {/* Submitted — done */}
+                <div className="flex items-start gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className="w-7 h-7 rounded-full bg-gray-900 flex items-center justify-center shrink-0">
+                      <Check className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <div className="w-px flex-1 min-h-[28px] bg-gray-200 my-1" />
+                  </div>
+                  <div className="pb-5 pt-0.5">
+                    <p className="text-sm font-semibold text-gray-900">Submitted</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Order placed by store</p>
+                  </div>
                 </div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Store</p>
+                {/* Rejected — terminal */}
+                <div className="flex items-start gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className="w-7 h-7 rounded-full bg-gray-900 flex items-center justify-center shrink-0">
+                      <X className="w-3.5 h-3.5 text-white" />
+                    </div>
+                  </div>
+                  <div className="pt-0.5">
+                    <p className="text-sm font-semibold text-gray-900">Rejected</p>
+                    {order.rejection_reason && (
+                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                        {order.rejection_reason}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
-              <p className="text-sm font-bold text-gray-800">{order.branch.name}</p>
+            ) : (
+              /* Normal flow */
+              <div className="flex flex-col gap-0">
+                {STEPS.map((step, idx) => {
+                  const state   = getStepState(step.key, order.status)
+                  const isLast  = idx === STEPS.length - 1
+
+                  return (
+                    <div key={step.key} className="flex items-start gap-3">
+                      {/* Circle + connector */}
+                      <div className="flex flex-col items-center">
+                        {/* Circle */}
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border-2 transition-all ${
+                          state === 'done'
+                            ? 'bg-gray-900 border-gray-900'
+                            : state === 'active'
+                            ? 'bg-white border-gray-900'
+                            : 'bg-white border-gray-200'
+                        }`}>
+                          {state === 'done'
+                            ? <Check className="w-3.5 h-3.5 text-white" />
+                            : state === 'active'
+                            ? <div className="w-2.5 h-2.5 rounded-full bg-gray-900" />
+                            : <div className="w-2 h-2 rounded-full bg-gray-200" />
+                          }
+                        </div>
+                        {/* Connector line */}
+                        {!isLast && (
+                          <div className={`w-px flex-1 min-h-[28px] my-1 ${
+                            state === 'done' ? 'bg-gray-900' : 'bg-gray-100'
+                          }`} />
+                        )}
+                      </div>
+
+                      {/* Label */}
+                      <div className={`pb-5 pt-0.5 ${isLast ? 'pb-0' : ''}`}>
+                        <p className={`text-sm font-semibold ${
+                          state === 'pending' ? 'text-gray-300' : 'text-gray-900'
+                        }`}>
+                          {step.label}
+                        </p>
+                        <p className={`text-xs mt-0.5 ${
+                          state === 'pending' ? 'text-gray-200' : 'text-gray-400'
+                        }`}>
+                          {step.sub}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Store */}
+          {order.branch && (
+            <div className="bg-white rounded-2xl border border-gray-200 px-5 py-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Store className="w-3.5 h-3.5 text-gray-400" />
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Store</p>
+              </div>
+              <p className="text-sm font-bold text-gray-900">{order.branch.name}</p>
               {(order.branch.city || order.branch.state) && (
                 <p className="text-xs text-gray-400 mt-0.5">
                   {[order.branch.city, order.branch.state].filter(Boolean).join(', ')}
@@ -120,43 +250,26 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
             </div>
           )}
 
-          {/* Date / summary */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
+          {/* Date */}
+          <div className="bg-white rounded-2xl border border-gray-200 px-5 py-4">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
-                <Calendar className="w-3.5 h-3.5 text-purple-500" />
-              </div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Order Date</p>
+              <Calendar className="w-3.5 h-3.5 text-gray-400" />
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Order Date</p>
             </div>
-            <p className="text-sm font-bold text-gray-800">{fmtDate(order.created_at)}</p>
+            <p className="text-sm font-bold text-gray-900">{fmtDate(order.created_at)}</p>
             <p className="text-xs text-gray-400 mt-0.5">{fmtTime(order.created_at)}</p>
-            <div className="mt-3 pt-3 border-t border-gray-50 flex items-center justify-between text-xs text-gray-400">
+            <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
               <span>{order.items.length} product{order.items.length !== 1 ? 's' : ''}</span>
-              <span className="font-semibold text-gray-600">{totalQty} items total</span>
+              <span className="font-semibold text-gray-700">{totalQty} items total</span>
             </div>
           </div>
 
-          {/* Rejection reason */}
-          {order.status === 'rejected' && order.rejection_reason && (
-            <div className="bg-red-50 border border-red-200 rounded-2xl px-4 py-4 flex items-start gap-3">
-              <div className="w-7 h-7 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
-                <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-red-700">Rejection Reason</p>
-                <p className="text-xs text-red-600 mt-1 leading-relaxed">{order.rejection_reason}</p>
-              </div>
-            </div>
-          )}
-
           {/* Delivery photos */}
           {(order.loaded_photo_url || order.shipped_photo_url || order.delivery_photo_url) && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
+            <div className="bg-white rounded-2xl border border-gray-200 px-5 py-4">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
-                  <ImageIcon className="w-3.5 h-3.5 text-gray-400" />
-                </div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Delivery Photos</p>
+                <ImageIcon className="w-3.5 h-3.5 text-gray-400" />
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Delivery Photos</p>
               </div>
               <div className="flex gap-3 flex-wrap">
                 {[
@@ -180,20 +293,20 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
 
           {/* Actions */}
           {actions && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
+            <div className="bg-white rounded-2xl border border-gray-200 px-5 py-4">
               {actions}
             </div>
           )}
         </div>
 
-        {/* ── RIGHT PANEL — Products ──────────────────────── */}
+        {/* ── RIGHT PANEL — Products ──────────────────────────── */}
         <div className="flex-1 min-w-0">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
             {/* Header */}
-            <div className="px-5 py-4 border-b border-gray-50 flex items-center gap-2">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
               <Package className="w-4 h-4 text-gray-400" />
-              <h2 className="text-sm font-semibold text-gray-700">Products</h2>
-              <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+              <h2 className="text-sm font-semibold text-gray-800">Products</h2>
+              <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2.5 py-0.5 rounded-full font-medium">
                 {order.items.length} item{order.items.length !== 1 ? 's' : ''}
               </span>
             </div>
@@ -203,7 +316,7 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
               {order.items.map((item, idx) => (
                 <div key={item.id} className="px-5 py-4 flex items-center gap-4">
                   {/* Index */}
-                  <span className="text-xs font-semibold text-gray-300 w-5 shrink-0 text-center">
+                  <span className="text-xs font-semibold text-gray-200 w-5 shrink-0 text-center select-none">
                     {idx + 1}
                   </span>
 
@@ -217,11 +330,11 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
 
                   {/* Name + category */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 leading-tight">
+                    <p className="text-sm font-semibold text-gray-900 leading-tight">
                       {item.product.name}
                     </p>
                     {item.product.category?.name && (
-                      <span className="inline-block mt-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                      <span className="inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full border border-gray-200 text-gray-500">
                         {item.product.category.name}
                       </span>
                     )}
@@ -229,17 +342,17 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
 
                   {/* Qty + unit */}
                   <div className="shrink-0 text-right">
-                    <p className="text-base font-bold text-gray-800">× {item.quantity}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">{item.product.unit}</p>
+                    <p className="text-base font-bold text-gray-900">× {item.quantity}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wide">{item.product.unit}</p>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Footer total */}
-            <div className="px-5 py-3 border-t border-gray-50 bg-gray-50/60 flex items-center justify-between">
+            {/* Footer */}
+            <div className="px-5 py-3.5 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
               <span className="text-xs text-gray-500 font-medium">Total quantity</span>
-              <span className="text-sm font-bold text-gray-800">{totalQty} items</span>
+              <span className="text-sm font-bold text-gray-900">{totalQty} items</span>
             </div>
           </div>
         </div>
