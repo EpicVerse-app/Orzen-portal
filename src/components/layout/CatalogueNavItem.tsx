@@ -4,9 +4,10 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { m, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { ShoppingBag, Tag, ChevronRight, ChevronDown, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useCartStore } from '@/store/cartStore'
 
 interface Category { id: string; name: string }
 
@@ -15,12 +16,15 @@ interface Props {
   baseUrl: string
   onNavigate?: () => void
   gold?: string
+  requireBranchSelection?: boolean
 }
 
 export default function CatalogueNavItem({
-  companyId, baseUrl, onNavigate, gold = '#c9a84c',
+  companyId, baseUrl, onNavigate, gold = '#c9a84c', requireBranchSelection = false,
 }: Props) {
   const pathname  = usePathname()
+  const router    = useRouter()
+  const { selectedBranchId } = useCartStore()
   const triggerRef = useRef<HTMLDivElement>(null)
 
   const [categories, setCategories]         = useState<Category[]>([])
@@ -49,6 +53,16 @@ export default function CatalogueNavItem({
     setLoaded(true)
     setLoading(false)
   }, [companyId, loaded, loading])
+
+  function handleCategoryClick(e: React.MouseEvent, catId: string) {
+    if (requireBranchSelection && !selectedBranchId) {
+      e.preventDefault()
+      setDesktopOpen(false)
+      setMobileExpanded(false)
+      onNavigate?.()
+      router.push(baseUrl)
+    }
+  }
 
   function handleMouseEnter() {
     if (triggerRef.current) {
@@ -101,7 +115,7 @@ export default function CatalogueNavItem({
                 >
                   <Link
                     href={`${baseUrl}/${cat.id}`}
-                    onClick={() => { setDesktopOpen(false); onNavigate?.() }}
+                    onClick={(e) => { handleCategoryClick(e, cat.id); setDesktopOpen(false); onNavigate?.() }}
                     className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-gray-50 active:bg-gray-100 transition-colors group"
                   >
                     <Tag className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-500 shrink-0 transition-colors" />
@@ -191,7 +205,7 @@ export default function CatalogueNavItem({
                     <Link
                       key={cat.id}
                       href={`${baseUrl}/${cat.id}`}
-                      onClick={() => { setMobileExpanded(false); onNavigate?.() }}
+                      onClick={(e) => { handleCategoryClick(e, cat.id); setMobileExpanded(false); onNavigate?.() }}
                       className="flex items-center gap-2 py-2 pr-3 text-sm rounded-lg transition-colors active:opacity-60"
                       style={{ color: 'rgba(255,255,255,0.55)' }}
                     >

@@ -313,6 +313,7 @@ export default function SuperShell({
                 item.label === 'Order Materials' ? (
                   <CatalogueNavItem
                     key={item.path}
+                    requireBranchSelection
                     companyId={(user as any).company_id}
                     baseUrl="/dashboard/super/catalogue"
                     onNavigate={() => setSidebarOpen(false)}
