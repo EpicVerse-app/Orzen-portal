@@ -33,9 +33,11 @@ export default async function SuperCataloguePage() {
     .order('name')
 
   return (
-    <SuperCatalogueClient
-      branches={(branches || []) as any[]}
-      categories={categories || []}
-    />
+    <div className="px-4 sm:px-6 py-5 max-w-4xl mx-auto">
+      <SuperCatalogueClient
+        branches={(branches || []) as any[]}
+        categories={categories || []}
+      />
+    </div>
   )
 }

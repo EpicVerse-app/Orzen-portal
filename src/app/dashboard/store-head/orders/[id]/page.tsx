@@ -42,20 +42,22 @@ export default async function StoreHeadOrderDetailPage({
   if (!order) notFound()
 
   return (
-    <OrderDetailView
-      order={order as any}
-      backHref="/dashboard/store-head/orders"
-      backLabel="Orders"
-      actions={
-        order.status === 'submitted' ? (
-          <StoreHeadOrderActions
-            orderId={order.id}
-            companyId={profile.company_id}
-            approverId={profile.id}
-            branchId={(order.branch as any)?.id}
-          />
-        ) : null
-      }
-    />
+    <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto">
+      <OrderDetailView
+        order={order as any}
+        backHref="/dashboard/store-head/orders"
+        backLabel="Orders"
+        actions={
+          order.status === 'submitted' ? (
+            <StoreHeadOrderActions
+              orderId={order.id}
+              companyId={profile.company_id}
+              approverId={profile.id}
+              branchId={(order.branch as any)?.id}
+            />
+          ) : null
+        }
+      />
+    </div>
   )
 }

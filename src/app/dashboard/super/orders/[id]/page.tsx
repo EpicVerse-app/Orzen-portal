@@ -42,10 +42,12 @@ export default async function SuperOrderDetailPage({
 
   // RM is read-only — no actions
   return (
-    <OrderDetailView
-      order={order as any}
-      backHref="/dashboard/super/orders"
-      backLabel="Orders"
-    />
+    <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto">
+      <OrderDetailView
+        order={order as any}
+        backHref="/dashboard/super/orders"
+        backLabel="Orders"
+      />
+    </div>
   )
 }

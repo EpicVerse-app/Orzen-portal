@@ -61,30 +61,32 @@ export default async function VendorOrderDetailPage({
   )
 
   return (
-    <OrderDetailView
-      order={order as any}
-      backHref="/dashboard/vendor"
-      backLabel="Dashboard"
-      actions={
-        <div className="space-y-3">
-          {order.status === 'approved' ? (
-            <VendorOrderActions
-              orderId={order.id}
-              companyId={profile.company_id}
-              branchId={(order.branch as any)?.id}
-            />
-          ) : order.status === 'shipped' ? (
-            <VendorShipPhotoUpload
-              orderId={order.id}
-              companyId={profile.company_id}
-              branchId={(order.branch as any)?.id}
-              shortId={'ORD-' + order.id.replace(/-/g, '').slice(0, 6).toUpperCase()}
-              existingPhotoUrl={(order as any).shipped_photo_url}
-            />
-          ) : null}
-          {downloadBtn}
-        </div>
-      }
-    />
+    <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto">
+      <OrderDetailView
+        order={order as any}
+        backHref="/dashboard/vendor"
+        backLabel="Dashboard"
+        actions={
+          <div className="space-y-3">
+            {order.status === 'approved' ? (
+              <VendorOrderActions
+                orderId={order.id}
+                companyId={profile.company_id}
+                branchId={(order.branch as any)?.id}
+              />
+            ) : order.status === 'shipped' ? (
+              <VendorShipPhotoUpload
+                orderId={order.id}
+                companyId={profile.company_id}
+                branchId={(order.branch as any)?.id}
+                shortId={'ORD-' + order.id.replace(/-/g, '').slice(0, 6).toUpperCase()}
+                existingPhotoUrl={(order as any).shipped_photo_url}
+              />
+            ) : null}
+            {downloadBtn}
+          </div>
+        }
+      />
+    </div>
   )
 }
