@@ -25,6 +25,12 @@ interface Props {
 export default function SuperViewOrderPage({ companyId, userId, branches }: Props) {
   const { items, removeItem, updateQty, clearCart, totalItems, selectedBranchId, setSelectedBranchId } = useCartStore()
   const [submitting, setSubmitting] = useState(false)
+
+  const totalPrice = items.reduce((sum, i) => {
+    const price = i.product.price ?? 0
+    return sum + price * i.quantity
+  }, 0)
+  const hasPrices = items.some(i => (i.product.price ?? 0) > 0)
   const router = useRouter()
 
   async function placeOrder() {
@@ -157,19 +163,28 @@ export default function SuperViewOrderPage({ companyId, userId, branches }: Prop
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-800 truncate">{item.product.name}</p>
                     <p className="text-xs text-gray-400">{(item.product as any).categoryName}</p>
-                    {item.product.price != null && item.product.price > 0 && (
-                      <p className="text-xs font-semibold mt-0.5" style={{ color: '#570439' }}>₹{item.product.price.toFixed(2)}</p>
+                    {(item.product.price ?? 0) > 0 && (
+                      <p className="text-xs font-medium mt-0.5" style={{ color: '#570439' }}>
+                        ₹{item.product.price!.toFixed(2)} / {item.product.unit}
+                      </p>
                     )}
                   </div>
 
-                  {/* Qty */}
-                  <input
-                    type="number"
-                    min="1"
-                    value={item.quantity}
-                    onChange={(e) => updateQty(item.product.id, parseInt(e.target.value) || 0)}
-                    className="w-16 sm:w-20 border border-gray-200 rounded-lg px-2 sm:px-3 py-2 text-sm text-center text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#c9a84c]"
-                  />
+                  {/* Qty + subtotal */}
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <input
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) => updateQty(item.product.id, parseInt(e.target.value) || 0)}
+                      className="w-16 sm:w-20 border border-gray-200 rounded-lg px-2 sm:px-3 py-2 text-sm text-center text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#c9a84c]"
+                    />
+                    {(item.product.price ?? 0) > 0 && (
+                      <p className="text-xs font-bold" style={{ color: '#570439' }}>
+                        ₹{(item.product.price! * item.quantity).toFixed(2)}
+                      </p>
+                    )}
+                  </div>
 
                   {/* Remove */}
                   <button
@@ -189,10 +204,21 @@ export default function SuperViewOrderPage({ companyId, userId, branches }: Prop
               <span className="text-gray-500">Total products</span>
               <span className="font-semibold text-gray-900">{items.length}</span>
             </div>
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center justify-between text-sm mb-2">
               <span className="text-gray-500">Total quantity</span>
               <span className="font-semibold text-gray-900">{totalItems()} items</span>
             </div>
+            {hasPrices && (
+              <>
+                <div className="border-t border-gray-100 my-3" />
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-gray-800">Total Price</span>
+                  <span className="text-base font-extrabold" style={{ color: '#570439' }}>
+                    ₹{totalPrice.toFixed(2)}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Actions */}
