@@ -144,15 +144,15 @@ export default function SuperShell({
         <Link
           href={path}
           onClick={() => setSidebarOpen(false)}
-          className="flex items-center gap-3 pl-5 pr-3 py-3 rounded-lg text-sm transition-colors active:opacity-70"
+          className="flex items-center gap-3 pl-5 pr-3 py-3 rounded-lg text-sm transition-all duration-150 active:opacity-70 hover:bg-white/10 group"
           style={
             active
-              ? { color: '#fff', fontWeight: 600, backgroundColor: 'rgba(255,255,255,0.08)' }
+              ? { color: '#fff', fontWeight: 600, backgroundColor: 'rgba(255,255,255,0.1)' }
               : { color: 'rgba(255,255,255,0.55)', fontWeight: 500 }
           }
         >
-          <Icon className="w-4 h-4 shrink-0" style={active ? { color: gold } : {}} />
-          <span className="flex-1">{label}</span>
+          <Icon className="w-4 h-4 shrink-0 transition-colors group-hover:text-white" style={active ? { color: gold } : {}} />
+          <span className="flex-1 transition-colors group-hover:text-white">{label}</span>
         </Link>
       </div>
     )

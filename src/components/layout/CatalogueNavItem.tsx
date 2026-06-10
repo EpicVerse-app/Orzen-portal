@@ -150,14 +150,14 @@ export default function CatalogueNavItem({
         )}
         <Link
           href={baseUrl}
-          className="flex items-center gap-3 pl-5 pr-3 py-3 rounded-lg text-sm transition-colors"
+          className="flex items-center gap-3 pl-5 pr-3 py-3 rounded-lg text-sm transition-all duration-150 hover:bg-white/10 group"
           style={isActive
-            ? { color: '#fff', fontWeight: 600, backgroundColor: 'rgba(255,255,255,0.08)' }
+            ? { color: '#fff', fontWeight: 600, backgroundColor: 'rgba(255,255,255,0.1)' }
             : { color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}
         >
-          <ShoppingBag className="w-4 h-4 shrink-0" style={isActive ? { color: gold } : {}} />
-          <span className="flex-1">Order Materials</span>
-          <ChevronRight className="w-3.5 h-3.5 opacity-40" />
+          <ShoppingBag className="w-4 h-4 shrink-0 transition-colors group-hover:text-white" style={isActive ? { color: gold } : {}} />
+          <span className="flex-1 transition-colors group-hover:text-white">Order Materials</span>
+          <ChevronRight className="w-3.5 h-3.5 opacity-40 group-hover:opacity-70 transition-opacity" />
         </Link>
 
         {/* Portal — escapes sidebar overflow clipping */}
@@ -174,15 +174,15 @@ export default function CatalogueNavItem({
         )}
         <button
           onClick={() => { loadCategories(); setMobileExpanded(v => !v) }}
-          className="w-full flex items-center gap-3 pl-5 pr-3 py-3 rounded-lg text-sm transition-colors text-left"
+          className="w-full flex items-center gap-3 pl-5 pr-3 py-3 rounded-lg text-sm transition-all duration-150 hover:bg-white/10 text-left group"
           style={isActive
-            ? { color: '#fff', fontWeight: 600, backgroundColor: 'rgba(255,255,255,0.08)' }
+            ? { color: '#fff', fontWeight: 600, backgroundColor: 'rgba(255,255,255,0.1)' }
             : { color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}
         >
-          <ShoppingBag className="w-4 h-4 shrink-0" style={isActive ? { color: gold } : {}} />
-          <span className="flex-1">Order Materials</span>
+          <ShoppingBag className="w-4 h-4 shrink-0 transition-colors group-hover:text-white" style={isActive ? { color: gold } : {}} />
+          <span className="flex-1 transition-colors group-hover:text-white">Order Materials</span>
           <m.span animate={{ rotate: mobileExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-            <ChevronDown className="w-3.5 h-3.5 opacity-50" />
+            <ChevronDown className="w-3.5 h-3.5 opacity-50 group-hover:opacity-70 transition-opacity" />
           </m.span>
         </button>
 
