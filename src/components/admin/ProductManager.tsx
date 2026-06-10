@@ -115,12 +115,18 @@ export default function ProductManager({ profile, categories, companyId }: Props
   // ── Deleting
   const [deleting, setDeleting] = useState<string | null>(null)
 
+  // ───────────── Slugify folder names ─────────────────────────────────────
+  function slugify(str: string) {
+    return str.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  }
+
   // ───────────── Image upload helper ──────────────────────────────────────
-  async function uploadImage(file: File, slot: number): Promise<string | null> {
+  // folderPath = "company-name/category-name/product-name"
+  async function uploadImage(file: File, slot: number, folderPath: string): Promise<string | null> {
     try {
       const supabase = createClient()
       const ext  = file.name.split('.').pop()
-      const path = `${companyId}/${Date.now()}_${slot}.${ext}`
+      const path = `${folderPath}/${Date.now()}_${slot}.${ext}`
       const { data: uploaded, error } = await supabase.storage
         .from('product-images')
         .upload(path, file, { upsert: true })
@@ -150,7 +156,7 @@ export default function ProductManager({ profile, categories, companyId }: Props
     addRefs.forEach(r => { if (r.current) r.current.value = '' })
   }
 
-  async function handleAddProduct(e: React.FormEvent<HTMLFormElement>, categoryId: string) {
+  async function handleAddProduct(e: React.FormEvent<HTMLFormElement>, categoryId: string, categoryName: string) {
     e.preventDefault()
     setAddSaving(true)
     const form = e.currentTarget
@@ -158,10 +164,13 @@ export default function ProductManager({ profile, categories, companyId }: Props
     fd.set('category_id', categoryId)
     fd.set('company_id', companyId)
 
+    const productName = (fd.get('name') as string) || 'product'
+    const folderPath = `${slugify(company?.name || companyId)}/${slugify(categoryName)}/${slugify(productName)}`
+
     const urlKeys = ['image_url', 'image_url_2', 'image_url_3']
     for (let i = 0; i < 3; i++) {
       if (addFiles[i]) {
-        const url = await uploadImage(addFiles[i]!, i)
+        const url = await uploadImage(addFiles[i]!, i, folderPath)
         if (!url) { setAddSaving(false); return }
         fd.set(urlKeys[i], url)
       }
@@ -207,7 +216,7 @@ export default function ProductManager({ profile, categories, companyId }: Props
     const ref = editRefs[slot]; if (ref.current) ref.current.value = ''
   }
 
-  async function handleEditProduct(e: React.FormEvent<HTMLFormElement>) {
+  async function handleEditProduct(e: React.FormEvent<HTMLFormElement>, categoryName: string) {
     e.preventDefault()
     if (!editingProduct) return
     setEditSaving(true)
@@ -215,11 +224,14 @@ export default function ProductManager({ profile, categories, companyId }: Props
     const fd = new FormData(form)
     fd.set('product_id', editingProduct.id)
 
+    const productName = (fd.get('name') as string) || editingProduct.name
+    const folderPath = `${slugify(company?.name || companyId)}/${slugify(categoryName)}/${slugify(productName)}`
+
     // For each slot: if new file → upload; else keep existing URL (may be null)
     const urlKeys = ['image_url', 'image_url_2', 'image_url_3']
     for (let i = 0; i < 3; i++) {
       if (editFiles[i]) {
-        const url = await uploadImage(editFiles[i]!, i)
+        const url = await uploadImage(editFiles[i]!, i, folderPath)
         if (!url) { setEditSaving(false); return }
         fd.set(urlKeys[i], url)
       } else {
@@ -347,7 +359,7 @@ export default function ProductManager({ profile, categories, companyId }: Props
                           /* ── Inline edit form ── */
                           <form
                             key={product.id}
-                            onSubmit={handleEditProduct}
+                            onSubmit={(e) => handleEditProduct(e, cat.name)}
                             className="px-5 py-4 space-y-3 bg-amber-50/40 border-l-4 border-[#c9a84c]"
                           >
                             <div className="flex items-center justify-between">
@@ -465,7 +477,7 @@ export default function ProductManager({ profile, categories, companyId }: Props
                   {/* Add product */}
                   {showAddProduct === cat.id ? (
                     <form
-                      onSubmit={(e) => handleAddProduct(e, cat.id)}
+                      onSubmit={(e) => handleAddProduct(e, cat.id, cat.name)}
                       className="border-t border-gray-100 px-5 py-4 space-y-3 bg-gray-50"
                     >
                       <div className="flex items-center justify-between mb-1">
