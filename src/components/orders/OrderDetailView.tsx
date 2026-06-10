@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import {
   ChevronLeft, MapPin, Calendar, Package,
-  Image as ImageIcon, Hash,
+  Image as ImageIcon, Hash, AlertTriangle,
 } from 'lucide-react'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 import ImageCarousel from '@/components/ui/ImageCarousel'
@@ -26,6 +26,7 @@ export interface OrderDetail {
   id: string
   status: string
   created_at: string
+  rejection_reason?: string | null
   loaded_photo_url?: string | null
   shipped_photo_url?: string | null
   delivery_photo_url?: string | null
@@ -117,6 +118,19 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
           </div>
         </div>
       </div>
+
+      {/* Rejection reason banner */}
+      {order.status === 'rejected' && order.rejection_reason && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl px-5 py-4 flex items-start gap-3">
+          <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
+            <AlertTriangle className="w-4 h-4 text-red-600" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-red-700">Order Rejected</p>
+            <p className="text-sm text-red-600 mt-0.5 leading-relaxed">{order.rejection_reason}</p>
+          </div>
+        </div>
+      )}
 
       {/* Products */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

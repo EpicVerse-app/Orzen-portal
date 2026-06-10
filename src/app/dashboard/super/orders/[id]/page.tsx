@@ -24,7 +24,7 @@ export default async function SuperOrderDetailPage({
   const { data: order } = await supabase
     .from('orders')
     .select(`
-      id, status, created_at,
+      id, status, created_at, rejection_reason,
       loaded_photo_url, shipped_photo_url, delivery_photo_url,
       branch:branches(name, city, state, address),
       items:order_items(
