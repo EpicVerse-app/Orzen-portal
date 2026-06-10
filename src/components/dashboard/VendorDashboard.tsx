@@ -575,7 +575,7 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
     { label: 'New Orders',           value: liveStats.newOrders, color: 'text-blue-600',   bg: 'bg-blue-50',   border: 'hover:border-blue-300',   Icon: Package,    ref: newOrdersRef },
     { label: 'Waiting for Delivery', value: liveStats.shipped,   color: 'text-purple-600', bg: 'bg-purple-50', border: 'hover:border-purple-300', Icon: Truck,       ref: shippedRef },
     { label: 'Delivered',            value: liveStats.delivered, color: 'text-green-600',  bg: 'bg-green-50',  border: 'hover:border-green-300',  Icon: CheckCircle, ref: deliveredRef },
-    { label: 'Total',                value: liveStats.total,     color: 'text-gray-700',   bg: 'bg-gray-100',  border: 'hover:border-gray-300',   Icon: TrendingUp,  ref: null },
+    { label: 'Total',                value: liveStats.total,     color: 'text-gray-700',   bg: 'bg-gray-100',  border: 'hover:border-gray-300',   Icon: TrendingUp,  ref: null, href: '/dashboard/vendor/total-orders' },
   ]
 
   return (
@@ -611,7 +611,7 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {STAT_CARDS.map(({ label, value, color, bg, Icon, ref }, i) => (
+        {STAT_CARDS.map(({ label, value, color, bg, Icon, ref, href }, i) => (
           <AnimatedStatCard
             key={label}
             label={label}
@@ -620,7 +620,8 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
             color={color}
             bg={bg}
             index={i}
-            onClick={ref ? () => scrollTo(ref) : undefined}
+            href={href}
+            onClick={!href && ref ? () => scrollTo(ref) : undefined}
           />
         ))}
       </div>
