@@ -42,7 +42,7 @@ export default async function SuperOrderDetailPage({
   if (!order) notFound()
 
   return (
-    <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto">
+    <div className="px-4 sm:px-6 py-5 max-w-5xl mx-auto">
       <OrderDetailView
         order={order as any}
         backHref="/dashboard/super/orders"
