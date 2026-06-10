@@ -40,7 +40,7 @@ interface ImageSlotProps {
   slot: number
   preview: string | null
   inputId: string
-  inputRef: React.RefObject<HTMLInputElement>
+  inputRef: React.RefObject<HTMLInputElement | null>
   onSelect: (slot: number, e: React.ChangeEvent<HTMLInputElement>) => void
   onRemove: (slot: number) => void
 }
