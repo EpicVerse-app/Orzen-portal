@@ -71,7 +71,7 @@ export default function BranchesGrid({ states }: { states: StateData[] }) {
               {s.regions.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
                   {s.regions.slice(0, 4).map(r => (
-                    <span key={r} className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 capitalize transition-colors group-hover:bg-[rgba(87,4,57,0.08)] group-hover:text-[#570439]">{r}</span>
+                    <span key={r} className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 capitalize">{r}</span>
                   ))}
                 </div>
               )}
