@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Orzen Flow — Complete Working Flow</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #fff;
+    color: #000;
+    padding: 40px;
+  }
+
+  /* ── Title ── */
+  .title-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .title-bar h1 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+  }
+  .title-bar p {
+    font-size: 12px;
+    color: #555;
+    margin-top: 2px;
+  }
+
+  /* ── Swimlane table ── */
+  .swimlane {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 2px solid #000;
+  }
+
+  /* Column headers */
+  .swimlane thead th {
+    background: #000;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-align: center;
+    padding: 14px 10px;
+    border-right: 2px solid #444;
+    width: 25%;
+  }
+  .swimlane thead th:last-child { border-right: none; }
+
+  /* Body rows */
+  .swimlane tbody tr {
+    border-bottom: 1px solid #e5e5e5;
+  }
+  .swimlane tbody tr:last-child { border-bottom: none; }
+
+  .swimlane tbody td {
+    vertical-align: middle;
+    padding: 18px 14px;
+    border-right: 1px solid #ddd;
+    width: 25%;
+    min-height: 80px;
+  }
+  .swimlane tbody td:last-child { border-right: none; }
+
+  /* Alternating row tint */
+  .swimlane tbody tr:nth-child(even) td {
+    background: #fafafa;
+  }
+
+  /* Step box */
+  .step {
+    border: 1.5px solid #000;
+    border-radius: 6px;
+    padding: 10px 12px;
+    background: #fff;
+    position: relative;
+  }
+  .step .step-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #000;
+    line-height: 1.3;
+  }
+  .step .step-sub {
+    font-size: 10px;
+    color: #666;
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+
+  /* Step variants */
+  .step.filled {
+    background: #000;
+  }
+  .step.filled .step-title,
+  .step.filled .step-sub { color: #fff; }
+
+  .step.dashed {
+    border-style: dashed;
+    border-color: #888;
+  }
+  .step.dashed .step-title { color: #555; }
+
+  .step.terminal {
+    background: #000;
+    border-color: #000;
+  }
+  .step.terminal .step-title {
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .step.terminal .check {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #fff;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .step.terminal .check::after {
+    content: '✓';
+    font-size: 9px;
+    color: #fff;
+    font-weight: 900;
+  }
+
+  /* Notify box */
+  .notify {
+    border: 1.5px dashed #555;
+    border-radius: 6px;
+    padding: 9px 12px;
+    background: #f5f5f5;
+  }
+  .notify .notify-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #000;
+    line-height: 1.3;
+  }
+  .notify .notify-sub {
+    font-size: 10px;
+    color: #666;
+    margin-top: 2px;
+  }
+
+  /* Arrow between steps in same cell (vertical) */
+  .arrow-down {
+    text-align: center;
+    font-size: 14px;
+    color: #999;
+    padding: 2px 0;
+    line-height: 1;
+  }
+
+  /* Row label */
+  .row-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #aaa;
+    margin-bottom: 8px;
+  }
+
+  /* Empty cell */
+  .empty { background: #fdfdfd; }
+
+  /* Section divider row */
+  .divider-row td {
+    height: 6px;
+    background: #f0f0f0;
+    border-right: 1px solid #ddd;
+    padding: 0;
+  }
+
+  /* Flow number badge */
+  .flow-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #000;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    margin-right: 6px;
+    flex-shrink: 0;
+    vertical-align: middle;
+  }
+
+  /* Cross-lane arrow indicator */
+  .trigger {
+    font-size: 9px;
+    color: #888;
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  /* Print */
+  @media print {
+    body { padding: 20px; }
+    .swimlane { font-size: 11px; }
+    @page { size: A4 landscape; margin: 15mm; }
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 24px;
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px solid #ddd;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #444;
+  }
+  .legend-box {
+    width: 28px;
+    height: 16px;
+    border-radius: 3px;
+  }
+  .footer {
+    margin-top: 20px;
+    font-size: 10px;
+    color: #aaa;
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+
+<!-- Title -->
+<div class="title-bar">
+  <div>
+    <h1>Orzen Flow — Complete Working Flow</h1>
+    <p>Swimlane Diagram &nbsp;·&nbsp; Malabar Jewellers Visual Merchandising Portal &nbsp;·&nbsp; All Roles</p>
+  </div>
+</div>
+
+<!-- Swimlane -->
+<table class="swimlane">
+  <thead>
+    <tr>
+      <th>🏪&nbsp; Store Manager</th>
+      <th>👤&nbsp; Super Manager</th>
+      <th>🚚&nbsp; Vendor</th>
+      <th>🔔&nbsp; System Notify</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <!-- Step 1: Browse & Cart -->
+    <tr>
+      <td>
+        <div class="step">
+          <div class="step-title"><span class="flow-num">1</span>Browse Catalogue</div>
+          <div class="step-sub">View products by category, select items and set quantities</div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="step">
+          <div class="step-title">Add to Cart</div>
+          <div class="step-sub">Items added to cart, branch auto-assigned</div>
+        </div>
+      </td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+    </tr>
+
+    <tr class="divider-row"><td></td><td></td><td></td><td></td></tr>
+
+    <!-- Step 2: Submit Order -->
+    <tr>
+      <td>
+        <div class="step filled">
+          <div class="step-title"><span style="background:#fff;color:#000;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;margin-right:6px;flex-shrink:0;">2</span>Submit Order</div>
+          <div class="step-sub">Confirms cart and submits order — status becomes <em>Submitted</em></div>
+        </div>
+        <div class="trigger">→ triggers notification to Super Manager</div>
+      </td>
+      <td>
+        <div class="notify">
+          <div class="notify-title">Receive Notification</div>
+          <div class="notify-sub">In-app alert: new order submitted</div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="step">
+          <div class="step-title"><span class="flow-num">3</span>Approve or Reject Order</div>
+          <div class="step-sub">Reviews order items, approves or rejects with reason</div>
+        </div>
+        <div class="trigger">→ triggers notification to Vendor</div>
+      </td>
+      <td class="empty"></td>
+      <td>
+        <div class="notify">
+          <div class="notify-title">Email + In-App</div>
+          <div class="notify-sub">→ Super Manager notified of new order</div>
+        </div>
+      </td>
+    </tr>
+
+    <tr class="divider-row"><td></td><td></td><td></td><td></td></tr>
+
+    <!-- Step 3: Vendor receives -->
+    <tr>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td>
+        <div class="notify">
+          <div class="notify-title">Receive Notification</div>
+          <div class="notify-sub">In-app alert: order approved, ready to pack</div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="step">
+          <div class="step-title"><span class="flow-num">4</span>Mark as Packing</div>
+          <div class="step-sub">Vendor starts preparing — status becomes <em>Packing</em></div>
+        </div>
+      </td>
+      <td>
+        <div class="notify">
+          <div class="notify-title">Email + In-App</div>
+          <div class="notify-sub">→ Vendor notified of approved order</div>
+        </div>
+      </td>
+    </tr>
+
+    <tr class="divider-row"><td></td><td></td><td></td><td></td></tr>
+
+    <!-- Step 4: Upload Loaded Photo -->
+    <tr>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td>
+        <div class="step">
+          <div class="step-title"><span class="flow-num">5</span>Upload Loaded Photo</div>
+          <div class="step-sub">Photo of packed/loaded goods — status becomes <em>Loaded</em></div>
+        </div>
+        <div class="trigger">→ triggers notification to Super Manager</div>
+      </td>
+      <td>
+        <div class="notify">
+          <div class="notify-title">Notify Super Manager</div>
+          <div class="notify-sub">Order loaded and ready to ship</div>
+        </div>
+      </td>
+    </tr>
+
+    <tr class="divider-row"><td></td><td></td><td></td><td></td></tr>
+
+    <!-- Step 5: Upload Shipped Photo -->
+    <tr>
+      <td>
+        <div class="notify">
+          <div class="notify-title">Receive Notification</div>
+          <div class="notify-sub">In-app: order is out for delivery</div>
+        </div>
+      </td>
+      <td class="empty"></td>
+      <td>
+        <div class="step">
+          <div class="step-title"><span class="flow-num">6</span>Upload Shipped Photo</div>
+          <div class="step-sub">Photo of dispatched order — status becomes <em>Shipped</em></div>
+        </div>
+        <div class="trigger">→ triggers notification to Store + Super Manager</div>
+      </td>
+      <td>
+        <div class="notify">
+          <div class="notify-title">Notify Store + Super Mgr</div>
+          <div class="notify-sub">Order is on the way</div>
+        </div>
+      </td>
+    </tr>
+
+    <tr class="divider-row"><td></td><td></td><td></td><td></td></tr>
+
+    <!-- Step 6: Received at Store -->
+    <tr>
+      <td>
+        <div class="step">
+          <div class="step-title"><span class="flow-num">7</span>Upload Received Photo</div>
+          <div class="step-sub">Store manager confirms delivery with photo — status becomes <em>Delivered</em></div>
+        </div>
+        <div class="trigger">→ triggers notification to all roles</div>
+      </td>
+      <td class="empty"></td>
+      <td class="empty"></td>
+      <td>
+        <div class="notify">
+          <div class="notify-title">Notify All Roles</div>
+          <div class="notify-sub">Order marked as delivered successfully</div>
+        </div>
+      </td>
+    </tr>
+
+    <tr class="divider-row"><td></td><td></td><td></td><td></td></tr>
+
+    <!-- Terminal: Completed -->
+    <tr>
+      <td>
+        <div class="step terminal">
+          <div class="step-title"><span class="check"></span>Delivered</div>
+        </div>
+      </td>
+      <td>
+        <div class="step terminal">
+          <div class="step-title"><span class="check"></span>View in Dashboard</div>
+        </div>
+      </td>
+      <td>
+        <div class="step terminal">
+          <div class="step-title"><span class="check"></span>Order Complete</div>
+        </div>
+      </td>
+      <td>
+        <div class="step terminal">
+          <div class="step-title"><span class="check"></span>Notify All Roles</div>
+        </div>
+      </td>
+    </tr>
+
+  </tbody>
+</table>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-box" style="background:#000;border:1.5px solid #000;"></div>
+    Action Step (filled = trigger point)
+  </div>
+  <div class="legend-item">
+    <div class="legend-box" style="background:#fff;border:1.5px solid #000;"></div>
+    Action Step
+  </div>
+  <div class="legend-item">
+    <div class="legend-box" style="background:#f5f5f5;border:1.5px dashed #555;"></div>
+    System Notification
+  </div>
+  <div class="legend-item">
+    <div class="legend-box" style="background:#000;"></div>
+    Terminal / Completed State
+  </div>
+</div>
+
+<div class="footer">
+  Orzen Flow &nbsp;·&nbsp; Malabar Jewellers Visual Merchandising &nbsp;·&nbsp; Confidential
+</div>
+
+</body>
+</html>
