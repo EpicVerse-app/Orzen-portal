@@ -132,7 +132,7 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
           Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}, {profile.full_name?.split(' ')[0]} 👋
         </h1>
         <p className="text-sm text-gray-400 mt-0.5">
-          {profile.scope_state} Region · {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
+          {profile.scope_state}{profile.scope_region ? ` · ${profile.scope_region} Region` : ' Region'} · {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
       </motion.div>
 

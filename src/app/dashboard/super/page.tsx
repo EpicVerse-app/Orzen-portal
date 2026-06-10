@@ -20,12 +20,14 @@ export default async function SuperDashboardPage() {
 
   if (!profile || profile.role !== 'super_manager') redirect('/login')
 
-  const companyId  = (profile as any).company_id
-  const scopeState = (profile as any).scope_state as string | null
+  const companyId   = (profile as any).company_id
+  const scopeState  = (profile as any).scope_state  as string | null
+  const scopeRegion = (profile as any).scope_region as string | null
 
-  // Get branch IDs scoped to this super manager's state
+  // Get branch IDs scoped to this super manager's state + region
   let branchQuery = supabase.from('branches').select('id').eq('company_id', companyId)
-  if (scopeState) branchQuery = branchQuery.eq('state', scopeState)
+  if (scopeState)  branchQuery = branchQuery.eq('state', scopeState)
+  if (scopeRegion) branchQuery = branchQuery.eq('region', scopeRegion)
   const { data: scopedBranches } = await branchQuery
   const branchIds = (scopedBranches || []).map(b => b.id)
 

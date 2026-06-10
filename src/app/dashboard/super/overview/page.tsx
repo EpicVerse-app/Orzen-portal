@@ -20,11 +20,13 @@ export default async function SuperOverviewPage() {
 
   const company = Array.isArray(profile.company) ? profile.company[0] : profile.company as any
 
-  const scopeState = (profile as any).scope_state as string | null
+  const scopeState  = (profile as any).scope_state  as string | null
+  const scopeRegion = (profile as any).scope_region as string | null
 
-  // Fetch branches scoped to this super manager's state
+  // Fetch branches scoped to this super manager's state + region
   let branchQuery = supabase.from('branches').select('id, name, city, state, region').eq('company_id', profile.company_id).order('name')
-  if (scopeState) branchQuery = branchQuery.eq('state', scopeState)
+  if (scopeState)  branchQuery = branchQuery.eq('state', scopeState)
+  if (scopeRegion) branchQuery = branchQuery.eq('region', scopeRegion)
   const { data: branches } = await branchQuery
 
   const branchIds = (branches || []).map(b => b.id)

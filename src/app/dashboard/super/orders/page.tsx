@@ -30,17 +30,19 @@ export default async function SuperOrdersPage({
 
   const { data: profile } = await supabase
     .from('users')
-    .select('id, role, company_id, scope_state')
+    .select('id, role, company_id, scope_state, scope_region')
     .eq('id', user.id)
     .single()
 
   if (!profile || profile.role !== 'super_manager') redirect('/dashboard')
 
-  const scopeState = (profile as any).scope_state as string | null
+  const scopeState  = (profile as any).scope_state  as string | null
+  const scopeRegion = (profile as any).scope_region as string | null
 
-  // Scope to this super manager's state
+  // Scope to this super manager's state + region
   let branchQuery = supabase.from('branches').select('id').eq('company_id', profile.company_id)
-  if (scopeState) branchQuery = branchQuery.eq('state', scopeState)
+  if (scopeState)  branchQuery = branchQuery.eq('state', scopeState)
+  if (scopeRegion) branchQuery = branchQuery.eq('region', scopeRegion)
   const { data: scopedBranches } = await branchQuery
   const branchIds = (scopedBranches || []).map(b => b.id)
 
