@@ -86,6 +86,7 @@ function ImageSlot({ slot, preview, inputId, inputRef, onSelect, onRemove }: Ima
 export default function ProductManager({ profile, categories, companyId }: Props) {
   const gold         = '#c9a84c'
   const primaryColor = '#570439'
+  const company      = Array.isArray(profile.company) ? profile.company[0] : profile.company
 
   // ── Expanded category
   const [expandedCat, setExpandedCat]       = useState<string | null>(categories[0]?.id || null)
