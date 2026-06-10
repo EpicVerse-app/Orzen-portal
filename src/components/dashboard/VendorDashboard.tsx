@@ -84,31 +84,45 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-// ── Download order as text file ─────────────────────────
-function downloadOrder(order: Order) {
-  const lines = [
-    `Order ID   : ${shortId(order.id)}`,
-    `Date       : ${formatDate(order.created_at)}`,
-    `Branch     : ${order.branch?.name}`,
-    `Address    : ${order.branch?.address}, ${order.branch?.city}, ${order.branch?.state}`,
-    `Status     : ${order.status}`,
-    ``,
-    `─────────────────────────────────────`,
-    `PRODUCTS`,
-    `─────────────────────────────────────`,
-    ...(order.items?.map(i =>
-      `${i.product?.name?.padEnd(30)} x${i.quantity} ${i.product?.unit}`
-    ) || []),
-    `─────────────────────────────────────`,
-    `Total Items: ${order.items?.reduce((s, i) => s + i.quantity, 0)}`,
+// ── Download order as Excel file ─────────────────────────
+async function downloadOrder(order: Order) {
+  const XLSX = await import('xlsx')
+
+  // Order summary sheet
+  const summary = [
+    ['Order ID',    shortId(order.id)],
+    ['Date',        formatDate(order.created_at)],
+    ['Branch',      order.branch?.name],
+    ['Address',     `${order.branch?.address}, ${order.branch?.city}, ${order.branch?.state}`],
+    ['Status',      order.status],
+    ['Total Items', order.items?.reduce((s, i) => s + i.quantity, 0)],
   ]
-  const blob = new Blob([lines.join('\n')], { type: 'text/plain' })
-  const url  = URL.createObjectURL(blob)
-  const a    = document.createElement('a')
-  a.href     = url
-  a.download = `${shortId(order.id)}.txt`
-  a.click()
-  URL.revokeObjectURL(url)
+
+  // Products sheet
+  const productRows = [
+    ['#', 'Product Name', 'Category', 'Quantity', 'Unit'],
+    ...(order.items?.map((item, idx) => [
+      idx + 1,
+      item.product?.name ?? '',
+      item.product?.category?.name ?? '',
+      item.quantity,
+      item.product?.unit ?? '',
+    ]) || []),
+  ]
+
+  const wb = XLSX.utils.book_new()
+
+  const wsSummary  = XLSX.utils.aoa_to_sheet(summary)
+  const wsProducts = XLSX.utils.aoa_to_sheet(productRows)
+
+  // Column widths
+  wsSummary['!cols']  = [{ wch: 16 }, { wch: 40 }]
+  wsProducts['!cols'] = [{ wch: 4 }, { wch: 32 }, { wch: 20 }, { wch: 10 }, { wch: 12 }]
+
+  XLSX.utils.book_append_sheet(wb, wsSummary,  'Order Summary')
+  XLSX.utils.book_append_sheet(wb, wsProducts, 'Products')
+
+  XLSX.writeFile(wb, `${shortId(order.id)}.xlsx`)
 }
 
 // ── Single collapsible order card ──────────────────────
