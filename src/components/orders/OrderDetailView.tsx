@@ -80,7 +80,7 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 lg:items-start">
 
         {/* ── LEFT PANEL ─────────────────────────────────── */}
-        <div className="lg:w-72 xl:w-80 shrink-0 space-y-3 lg:sticky lg:top-6">
+        <div className="lg:w-96 xl:w-[420px] shrink-0 space-y-3 lg:sticky lg:top-6">
 
           {/* Order ID + Status */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
