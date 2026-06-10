@@ -16,6 +16,8 @@ export interface CartItem {
 interface CartState {
   items: CartItem[]
   isOpen: boolean
+  selectedBranchId: string
+  setSelectedBranchId: (id: string) => void
   setOpen: (open: boolean) => void
   addItem: (product: CartProduct, quantity: number) => void
   removeItem: (productId: string) => void
@@ -27,6 +29,8 @@ interface CartState {
 export const useCartStore = create<CartState>((set, get) => ({
   items: [],
   isOpen: false,
+  selectedBranchId: '',
+  setSelectedBranchId: (id) => set({ selectedBranchId: id }),
   setOpen: (open) => set({ isOpen: open }),
 
   addItem: (product, quantity) => {
@@ -59,7 +63,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     }))
   },
 
-  clearCart: () => set({ items: [] }),
+  clearCart: () => set({ items: [], selectedBranchId: '' }),
 
   totalItems: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
 }))

@@ -23,8 +23,7 @@ interface Props {
 }
 
 export default function SuperViewOrderPage({ companyId, userId, branches }: Props) {
-  const { items, removeItem, updateQty, clearCart, totalItems } = useCartStore()
-  const [selectedBranchId, setSelectedBranchId] = useState<string>('')
+  const { items, removeItem, updateQty, clearCart, totalItems, selectedBranchId, setSelectedBranchId } = useCartStore()
   const [submitting, setSubmitting] = useState(false)
   const router = useRouter()
 
@@ -85,7 +84,7 @@ export default function SuperViewOrderPage({ companyId, userId, branches }: Prop
       {/* Page header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">View Order</h1>
-        <p className="text-sm text-gray-500 mt-1">Review your items and select the branch</p>
+        <p className="text-sm text-gray-500 mt-1">Review your items and place the order</p>
       </div>
 
       {items.length === 0 ? (
