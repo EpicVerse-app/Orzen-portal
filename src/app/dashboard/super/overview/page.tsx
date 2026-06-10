@@ -86,7 +86,7 @@ export default async function SuperOverviewPage() {
           <div className="flex flex-wrap gap-4 text-sm text-gray-500">
             <span className="flex items-center gap-1.5">
               <Building2 className="w-4 h-4 text-blue-400" />
-              {allBranches.length} Branches
+              {allBranches.length} Stores
             </span>
             <span className="flex items-center gap-1.5">
               <MapPin className="w-4 h-4 text-purple-400" />
@@ -123,16 +123,16 @@ export default async function SuperOverviewPage() {
       {/* Branch-wise breakdown */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-50">
-          <h2 className="text-sm font-semibold text-gray-700">Orders by Branch</h2>
+          <h2 className="text-sm font-semibold text-gray-700">Orders by Store</h2>
         </div>
         {branchStats.length === 0 ? (
-          <div className="px-5 py-10 text-center text-sm text-gray-400">No branches found</div>
+          <div className="px-5 py-10 text-center text-sm text-gray-400">No stores found</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-50 text-left">
-                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Branch</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Store</th>
                   <th className="px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide text-center">Total</th>
                   <th className="px-4 py-3 text-xs font-semibold text-orange-400 uppercase tracking-wide text-center">Pending</th>
                   <th className="px-4 py-3 text-xs font-semibold text-green-500 uppercase tracking-wide text-center">Approved</th>
