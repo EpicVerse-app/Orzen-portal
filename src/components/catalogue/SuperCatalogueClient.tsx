@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
-import { Tag, ChevronRight, ShoppingBag, Store, CheckCircle2, ChevronDown } from 'lucide-react'
+import { Tag, ChevronRight, ShoppingBag, Store, CheckCircle2, Search, X } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
 
 interface Branch {
@@ -24,18 +24,47 @@ interface Props {
 
 export default function SuperCatalogueClient({ branches, categories }: Props) {
   const { selectedBranchId, setSelectedBranchId } = useCartStore()
-  const [localBranch, setLocalBranch] = useState(selectedBranchId)
+  const [localBranch, setLocalBranch]   = useState(selectedBranchId)
+  const [query, setQuery]               = useState('')
+  const [open, setOpen]                 = useState(false)
+  const containerRef                    = useRef<HTMLDivElement>(null)
 
   // Sync from store on mount
   useEffect(() => {
     setLocalBranch(selectedBranchId)
-  }, [selectedBranchId])
+    const b = branches.find(b => b.id === selectedBranchId)
+    if (b) setQuery(`${b.name} — ${b.city}`)
+  }, [])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [])
 
   const selectedBranch = branches.find(b => b.id === localBranch)
 
-  function handleBranchChange(id: string) {
-    setLocalBranch(id)
-    setSelectedBranchId(id)
+  const filtered = query.trim() === '' || (selectedBranch && query === `${selectedBranch.name} — ${selectedBranch.city}`)
+    ? branches
+    : branches.filter(b =>
+        `${b.name} ${b.city} ${b.state}`.toLowerCase().includes(query.toLowerCase())
+      )
+
+  function handleSelect(b: Branch) {
+    setLocalBranch(b.id)
+    setSelectedBranchId(b.id)
+    setQuery(`${b.name} — ${b.city}`)
+    setOpen(false)
+  }
+
+  function handleClear() {
+    setLocalBranch('')
+    setSelectedBranchId('')
+    setQuery('')
+    setOpen(false)
   }
 
   return (
@@ -66,21 +95,46 @@ export default function SuperCatalogueClient({ branches, categories }: Props) {
           )}
         </div>
 
-        <div className="relative">
-          <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-          <select
-            value={localBranch}
-            onChange={e => handleBranchChange(e.target.value)}
-            className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-gray-200 text-sm bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/40 focus:border-[#c9a84c] transition-all"
-          >
-            <option value="">— Choose a store —</option>
-            {branches.map(b => (
-              <option key={b.id} value={b.id}>
-                {b.name} — {b.city}, {b.state}
-              </option>
-            ))}
-          </select>
+        {/* Searchable combobox */}
+        <div ref={containerRef} className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            value={query}
+            placeholder="Type to search store..."
+            onChange={e => { setQuery(e.target.value); setOpen(true); if (!e.target.value) handleClear() }}
+            onFocus={() => setOpen(true)}
+            className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/40 focus:border-[#c9a84c] transition-all"
+          />
+          {query && (
+            <button onClick={handleClear} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500">
+              <X className="w-4 h-4" />
+            </button>
+          )}
+
+          {/* Dropdown */}
+          {open && (
+            <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden max-h-56 overflow-y-auto">
+              {filtered.length === 0 ? (
+                <div className="px-4 py-3 text-sm text-gray-400 text-center">No stores found</div>
+              ) : (
+                filtered.map(b => (
+                  <button
+                    key={b.id}
+                    onClick={() => handleSelect(b)}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors ${b.id === localBranch ? 'bg-[#f5f0e8]' : ''}`}
+                  >
+                    <Store className="w-4 h-4 text-gray-400 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate">{b.name}</p>
+                      <p className="text-xs text-gray-400 truncate">{b.city}, {b.state}</p>
+                    </div>
+                    {b.id === localBranch && <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 ml-auto" />}
+                  </button>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
         {selectedBranch && (
