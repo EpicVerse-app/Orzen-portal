@@ -43,7 +43,7 @@ export default async function StoreHeadOrderDetailPage({
   if (!order) notFound()
 
   return (
-    <div className="px-4 sm:px-6 py-5 max-w-5xl mx-auto">
+    <div className="px-4 sm:px-6 py-5">
       <OrderDetailView
         order={order as any}
         backHref="/dashboard/store-head/orders"
