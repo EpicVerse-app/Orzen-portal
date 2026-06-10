@@ -10,17 +10,17 @@ export default async function SuperBranchesPage() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('id, role, company_id')
+    .select('id, role, company_id, scope_state')
     .eq('id', user.id)
     .single()
 
   if (!profile || profile.role !== 'super_manager') redirect('/dashboard')
 
-  const { data: branches } = await supabase
-    .from('branches')
-    .select('id, name, address, city, state, region')
-    .eq('company_id', profile.company_id)
-    .order('name')
+  const scopeState = (profile as any).scope_state as string | null
+
+  let branchQuery = supabase.from('branches').select('id, name, address, city, state, region').eq('company_id', profile.company_id).order('name')
+  if (scopeState) branchQuery = branchQuery.eq('state', scopeState)
+  const { data: branches } = await branchQuery
 
   const allBranches = branches || []
 

@@ -20,25 +20,32 @@ export default async function SuperDashboardPage() {
 
   if (!profile || profile.role !== 'super_manager') redirect('/login')
 
-  const companyId = (profile as any).company_id
+  const companyId  = (profile as any).company_id
+  const scopeState = (profile as any).scope_state as string | null
+
+  // Get branch IDs scoped to this super manager's state
+  let branchQuery = supabase.from('branches').select('id').eq('company_id', companyId)
+  if (scopeState) branchQuery = branchQuery.eq('state', scopeState)
+  const { data: scopedBranches } = await branchQuery
+  const branchIds = (scopedBranches || []).map(b => b.id)
 
   // Run orders + branch count IN PARALLEL (not sequential)
   const [ordersResult, branchCountResult] = await Promise.all([
-    supabase
-      .from('orders')
-      .select(`
-        id, status, created_at,
-        branch:branches(id, name, city, state),
-        items:order_items(id, quantity, product:products(id, name, unit, image_url))
-      `)
-      .eq('company_id', companyId)
-      .order('created_at', { ascending: false })
-      .limit(100),
+    branchIds.length === 0
+      ? Promise.resolve({ data: [] })
+      : supabase
+          .from('orders')
+          .select(`
+            id, status, created_at,
+            branch:branches(id, name, city, state),
+            items:order_items(id, quantity, product:products(id, name, unit, image_url))
+          `)
+          .eq('company_id', companyId)
+          .in('branch_id', branchIds)
+          .order('created_at', { ascending: false })
+          .limit(100),
 
-    supabase
-      .from('branches')
-      .select('id', { count: 'exact', head: true })
-      .eq('company_id', companyId),
+    Promise.resolve({ count: branchIds.length }),
   ])
 
   const orders = ordersResult.data || []

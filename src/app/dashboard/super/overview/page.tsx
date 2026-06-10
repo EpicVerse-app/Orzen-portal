@@ -20,19 +20,24 @@ export default async function SuperOverviewPage() {
 
   const company = Array.isArray(profile.company) ? profile.company[0] : profile.company as any
 
-  // Fetch all branches
-  const { data: branches } = await supabase
-    .from('branches')
-    .select('id, name, city, state, region')
-    .eq('company_id', profile.company_id)
-    .order('name')
+  const scopeState = (profile as any).scope_state as string | null
 
-  // Fetch all orders with branch info
-  const { data: orders } = await supabase
-    .from('orders')
-    .select('id, status, created_at, branch_id, branch:branches(id, name, city)')
-    .eq('company_id', profile.company_id)
-    .order('created_at', { ascending: false })
+  // Fetch branches scoped to this super manager's state
+  let branchQuery = supabase.from('branches').select('id, name, city, state, region').eq('company_id', profile.company_id).order('name')
+  if (scopeState) branchQuery = branchQuery.eq('state', scopeState)
+  const { data: branches } = await branchQuery
+
+  const branchIds = (branches || []).map(b => b.id)
+
+  // Fetch orders scoped to those branches
+  const { data: orders } = branchIds.length === 0
+    ? { data: [] }
+    : await supabase
+        .from('orders')
+        .select('id, status, created_at, branch_id, branch:branches(id, name, city)')
+        .eq('company_id', profile.company_id)
+        .in('branch_id', branchIds)
+        .order('created_at', { ascending: false })
 
   const allBranches = branches || []
   const allOrders   = orders   || []

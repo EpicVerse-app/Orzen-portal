@@ -15,13 +15,21 @@ export default async function SuperRequestsPage() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('id, role, company_id')
+    .select('id, role, company_id, scope_state')
     .eq('id', user.id)
     .single()
 
   if (!profile || profile.role !== 'super_manager') redirect('/dashboard')
 
-  const { data: orders } = await supabase
+  const scopeState = (profile as any).scope_state as string | null
+
+  // Scope to this super manager's state
+  let branchQuery = supabase.from('branches').select('id').eq('company_id', profile.company_id)
+  if (scopeState) branchQuery = branchQuery.eq('state', scopeState)
+  const { data: scopedBranches } = await branchQuery
+  const branchIds = (scopedBranches || []).map(b => b.id)
+
+  let ordersQuery = supabase
     .from('orders')
     .select(`
       id, status, created_at,
@@ -31,6 +39,10 @@ export default async function SuperRequestsPage() {
     .eq('company_id', profile.company_id)
     .eq('status', 'submitted')
     .order('created_at', { ascending: true })
+
+  if (branchIds.length > 0) ordersQuery = ordersQuery.in('branch_id', branchIds)
+
+  const { data: orders } = branchIds.length === 0 ? { data: [] } : await ordersQuery
 
   const allOrders = orders || []
 

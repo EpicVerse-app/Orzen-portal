@@ -30,26 +30,37 @@ export default async function SuperOrdersPage({
 
   const { data: profile } = await supabase
     .from('users')
-    .select('id, role, company_id')
+    .select('id, role, company_id, scope_state')
     .eq('id', user.id)
     .single()
 
   if (!profile || profile.role !== 'super_manager') redirect('/dashboard')
 
-  const { data: orders } = await supabase
-    .from('orders')
-    .select(`
-      id, status, created_at,
-      loaded_photo_url, shipped_photo_url, delivery_photo_url,
-      branch:branches(id, name, city, state),
-      items:order_items(
-        id, quantity,
-        product:products(id, name, image_url, unit, category:categories(name))
-      )
-    `)
-    .eq('company_id', profile.company_id)
-    .in('status', statuses)
-    .order('created_at', { ascending: false })
+  const scopeState = (profile as any).scope_state as string | null
+
+  // Scope to this super manager's state
+  let branchQuery = supabase.from('branches').select('id').eq('company_id', profile.company_id)
+  if (scopeState) branchQuery = branchQuery.eq('state', scopeState)
+  const { data: scopedBranches } = await branchQuery
+  const branchIds = (scopedBranches || []).map(b => b.id)
+
+  const { data: orders } = branchIds.length === 0
+    ? { data: [] }
+    : await supabase
+        .from('orders')
+        .select(`
+          id, status, created_at,
+          loaded_photo_url, shipped_photo_url, delivery_photo_url,
+          branch:branches(id, name, city, state),
+          items:order_items(
+            id, quantity,
+            product:products(id, name, image_url, unit, category:categories(name))
+          )
+        `)
+        .eq('company_id', profile.company_id)
+        .in('branch_id', branchIds)
+        .in('status', statuses)
+        .order('created_at', { ascending: false })
 
   const allOrders = orders || []
 

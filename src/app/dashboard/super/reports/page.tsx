@@ -19,17 +19,23 @@ export default async function SuperReportsPage() {
 
   if (!profile || profile.role !== 'super_manager') redirect('/dashboard')
 
-  const { data: branches } = await supabase
-    .from('branches')
-    .select('id, name, city, state')
-    .eq('company_id', profile.company_id)
-    .order('name')
+  const scopeState = (profile as any).scope_state as string | null
 
-  const { data: orders } = await supabase
-    .from('orders')
-    .select('id, status, created_at, branch_id, items:order_items(id)')
-    .eq('company_id', profile.company_id)
-    .order('created_at', { ascending: false })
+  // Fetch branches scoped to this super manager's state
+  let branchQuery = supabase.from('branches').select('id, name, city, state').eq('company_id', profile.company_id).order('name')
+  if (scopeState) branchQuery = branchQuery.eq('state', scopeState)
+  const { data: branches } = await branchQuery
+
+  const branchIds = (branches || []).map(b => b.id)
+
+  const { data: orders } = branchIds.length === 0
+    ? { data: [] }
+    : await supabase
+        .from('orders')
+        .select('id, status, created_at, branch_id, items:order_items(id)')
+        .eq('company_id', profile.company_id)
+        .in('branch_id', branchIds)
+        .order('created_at', { ascending: false })
 
   const allOrders   = orders   || []
   const allBranches = branches || []
