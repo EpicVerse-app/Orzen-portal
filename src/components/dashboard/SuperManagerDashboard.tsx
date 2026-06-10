@@ -1,18 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import Link from 'next/link'
 import { m as motion, AnimatePresence } from 'framer-motion'
 import {
   CheckCircle, XCircle, Clock, AlertTriangle,
-  Package, TrendingUp, Building2, Activity,
+  Package, TrendingUp, Building2, Activity, Eye,
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { AppUser, Order } from '@/types'
 import AnimatedStatCard from '@/components/ui/AnimatedStatCard'
 import { useLiveOrders } from '@/hooks/useRealtimeOrders'
 import { fadeUp, stagger, itemAnim, slideIn } from '@/lib/motion'
-import toast from 'react-hot-toast'
-import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 const SUPER_ORDER_SELECT = `
   id, status, created_at,
@@ -94,8 +92,6 @@ function activityDot(status: string) {
 }
 
 export default function SuperManagerDashboard({ profile, pendingOrders, recentActivity, stats }: Props) {
-  const [processing, setProcessing] = useState<string | null>(null)
-
   // Live order state — all orders for this company, patched instantly on any change
   const allInitial  = [...pendingOrders, ...recentActivity.filter(o => !pendingOrders.find(p => p.id === o.id))]
   const liveOrders  = useLiveOrders(allInitial as any[], profile.company_id, fetchSuperOrder)
@@ -109,23 +105,6 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
     pending:  livePending.length,
     approved: liveOrders.filter((o: any) => ['approved','packing','loaded','shipped','delivered'].includes(o.status)).length,
     rejected: liveOrders.filter((o: any) => o.status === 'rejected').length,
-  }
-
-  async function handleApproval(orderId: string, action: 'approved' | 'rejected') {
-    setProcessing(orderId)
-    const supabase = createClient()
-    const { error } = await supabase
-      .from('orders')
-      .update({ status: action, approved_by: profile.id, approved_by_role: profile.role })
-      .eq('id', orderId)
-
-    if (error) {
-      toast.error('Action failed. Try again.')
-    } else {
-      toast.success(action === 'approved' ? 'Order approved ✓' : 'Order rejected')
-      // No router.refresh() needed — realtime will patch state instantly
-    }
-    setProcessing(null)
   }
 
   function getDaysAgo(date: string) {
@@ -256,30 +235,13 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
                         ))}
                       </div>
 
-                      <div className="flex gap-2">
-                        <motion.button
-                          whileTap={{ scale: 0.96 }}
-                          onClick={() => handleApproval(order.id, 'rejected')}
-                          disabled={processing === order.id}
-                          className="flex-1 flex items-center justify-center gap-1.5 border border-red-200 text-red-600 py-2 rounded-xl text-xs font-semibold hover:bg-red-50 transition-colors disabled:opacity-40"
-                        >
-                          <XCircle className="w-3.5 h-3.5" />
-                          Reject
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.96 }}
-                          onClick={() => handleApproval(order.id, 'approved')}
-                          disabled={processing === order.id}
-                          className="flex-1 flex items-center justify-center gap-1.5 bg-green-600 text-white py-2 rounded-xl text-xs font-semibold hover:bg-green-700 transition-colors disabled:opacity-40"
-                        >
-                          {processing === order.id ? (
-                            <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                          ) : (
-                            <CheckCircle className="w-3.5 h-3.5" />
-                          )}
-                          Approve
-                        </motion.button>
-                      </div>
+                      <Link
+                        href={`/dashboard/super/orders/${order.id}`}
+                        className="flex items-center justify-center gap-1.5 w-full border border-gray-200 text-gray-600 py-2 rounded-xl text-xs font-semibold hover:bg-gray-50 transition-colors"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        View Order
+                      </Link>
                     </motion.div>
                   )
                 })}
