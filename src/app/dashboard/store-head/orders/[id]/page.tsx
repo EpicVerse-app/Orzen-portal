@@ -2,6 +2,7 @@ import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import OrderDetailView from '@/components/orders/OrderDetailView'
 import StoreHeadOrderActions from '@/components/orders/StoreHeadOrderActions'
+import VendorOrderDownloadButton from '@/components/orders/VendorOrderDownloadButton'
 
 export default async function StoreHeadOrderDetailPage({
   params,
@@ -48,14 +49,23 @@ export default async function StoreHeadOrderDetailPage({
         backHref="/dashboard/store-head/orders"
         backLabel="Orders"
         actions={
-          order.status === 'submitted' ? (
-            <StoreHeadOrderActions
+          <div className="space-y-3">
+            {order.status === 'submitted' && (
+              <StoreHeadOrderActions
+                orderId={order.id}
+                companyId={profile.company_id}
+                approverId={profile.id}
+                branchId={(order.branch as any)?.id}
+              />
+            )}
+            <VendorOrderDownloadButton
               orderId={order.id}
-              companyId={profile.company_id}
-              approverId={profile.id}
-              branchId={(order.branch as any)?.id}
+              createdAt={order.created_at}
+              status={order.status}
+              branch={Array.isArray(order.branch) ? order.branch[0] : order.branch as any}
+              items={order.items as any}
             />
-          ) : null
+          </div>
         }
       />
     </div>

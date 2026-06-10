@@ -2,6 +2,7 @@ import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getStoreProfile } from '@/lib/auth/getStoreProfile'
 import OrderDetailView from '@/components/orders/OrderDetailView'
+import VendorOrderDownloadButton from '@/components/orders/VendorOrderDownloadButton'
 
 export default async function StoreOrderDetailPage({
   params,
@@ -38,6 +39,15 @@ export default async function StoreOrderDetailPage({
       order={order as any}
       backHref="/dashboard/store/orders"
       backLabel="My Orders"
+      actions={
+        <VendorOrderDownloadButton
+          orderId={order.id}
+          createdAt={order.created_at}
+          status={order.status}
+          branch={Array.isArray(order.branch) ? order.branch[0] : order.branch as any}
+          items={order.items as any}
+        />
+      }
     />
   )
 }

@@ -1,6 +1,7 @@
 import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import OrderDetailView from '@/components/orders/OrderDetailView'
+import VendorOrderDownloadButton from '@/components/orders/VendorOrderDownloadButton'
 
 export default async function SuperOrderDetailPage({
   params,
@@ -40,13 +41,21 @@ export default async function SuperOrderDetailPage({
 
   if (!order) notFound()
 
-  // RM is read-only — no actions
   return (
     <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto">
       <OrderDetailView
         order={order as any}
         backHref="/dashboard/super/orders"
         backLabel="Orders"
+        actions={
+          <VendorOrderDownloadButton
+            orderId={order.id}
+            createdAt={order.created_at}
+            status={order.status}
+            branch={Array.isArray(order.branch) ? order.branch[0] : order.branch as any}
+            items={order.items as any}
+          />
+        }
       />
     </div>
   )
