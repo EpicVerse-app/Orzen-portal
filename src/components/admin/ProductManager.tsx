@@ -10,6 +10,7 @@ interface Product {
   id: string
   name: string
   unit: string
+  price: number | null
   image_url: string | null
 }
 
@@ -241,6 +242,10 @@ export default function ProductManager({ profile, categories, companyId }: Props
                             <p className="text-sm font-semibold text-gray-800 truncate">{product.name}</p>
                             <p className="text-xs text-gray-400">{product.unit}</p>
                           </div>
+                          {/* Price */}
+                          <p className="text-sm font-semibold shrink-0" style={{ color: '#570439' }}>
+                            {product.price != null && product.price > 0 ? `₹${product.price.toFixed(2)}` : '—'}
+                          </p>
                           {/* Delete */}
                           <button
                             onClick={() => handleDeleteProduct(product.id, product.name)}
@@ -278,6 +283,17 @@ export default function ProductManager({ profile, categories, companyId }: Props
                         placeholder="Unit (e.g. pcs, kg)"
                         className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]"
                       />
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium">₹</span>
+                        <input
+                          name="price"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="Price (optional)"
+                          className="w-full border border-gray-200 rounded-xl pl-8 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]"
+                        />
+                      </div>
 
                       {/* Image upload — 3 slots */}
                       <div>

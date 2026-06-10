@@ -23,7 +23,7 @@ export default async function SuperCategoryPage({ params }: { params: Promise<{ 
   const [categoryResult, productsResult] = await Promise.all([
     supabase.from('categories').select('id, name').eq('id', categoryId).single(),
     supabase.from('products')
-      .select('id, name, unit, image_url, image_url_2, image_url_3')
+      .select('id, name, unit, price, image_url, image_url_2, image_url_3')
       .eq('category_id', categoryId)
       .eq('company_id', profile.company_id)
       .order('name'),

@@ -157,6 +157,9 @@ export default function SuperViewOrderPage({ companyId, userId, branches }: Prop
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-800 truncate">{item.product.name}</p>
                     <p className="text-xs text-gray-400">{(item.product as any).categoryName}</p>
+                    {item.product.price != null && item.product.price > 0 && (
+                      <p className="text-xs font-semibold mt-0.5" style={{ color: '#570439' }}>₹{item.product.price.toFixed(2)}</p>
+                    )}
                   </div>
 
                   {/* Qty */}

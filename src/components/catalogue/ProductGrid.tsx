@@ -12,6 +12,7 @@ interface Product {
   id: string
   name: string
   unit: string
+  price?: number | null
   image_url: string | null
   image_url_2?: string | null
   image_url_3?: string | null
@@ -100,6 +101,9 @@ export default function ProductGrid({ products }: Props) {
 
               <div className="p-2 sm:p-3 space-y-2">
                 <p className="text-xs sm:text-sm font-semibold text-gray-800 truncate">{product.name}</p>
+                {product.price != null && product.price > 0 && (
+                  <p className="text-xs font-bold" style={{ color: '#570439' }}>₹{product.price.toFixed(2)}</p>
+                )}
 
                 <input
                   type="number"

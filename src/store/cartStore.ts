@@ -5,6 +5,7 @@ export interface CartProduct {
   name: string
   image_url: string | null
   unit: string
+  price?: number | null
   categoryName: string
 }
 

@@ -13,6 +13,8 @@ export async function addProductAction(formData: FormData) {
   const image_url   = (formData.get('image_url')   as string) || null
   const image_url_2 = (formData.get('image_url_2') as string) || null
   const image_url_3 = (formData.get('image_url_3') as string) || null
+  const priceRaw    = formData.get('price') as string
+  const price       = priceRaw ? parseFloat(priceRaw) : 0
 
   if (!name || !unit || !category_id || !company_id) {
     return { error: 'All fields are required.' }
@@ -21,6 +23,7 @@ export async function addProductAction(formData: FormData) {
   const { error } = await supabase.from('products').insert({
     name,
     unit,
+    price,
     category_id,
     company_id,
     image_url,
