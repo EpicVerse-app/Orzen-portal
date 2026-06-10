@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Bell, CheckCircle, XCircle, Package, Truck, Clock } from 'lucide-react'
+import { Bell, CheckCircle, XCircle, Package, Truck, Clock, ChevronRight } from 'lucide-react'
 
 interface Notification {
   id: string
@@ -72,6 +73,37 @@ export default function StoreNotificationsPage() {
     load()
   }, [])
 
+  function NotifCard({ n }: { n: Notification }) {
+    const Icon  = TYPE_ICON[n.type]  || Bell
+    const color = TYPE_COLOR[n.type] || 'bg-gray-100 text-gray-500'
+    const inner = (
+      <div className={`bg-white rounded-2xl border shadow-sm px-4 py-4 flex items-start gap-3 transition-all ${
+        !n.is_read ? 'border-purple-100 bg-purple-50/30' : 'border-gray-100'
+      } ${n.order_id ? 'hover:border-gray-300 hover:shadow-md active:scale-[0.99] cursor-pointer' : ''}`}>
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
+          <Icon className="w-4 h-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <p className={`text-sm font-semibold ${!n.is_read ? 'text-gray-900' : 'text-gray-700'}`}>
+              {n.title}
+            </p>
+            <div className="flex items-center gap-1 shrink-0 mt-0.5">
+              {!n.is_read && <span className="w-2 h-2 rounded-full bg-purple-500" />}
+              {n.order_id && <ChevronRight className="w-3.5 h-3.5 text-gray-300" />}
+            </div>
+          </div>
+          {n.message && <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{n.message}</p>}
+          <p className="text-[10px] text-gray-400 mt-1">{timeAgo(n.created_at)}</p>
+        </div>
+      </div>
+    )
+    if (n.order_id) {
+      return <Link href={`/dashboard/store/orders/${n.order_id}`}>{inner}</Link>
+    }
+    return inner
+  }
+
   return (
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
@@ -106,34 +138,7 @@ export default function StoreNotificationsPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {notifs.map((n) => {
-            const Icon  = TYPE_ICON[n.type]  || Bell
-            const color = TYPE_COLOR[n.type] || 'bg-gray-100 text-gray-500'
-            return (
-              <div
-                key={n.id}
-                className={`bg-white rounded-2xl border shadow-sm px-4 py-4 flex items-start gap-3 transition-colors ${
-                  !n.is_read ? 'border-purple-100 bg-purple-50/30' : 'border-gray-100'
-                }`}
-              >
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
-                  <Icon className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className={`text-sm font-semibold ${!n.is_read ? 'text-gray-900' : 'text-gray-700'}`}>
-                      {n.title}
-                    </p>
-                    {!n.is_read && (
-                      <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0 mt-1.5" />
-                    )}
-                  </div>
-                  {n.message && <p className="text-xs text-gray-500 mt-0.5">{n.message}</p>}
-                  <p className="text-[10px] text-gray-400 mt-1">{timeAgo(n.created_at)}</p>
-                </div>
-              </div>
-            )
-          })}
+          {notifs.map((n) => <NotifCard key={n.id} n={n} />)}
         </div>
       )}
     </div>
