@@ -47,8 +47,8 @@ export default async function SuperBranchesPage() {
 
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Branches</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{allBranches.length} total branches</p>
+          <h1 className="text-2xl font-bold text-gray-900">Stores</h1>
+          <p className="text-sm text-gray-400 mt-0.5">{allBranches.length} total stores</p>
         </div>
         <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
           <Building2 className="w-5 h-5 text-blue-600" />

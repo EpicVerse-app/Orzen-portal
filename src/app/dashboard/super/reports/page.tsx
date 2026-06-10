@@ -173,7 +173,7 @@ export default async function SuperReportsPage() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-50 flex items-center gap-2">
           <Building2 className="w-4 h-4 text-gray-400" />
-          <h2 className="text-sm font-semibold text-gray-700">Branch Performance</h2>
+          <h2 className="text-sm font-semibold text-gray-700">Store Performance</h2>
         </div>
         {branchReport.length === 0 ? (
           <div className="px-5 py-10 text-center text-sm text-gray-400">No data available</div>
@@ -182,7 +182,7 @@ export default async function SuperReportsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-50">
-                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide text-left">Branch</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide text-left">Store</th>
                   <th className="px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide text-center">Total</th>
                   <th className="px-4 py-3 text-xs font-semibold text-orange-400 uppercase tracking-wide text-center">Pending</th>
                   <th className="px-4 py-3 text-xs font-semibold text-green-500 uppercase tracking-wide text-center">Approved</th>
