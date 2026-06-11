@@ -76,7 +76,7 @@ export default function VendorOrderDownloadButton({
       // ── Logo ─────────────────────────────────────────────────────────
       try {
         const logoB64 = await loadImageAsBase64(LOGO_URL)
-        doc.addImage(logoB64, 'PNG', margin, 12, 100, 10)
+        doc.addImage(logoB64, 'PNG', margin, 12, 100, 12)
       } catch {
         // logo failed silently
       }
