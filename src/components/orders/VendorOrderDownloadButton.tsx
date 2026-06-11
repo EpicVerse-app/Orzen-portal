@@ -141,6 +141,8 @@ export default function VendorOrderDownloadButton({
         ? [['#', 'Product Name', 'Category', 'Unit', 'Qty', 'Unit Price', 'Total']]
         : [['#', 'Product Name', 'Category', 'Qty', 'Unit']]
 
+      const fmt = (n: number) => `Rs. ${n.toLocaleString('en-IN')}`
+
       const tableBody = hasPrices
         ? items.map((item, idx) => [
             idx + 1,
@@ -148,8 +150,8 @@ export default function VendorOrderDownloadButton({
             item.product?.category?.name ?? '',
             item.product?.unit ?? '',
             item.quantity,
-            `₹${(item.product?.price ?? 0).toLocaleString('en-IN')}`,
-            `₹${((item.product?.price ?? 0) * item.quantity).toLocaleString('en-IN')}`,
+            fmt(item.product?.price ?? 0),
+            fmt((item.product?.price ?? 0) * item.quantity),
           ])
         : items.map((item, idx) => [
             idx + 1,
@@ -164,8 +166,8 @@ export default function VendorOrderDownloadButton({
             '0': { cellWidth: 10,  halign: 'center' },
             '3': { cellWidth: 16,  halign: 'center' },
             '4': { cellWidth: 14,  halign: 'center' },
-            '5': { cellWidth: 24,  halign: 'right'  },
-            '6': { cellWidth: 24,  halign: 'right'  },
+            '5': { cellWidth: 32,  halign: 'right'  },
+            '6': { cellWidth: 32,  halign: 'right'  },
           }
         : {
             '0': { cellWidth: 10,  halign: 'center' },
@@ -203,7 +205,7 @@ export default function VendorOrderDownloadButton({
       doc.setTextColor(62, 0, 30)
       doc.text(`Total Quantity: ${totalQty} items`, pageW - margin, afterTable, { align: 'right' })
       if (hasPrices) {
-        doc.text(`Total Amount: ₹${totalPrice.toLocaleString('en-IN')}`, pageW - margin, afterTable + 7, { align: 'right' })
+        doc.text(`Total Amount: Rs. ${totalPrice.toLocaleString('en-IN')}`, pageW - margin, afterTable + 7, { align: 'right' })
       }
 
       // ── Footer ────────────────────────────────────────────────────────
@@ -216,7 +218,7 @@ export default function VendorOrderDownloadButton({
       doc.setFontSize(8)
       doc.setTextColor(150)
       doc.text(
-        `This is a system-generated Purchase Order. | ${companyName}`,
+        `System-generated Purchase Order | ${companyName}`,
         pageW / 2, footerY + 6, { align: 'center' },
       )
 
