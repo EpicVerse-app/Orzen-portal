@@ -23,7 +23,7 @@ export default async function StoreOrderDetailPage({
       branch:branches(name, city, state, address),
       items:order_items(
         id, quantity,
-        product:products(id, name, unit, image_url, image_url_2, image_url_3,
+        product:products(id, name, unit, price, image_url, image_url_2, image_url_3,
           category:categories(name)
         )
       )

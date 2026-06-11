@@ -15,6 +15,7 @@ interface OrderItem {
     id: string
     name: string
     unit: string
+    price?: number | null
     image_url?: string | null
     image_url_2?: string | null
     image_url_3?: string | null
@@ -91,8 +92,10 @@ function fmtTime(d: string) {
 
 // ── Component ────────────────────────────────────────────────────────────────
 export default function OrderDetailView({ order, backHref, backLabel = 'Back', actions }: Props) {
-  const totalQty   = order.items.reduce((s, i) => s + i.quantity, 0)
-  const isRejected = order.status === 'rejected'
+  const totalQty    = order.items.reduce((s, i) => s + i.quantity, 0)
+  const hasPrices   = order.items.some(i => (i.product.price ?? 0) > 0)
+  const totalPrice  = order.items.reduce((s, i) => s + (i.product.price ?? 0) * i.quantity, 0)
+  const isRejected  = order.status === 'rejected'
 
   return (
     <div className="space-y-4">
@@ -338,10 +341,16 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
                     )}
                   </div>
 
-                  {/* Qty + unit */}
+                  {/* Qty + unit + price */}
                   <div className="shrink-0 text-right">
                     <p className="text-base font-bold text-gray-900">× {item.quantity}</p>
                     <p className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wide">{item.product.unit}</p>
+                    {(item.product.price ?? 0) > 0 && (
+                      <>
+                        <p className="text-xs text-gray-400 mt-1">₹{item.product.price!.toLocaleString('en-IN')} / {item.product.unit}</p>
+                        <p className="text-xs font-semibold text-gray-700 mt-0.5">₹{(item.product.price! * item.quantity).toLocaleString('en-IN')}</p>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
@@ -350,7 +359,12 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
             {/* Footer */}
             <div className="px-5 py-3.5 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
               <span className="text-xs text-gray-500 font-medium">Total quantity</span>
-              <span className="text-sm font-bold text-gray-900">{totalQty} items</span>
+              <div className="text-right">
+                <span className="text-sm font-bold text-gray-900">{totalQty} items</span>
+                {hasPrices && (
+                  <p className="text-xs font-semibold text-gray-700 mt-0.5">₹{totalPrice.toLocaleString('en-IN')}</p>
+                )}
+              </div>
             </div>
           </div>
         </div>

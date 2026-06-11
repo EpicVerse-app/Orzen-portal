@@ -8,6 +8,7 @@ interface Item {
   product: {
     name: string
     unit: string
+    price?: number | null
     category?: { name: string } | null
   }
 }
@@ -66,7 +67,9 @@ export default function VendorOrderDownloadButton({
       const contentW = pageW - margin * 2
       const poId     = shortId(orderId)
       const poDate   = formatDate(createdAt)
-      const totalQty = items.reduce((s, i) => s + i.quantity, 0)
+      const totalQty   = items.reduce((s, i) => s + i.quantity, 0)
+      const hasPrices  = items.some(i => (i.product.price ?? 0) > 0)
+      const totalPrice = items.reduce((s, i) => s + (i.product.price ?? 0) * i.quantity, 0)
       const branchAddr = [branch?.address, branch?.city, branch?.state]
         .filter(Boolean).join(', ')
 
@@ -134,16 +137,46 @@ export default function VendorOrderDownloadButton({
       // ── Items table ───────────────────────────────────────────────────
       const tableTop = y + 30
 
+      const tableHead = hasPrices
+        ? [['#', 'Product Name', 'Category', 'Unit', 'Qty', 'Unit Price', 'Total']]
+        : [['#', 'Product Name', 'Category', 'Qty', 'Unit']]
+
+      const tableBody = hasPrices
+        ? items.map((item, idx) => [
+            idx + 1,
+            item.product?.name ?? '',
+            item.product?.category?.name ?? '',
+            item.product?.unit ?? '',
+            item.quantity,
+            `₹${(item.product?.price ?? 0).toLocaleString('en-IN')}`,
+            `₹${((item.product?.price ?? 0) * item.quantity).toLocaleString('en-IN')}`,
+          ])
+        : items.map((item, idx) => [
+            idx + 1,
+            item.product?.name ?? '',
+            item.product?.category?.name ?? '',
+            item.quantity,
+            item.product?.unit ?? '',
+          ])
+
+      const colStylesBase = hasPrices
+        ? {
+            0: { cellWidth: 10,  halign: 'center' as const },
+            3: { cellWidth: 16,  halign: 'center' as const },
+            4: { cellWidth: 14,  halign: 'center' as const },
+            5: { cellWidth: 24,  halign: 'right'  as const },
+            6: { cellWidth: 24,  halign: 'right'  as const },
+          }
+        : {
+            0: { cellWidth: 10,  halign: 'center' as const },
+            3: { cellWidth: 16,  halign: 'center' as const },
+            4: { cellWidth: 18,  halign: 'center' as const },
+          }
+
       autoTable(doc, {
         startY: tableTop,
-        head: [['#', 'Product Name', 'Category', 'Qty', 'Unit']],
-        body: items.map((item, idx) => [
-          idx + 1,
-          item.product?.name ?? '',
-          item.product?.category?.name ?? '',
-          item.quantity,
-          item.product?.unit ?? '',
-        ]),
+        head: tableHead,
+        body: tableBody,
         headStyles: {
           fillColor:  [62, 0, 30],
           textColor:  [255, 255, 255],
@@ -158,11 +191,7 @@ export default function VendorOrderDownloadButton({
         alternateRowStyles: {
           fillColor: [250, 245, 248],
         },
-        columnStyles: {
-          0: { cellWidth: 10,  halign: 'center' },
-          3: { cellWidth: 16,  halign: 'center' },
-          4: { cellWidth: 18,  halign: 'center' },
-        },
+        columnStyles: colStylesBase,
         margin: { left: margin, right: margin },
         theme:  'grid',
       })
@@ -173,6 +202,9 @@ export default function VendorOrderDownloadButton({
       doc.setFontSize(10)
       doc.setTextColor(62, 0, 30)
       doc.text(`Total Quantity: ${totalQty} items`, pageW - margin, afterTable, { align: 'right' })
+      if (hasPrices) {
+        doc.text(`Total Amount: ₹${totalPrice.toLocaleString('en-IN')}`, pageW - margin, afterTable + 7, { align: 'right' })
+      }
 
       // ── Footer ────────────────────────────────────────────────────────
       const footerY = doc.internal.pageSize.getHeight() - 18
