@@ -261,7 +261,12 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
             <p className="text-xs text-gray-400 mt-0.5">{fmtTime(order.created_at)}</p>
             <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
               <span>{order.items.length} product{order.items.length !== 1 ? 's' : ''}</span>
-              <span className="font-semibold text-gray-700">{totalQty} items total</span>
+              <div className="text-right">
+                <p className="font-semibold text-gray-700">{totalQty} items total</p>
+                {hasPrices && (
+                  <p className="font-semibold text-gray-900 mt-0.5">₹{totalPrice.toLocaleString('en-IN')}</p>
+                )}
+              </div>
             </div>
           </div>
 
