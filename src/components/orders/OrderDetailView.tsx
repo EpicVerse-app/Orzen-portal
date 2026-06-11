@@ -50,8 +50,6 @@ interface Props {
 const STEPS = [
   { key: 'submitted', label: 'Submitted',  sub: 'Order placed by store' },
   { key: 'approved',  label: 'Approved',   sub: 'Approved by store head' },
-  { key: 'packing',   label: 'Packing',    sub: 'Vendor preparing order' },
-  { key: 'loaded',    label: 'Loaded',     sub: 'Items loaded for dispatch' },
   { key: 'shipped',   label: 'Shipped',    sub: 'Out for delivery' },
   { key: 'delivered', label: 'Delivered',  sub: 'Received at store' },
 ]
@@ -59,11 +57,11 @@ const STEPS = [
 const STATUS_RANK: Record<string, number> = {
   submitted: 0,
   approved:  1,
-  packing:   2,
-  loaded:    3,
-  shipped:   4,
-  delivered: 5,
-  closed:    5,
+  packing:   2,  // legacy — maps to shipped step being active
+  loaded:    2,  // legacy — same
+  shipped:   2,
+  delivered: 4,  // intentionally > last step index (3) so delivered step shows as done
+  closed:    4,
   rejected:  -1,
 }
 

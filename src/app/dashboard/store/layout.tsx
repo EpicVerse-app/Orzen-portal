@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { redirect } from 'next/navigation'
 import AppShell from '@/components/layout/AppShell'
 import { getStoreProfile, getThemeColors } from '@/lib/auth/getStoreProfile'
