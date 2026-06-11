@@ -17,7 +17,7 @@ export default async function StoreHeadOrderDetailPage({
 
   const { data: profile } = await supabase
     .from('users')
-    .select('id, role, company_id, branch_id')
+    .select('id, role, company_id, branch_id, company:companies(name)')
     .eq('id', user.id)
     .single()
 
@@ -42,6 +42,10 @@ export default async function StoreHeadOrderDetailPage({
 
   if (!order) notFound()
 
+  const companyName = Array.isArray((profile as any)?.company)
+    ? (profile as any).company[0]?.name
+    : (profile as any)?.company?.name ?? 'Malabar Gold & Diamonds'
+
   return (
     <div className="px-4 sm:px-6 py-5">
       <OrderDetailView
@@ -62,6 +66,7 @@ export default async function StoreHeadOrderDetailPage({
               orderId={order.id}
               createdAt={order.created_at}
               status={order.status}
+              companyName={companyName}
               branch={Array.isArray(order.branch) ? order.branch[0] : order.branch as any}
               items={order.items as any}
             />

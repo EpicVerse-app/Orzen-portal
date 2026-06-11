@@ -1,6 +1,7 @@
 'use client'
 
 import { Download } from 'lucide-react'
+import { useState } from 'react'
 
 interface Item {
   quantity: number
@@ -12,9 +13,10 @@ interface Item {
 }
 
 interface Props {
-  orderId:    string
-  createdAt:  string
-  status:     string
+  orderId:     string
+  createdAt:   string
+  status:      string
+  companyName: string
   branch?: {
     name?:    string
     address?: string
@@ -24,60 +26,182 @@ interface Props {
   items: Item[]
 }
 
+const LOGO_URL =
+  'https://muaqpangtwibnlmtjahn.supabase.co/storage/v1/object/public/product-images/malabar%20background/5.%20Landscape%20Logo%20(1).png'
+
 function shortId(id: string) {
   return 'ORD-' + id.replace(/-/g, '').slice(0, 6).toUpperCase()
 }
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-IN', {
-    day: 'numeric', month: 'short', year: 'numeric',
+    day: 'numeric', month: 'long', year: 'numeric',
   })
 }
 
-export default function VendorOrderDownloadButton({ orderId, createdAt, status, branch, items }: Props) {
+async function loadImageAsBase64(url: string): Promise<string> {
+  const res  = await fetch(url)
+  const blob = await res.blob()
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload  = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
+export default function VendorOrderDownloadButton({
+  orderId, createdAt, status, companyName, branch, items,
+}: Props) {
+  const [loading, setLoading] = useState(false)
+
   async function handleDownload() {
-    const XLSX = await import('xlsx')
+    setLoading(true)
+    try {
+      const { default: jsPDF } = await import('jspdf')
+      const { default: autoTable } = await import('jspdf-autotable')
 
-    const summary = [
-      ['Order ID',    shortId(orderId)],
-      ['Date',        formatDate(createdAt)],
-      ['Branch',      branch?.name ?? ''],
-      ['Address',     [branch?.address, branch?.city, branch?.state].filter(Boolean).join(', ')],
-      ['Status',      status],
-      ['Total Items', items.reduce((s, i) => s + i.quantity, 0)],
-    ]
+      const doc      = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      const pageW    = doc.internal.pageSize.getWidth()
+      const margin   = 15
+      const contentW = pageW - margin * 2
+      const poId     = shortId(orderId)
+      const poDate   = formatDate(createdAt)
+      const totalQty = items.reduce((s, i) => s + i.quantity, 0)
+      const branchAddr = [branch?.address, branch?.city, branch?.state]
+        .filter(Boolean).join(', ')
 
-    const productRows = [
-      ['#', 'Product Name', 'Category', 'Quantity', 'Unit'],
-      ...items.map((item, idx) => [
-        idx + 1,
-        item.product?.name ?? '',
-        item.product?.category?.name ?? '',
-        item.quantity,
-        item.product?.unit ?? '',
-      ]),
-    ]
+      // ── Logo ─────────────────────────────────────────────────────────
+      try {
+        const logoB64 = await loadImageAsBase64(LOGO_URL)
+        doc.addImage(logoB64, 'PNG', margin, 12, 60, 18)
+      } catch {
+        // logo failed silently
+      }
 
-    const wb = XLSX.utils.book_new()
+      // ── "PURCHASE ORDER" heading ──────────────────────────────────────
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(20)
+      doc.setTextColor(62, 0, 30)        // maroon
+      doc.text('PURCHASE ORDER', pageW - margin, 22, { align: 'right' })
 
-    const wsSummary  = XLSX.utils.aoa_to_sheet(summary)
-    const wsProducts = XLSX.utils.aoa_to_sheet(productRows)
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(100)
+      doc.text(`PO Number : ${poId}`, pageW - margin, 29, { align: 'right' })
+      doc.text(`Date       : ${poDate}`, pageW - margin, 34, { align: 'right' })
+      doc.text(`Status     : ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+        pageW - margin, 39, { align: 'right' })
 
-    wsSummary['!cols']  = [{ wch: 16 }, { wch: 40 }]
-    wsProducts['!cols'] = [{ wch: 4 }, { wch: 32 }, { wch: 20 }, { wch: 10 }, { wch: 12 }]
+      // ── Divider ───────────────────────────────────────────────────────
+      doc.setDrawColor(62, 0, 30)
+      doc.setLineWidth(0.5)
+      doc.line(margin, 45, pageW - margin, 45)
 
-    XLSX.utils.book_append_sheet(wb, wsSummary,  'Order Summary')
-    XLSX.utils.book_append_sheet(wb, wsProducts, 'Products')
+      // ── Bill From / Ship To ───────────────────────────────────────────
+      let y = 52
+      const colMid = margin + contentW / 2 + 5
 
-    XLSX.writeFile(wb, `${shortId(orderId)}.xlsx`)
+      // Left — FROM
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(8)
+      doc.setTextColor(62, 0, 30)
+      doc.text('FROM', margin, y)
+
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(10)
+      doc.setTextColor(30, 30, 30)
+      doc.text(companyName, margin, y + 6)
+
+      // Right — SHIP TO
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(8)
+      doc.setTextColor(62, 0, 30)
+      doc.text('SHIP TO', colMid, y)
+
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(10)
+      doc.setTextColor(30, 30, 30)
+      doc.text(branch?.name ?? '', colMid, y + 6)
+
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      doc.setTextColor(80, 80, 80)
+      if (branchAddr) {
+        const lines = doc.splitTextToSize(branchAddr, contentW / 2 - 5) as string[]
+        doc.text(lines, colMid, y + 12)
+      }
+
+      // ── Items table ───────────────────────────────────────────────────
+      const tableTop = y + 30
+
+      autoTable(doc, {
+        startY: tableTop,
+        head: [['#', 'Product Name', 'Category', 'Qty', 'Unit']],
+        body: items.map((item, idx) => [
+          idx + 1,
+          item.product?.name ?? '',
+          item.product?.category?.name ?? '',
+          item.quantity,
+          item.product?.unit ?? '',
+        ]),
+        headStyles: {
+          fillColor:  [62, 0, 30],
+          textColor:  [255, 255, 255],
+          fontStyle:  'bold',
+          fontSize:   9,
+          halign:     'left',
+        },
+        bodyStyles: {
+          fontSize:   9,
+          textColor:  [40, 40, 40],
+        },
+        alternateRowStyles: {
+          fillColor: [250, 245, 248],
+        },
+        columnStyles: {
+          0: { cellWidth: 10,  halign: 'center' },
+          3: { cellWidth: 16,  halign: 'center' },
+          4: { cellWidth: 18,  halign: 'center' },
+        },
+        margin: { left: margin, right: margin },
+        theme:  'grid',
+      })
+
+      // ── Total row ─────────────────────────────────────────────────────
+      const afterTable = (doc as any).lastAutoTable.finalY + 6
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(10)
+      doc.setTextColor(62, 0, 30)
+      doc.text(`Total Quantity: ${totalQty} items`, pageW - margin, afterTable, { align: 'right' })
+
+      // ── Footer ────────────────────────────────────────────────────────
+      const footerY = doc.internal.pageSize.getHeight() - 18
+      doc.setDrawColor(200, 200, 200)
+      doc.setLineWidth(0.3)
+      doc.line(margin, footerY, pageW - margin, footerY)
+
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8)
+      doc.setTextColor(150)
+      doc.text(
+        `This is a system-generated Purchase Order. | ${companyName}`,
+        pageW / 2, footerY + 6, { align: 'center' },
+      )
+
+      doc.save(`${poId}_PO.pdf`)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <button
       onClick={handleDownload}
-      className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-600 py-3 px-4 rounded-xl text-sm font-semibold hover:bg-gray-50 active:scale-95 transition-all"
+      disabled={loading}
+      className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-600 py-3 px-4 rounded-xl text-sm font-semibold hover:bg-gray-50 active:scale-95 transition-all disabled:opacity-50"
     >
       <Download className="w-4 h-4" />
-      Download Order
+      {loading ? 'Generating PO…' : 'Download PO'}
     </button>
   )
 }

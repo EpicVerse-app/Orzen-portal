@@ -18,7 +18,7 @@ export default async function VendorOrderDetailPage({
 
   const { data: profile } = await supabase
     .from('users')
-    .select('id, role, company_id')
+    .select('id, role, company_id, company:companies(name)')
     .eq('id', user.id)
     .single()
 
@@ -43,11 +43,14 @@ export default async function VendorOrderDetailPage({
 
   if (!order) notFound()
 
+  const companyName = (profile as any)?.company?.name ?? 'Malabar Gold & Diamonds'
+
   const downloadBtn = (
     <VendorOrderDownloadButton
       orderId={order.id}
       createdAt={order.created_at}
       status={order.status}
+      companyName={companyName}
       branch={order.branch as any}
       items={(order.items as any[]).map(i => ({
         quantity: i.quantity,

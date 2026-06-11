@@ -34,6 +34,10 @@ export default async function StoreOrderDetailPage({
 
   if (!order) notFound()
 
+  const companyName = Array.isArray((profile as any)?.company)
+    ? (profile as any).company[0]?.name
+    : (profile as any)?.company?.name ?? 'Malabar Gold & Diamonds'
+
   return (
     <OrderDetailView
       order={order as any}
@@ -44,6 +48,7 @@ export default async function StoreOrderDetailPage({
           orderId={order.id}
           createdAt={order.created_at}
           status={order.status}
+          companyName={companyName}
           branch={Array.isArray(order.branch) ? order.branch[0] : order.branch as any}
           items={order.items as any}
         />
