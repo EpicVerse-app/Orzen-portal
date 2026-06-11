@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Truck, Download } from 'lucide-react'
+import { Truck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { sendOrderNotifications } from '@/app/actions/notifications'
 import toast from 'react-hot-toast'
@@ -15,7 +14,6 @@ interface Props {
 
 export default function VendorOrderActions({ orderId, companyId, branchId }: Props) {
   const [shipping, setShipping] = useState(false)
-  const router = useRouter()
 
   async function markShipped() {
     setShipping(true)
@@ -43,8 +41,7 @@ export default function VendorOrderActions({ orderId, companyId, branchId }: Pro
     })
 
     toast.success('Order marked as shipped!')
-    router.push('/dashboard/vendor')
-    router.refresh()
+    window.location.href = '/dashboard/vendor'
   }
 
   return (

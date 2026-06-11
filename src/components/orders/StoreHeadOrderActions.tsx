@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { CheckCircle, XCircle, AlertTriangle, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { sendOrderNotifications } from '@/app/actions/notifications'
@@ -18,7 +17,6 @@ export default function StoreHeadOrderActions({ orderId, companyId, approverId, 
   const [processing, setProcessing]       = useState<string | null>(null)
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [rejectReason, setRejectReason]   = useState('')
-  const router = useRouter()
 
   async function handleApprove() {
     setProcessing('approved')
@@ -47,8 +45,7 @@ export default function StoreHeadOrderActions({ orderId, companyId, approverId, 
     })
 
     toast.success('Order approved ✓')
-    router.push('/dashboard/store-head/requests')
-    router.refresh()
+    window.location.href = '/dashboard/store-head/requests'
   }
 
   async function handleRejectConfirm() {
@@ -84,8 +81,7 @@ export default function StoreHeadOrderActions({ orderId, companyId, approverId, 
     })
 
     toast.success('Order rejected')
-    router.push('/dashboard/store-head/requests')
-    router.refresh()
+    window.location.href = '/dashboard/store-head/requests'
   }
 
   return (

@@ -5,7 +5,6 @@ import { Camera, CheckCircle2, ImageIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { sendOrderNotifications } from '@/app/actions/notifications'
 import toast from 'react-hot-toast'
-import { useRouter } from 'next/navigation'
 
 interface Props {
   orderId:          string
@@ -18,7 +17,6 @@ interface Props {
 export default function VendorShipPhotoUpload({ orderId, companyId, branchId, shortId, existingPhotoUrl }: Props) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview]     = useState<string | null>(existingPhotoUrl || null)
-  const router = useRouter()
 
   async function handleUpload(file: File) {
     setUploading(true)
@@ -62,8 +60,8 @@ export default function VendorShipPhotoUpload({ orderId, companyId, branchId, sh
 
     setPreview(publicUrl)
     toast.success('Delivery confirmed with photo!')
-    router.refresh()
     setUploading(false)
+    window.location.reload()
   }
 
   return (
