@@ -141,7 +141,7 @@ export default function VendorOrderDownloadButton({
         ? [['#', 'Product Name', 'Category', 'Unit', 'Qty', 'Unit Price', 'Total']]
         : [['#', 'Product Name', 'Category', 'Qty', 'Unit']]
 
-      const fmt = (n: number) => `Rs. ${n.toLocaleString('en-IN')}`
+      const fmt = (n: number) => n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
       const tableBody = hasPrices
         ? items.map((item, idx) => [
@@ -205,7 +205,7 @@ export default function VendorOrderDownloadButton({
       doc.setTextColor(62, 0, 30)
       doc.text(`Total Quantity: ${totalQty} items`, pageW - margin, afterTable, { align: 'right' })
       if (hasPrices) {
-        doc.text(`Total Amount: Rs. ${totalPrice.toLocaleString('en-IN')}`, pageW - margin, afterTable + 7, { align: 'right' })
+        doc.text(`Total Amount: ${totalPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageW - margin, afterTable + 7, { align: 'right' })
       }
 
       // ── Footer ────────────────────────────────────────────────────────
