@@ -233,7 +233,8 @@ function OrderList({
         {orders.map((o: any) => {
           const branch = Array.isArray(o.branch) ? o.branch[0] : o.branch
           return (
-            <div key={o.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 transition-colors">
+            <Link key={o.id} href={`/dashboard/admin/orders/${o.id}`}
+              className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 transition-colors">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-gray-800">{shortId(o.id)}</p>
                 <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1 flex-wrap">
@@ -242,10 +243,7 @@ function OrderList({
                   {branch && (
                     <>
                       <span>·</span>
-                      <Link href={`/dashboard/admin/branches/${branch.id}`}
-                        className="text-blue-500 hover:underline">
-                        {branch.name}
-                      </Link>
+                      <span className="text-gray-500">{branch.name}</span>
                       {showRegion && branch.region && (
                         <span className="capitalize text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full">{branch.region}</span>
                       )}
@@ -255,7 +253,7 @@ function OrderList({
                 </p>
               </div>
               <OrderStatusBadge status={o.status as any} />
-            </div>
+            </Link>
           )
         })}
       </div>
