@@ -159,18 +159,18 @@ export default function VendorOrderDownloadButton({
             item.product?.unit ?? '',
           ])
 
-      const colStylesBase = hasPrices
+      const colStylesBase: Record<string, object> = hasPrices
         ? {
-            0: { cellWidth: 10,  halign: 'center' as const },
-            3: { cellWidth: 16,  halign: 'center' as const },
-            4: { cellWidth: 14,  halign: 'center' as const },
-            5: { cellWidth: 24,  halign: 'right'  as const },
-            6: { cellWidth: 24,  halign: 'right'  as const },
+            '0': { cellWidth: 10,  halign: 'center' },
+            '3': { cellWidth: 16,  halign: 'center' },
+            '4': { cellWidth: 14,  halign: 'center' },
+            '5': { cellWidth: 24,  halign: 'right'  },
+            '6': { cellWidth: 24,  halign: 'right'  },
           }
         : {
-            0: { cellWidth: 10,  halign: 'center' as const },
-            3: { cellWidth: 16,  halign: 'center' as const },
-            4: { cellWidth: 18,  halign: 'center' as const },
+            '0': { cellWidth: 10,  halign: 'center' },
+            '3': { cellWidth: 16,  halign: 'center' },
+            '4': { cellWidth: 18,  halign: 'center' },
           }
 
       autoTable(doc, {
