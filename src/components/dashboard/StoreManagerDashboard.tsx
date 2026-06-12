@@ -48,9 +48,9 @@ export default function StoreManagerDashboard({ profile, orders, categories, pri
       {/* ── Page header + stats ─────────────────────────────────── */}
       <motion.div variants={fadeUp} initial="hidden" animate="show" className="mb-6">
         <div className="mb-4">
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Store Dashboard</h1>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{profile.full_name}</h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-0.5 leading-relaxed">
-            {company?.name} — {branch?.name}, {branch?.city} &nbsp;·&nbsp; {today}
+            Store Manager{branch?.name ? ` · ${branch.name}` : ''}{branch?.city ? `, ${branch.city}` : ''} &nbsp;·&nbsp; {today}
           </p>
         </div>
 

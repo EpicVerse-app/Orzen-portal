@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Package, BarChart2, ChevronRight, Calendar, Store, Users } from 'lucide-react'
+import { Package, BarChart2, ChevronRight, Store, Users } from 'lucide-react'
 import AdminDashboardStats from '@/components/admin/AdminDashboardStats'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 
@@ -51,12 +51,10 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="px-4 sm:px-6 py-6 max-w-6xl mx-auto space-y-6">
-      {/* Greeting */}
+      {/* Header */}
       <div className="animate-fade-in-up stagger-1" style={{ opacity: 0 }}>
-        <h1 className="text-2xl font-bold text-gray-900">Welcome, {profile.full_name} 👋</h1>
-        <p className="text-sm text-gray-400 mt-0.5 flex items-center gap-1.5">
-          <Calendar className="w-3.5 h-3.5" /> {today}
-        </p>
+        <h1 className="text-2xl font-bold text-gray-900">{profile.full_name}</h1>
+        <p className="text-sm text-gray-400 mt-0.5">Administrator · {today}</p>
       </div>
 
       {/* Animated Stats grid */}

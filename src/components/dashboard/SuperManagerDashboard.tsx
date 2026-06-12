@@ -126,13 +126,11 @@ export default function SuperManagerDashboard({ profile, pendingOrders, recentAc
   return (
     <div className="px-4 sm:px-6 py-5 space-y-6 max-w-6xl mx-auto">
 
-      {/* Greeting */}
+      {/* Header */}
       <motion.div variants={fadeUp} initial="hidden" animate="show">
-        <h1 className="text-xl font-bold text-gray-800">
-          Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}, {profile.full_name?.split(' ')[0]} 👋
-        </h1>
+        <h1 className="text-xl font-bold text-gray-900">{profile.full_name}</h1>
         <p className="text-sm text-gray-400 mt-0.5">
-          {profile.scope_state}{profile.scope_region ? ` · ${profile.scope_region} Region` : ' Region'} · {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
+          Regional Manager{profile.scope_state ? ` · ${profile.scope_state}` : ''}{profile.scope_region ? ` · ${profile.scope_region} Region` : ''} · {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </p>
       </motion.div>
 

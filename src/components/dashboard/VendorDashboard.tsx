@@ -581,8 +581,10 @@ export default function VendorDashboard({ profile, companyId, newOrders, shipped
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-5 max-w-7xl mx-auto space-y-6">
       <motion.div variants={fadeUp} initial="hidden" animate="show">
-        <h1 className="text-2xl font-bold text-gray-900">Hello, {profile.full_name?.split(' ')[0]} 👋</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Here's your order overview</p>
+        <h1 className="text-2xl font-bold text-gray-900">{profile.full_name}</h1>
+        <p className="text-sm text-gray-400 mt-0.5">
+          Vendor{profile.company ? ` · ${Array.isArray(profile.company) ? profile.company[0]?.name : (profile.company as any)?.name}` : ''} · {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+        </p>
       </motion.div>
 
       {/* Search bar */}

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Package, ChevronRight, Building2, MapPin, AlertCircle } from 'lucide-react'
+import { Package, ChevronRight, AlertCircle } from 'lucide-react'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 import StoreHeadDashboardStats from '@/components/store-head/StoreHeadDashboardStats'
 
@@ -44,14 +44,12 @@ export default async function StoreHeadDashboard() {
   return (
     <div className="px-4 sm:px-6 py-5 max-w-4xl mx-auto space-y-6">
 
-      {/* Greeting */}
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Hello, {profile.full_name?.split(' ')[0]} 👋</h1>
-        <div className="flex items-center gap-1.5 mt-1 text-sm text-gray-500">
-          <Building2 className="w-3.5 h-3.5 text-gray-400" />
-          <span>{branch?.name}</span>
-          {branch?.city && <><span className="text-gray-300">·</span><MapPin className="w-3 h-3 text-gray-400" /><span>{branch.city}</span></>}
-        </div>
+        <h1 className="text-2xl font-bold text-gray-900">{profile.full_name}</h1>
+        <p className="text-sm text-gray-500 mt-0.5">
+          Store Head{branch?.name ? ` · ${branch.name}` : ''}{branch?.city ? `, ${branch.city}` : ''} · {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+        </p>
       </div>
 
       {/* Stat cards */}
