@@ -33,10 +33,15 @@ export default function ViewOrderPage({ branchId, companyId, userId, branch }: P
   }, 0)
   const hasPrices = items.some(i => (i.product.price ?? 0) > 0)
   const [submitting, setSubmitting] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [orderedByName, setOrderedByName] = useState('')
+  const [orderedById, setOrderedById] = useState('')
   const router = useRouter()
 
   async function placeOrder() {
     if (items.length === 0) return
+    if (!orderedByName.trim() || !orderedById.trim()) return
+    setShowModal(false)
     setSubmitting(true)
 
     const supabase = createClient()
@@ -51,6 +56,8 @@ export default function ViewOrderPage({ branchId, companyId, userId, branch }: P
         created_by: userId,
         status: 'submitted',
         escalation_deadline: deadline.toISOString(),
+        ordered_by_name: orderedByName.trim(),
+        ordered_by_id: orderedById.trim(),
       })
       .select('id')
       .single()
@@ -89,8 +96,7 @@ export default function ViewOrderPage({ branchId, companyId, userId, branch }: P
 
     clearCart()
     toast.success('Order placed successfully!')
-    router.push('/dashboard/store')
-    router.refresh()
+    window.location.href = '/dashboard/store'
   }
 
   return (
@@ -224,7 +230,7 @@ export default function ViewOrderPage({ branchId, companyId, userId, branch }: P
               ← Add More
             </Link>
             <button
-              onClick={placeOrder}
+              onClick={() => setShowModal(true)}
               disabled={submitting}
               className="flex-1 bg-[#1a1a1a] text-white py-3.5 rounded-xl text-sm font-semibold hover:bg-[#2a2a2a] transition-colors disabled:opacity-40"
             >
@@ -232,6 +238,55 @@ export default function ViewOrderPage({ branchId, companyId, userId, branch }: P
             </button>
           </div>
         </>
+      )}
+
+      {/* Ordered-by modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-base font-bold text-gray-900 mb-1">Confirm Order</h2>
+            <p className="text-sm text-gray-400 mb-5">Enter your name and ID to place this order.</p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Your Name</label>
+                <input
+                  type="text"
+                  value={orderedByName}
+                  onChange={e => setOrderedByName(e.target.value)}
+                  placeholder="Full name"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#c9a84c]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Your ID</label>
+                <input
+                  type="text"
+                  value={orderedById}
+                  onChange={e => setOrderedById(e.target.value)}
+                  placeholder="Employee / Staff ID"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#c9a84c]"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowModal(false)}
+                className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={placeOrder}
+                disabled={!orderedByName.trim() || !orderedById.trim()}
+                className="flex-1 bg-[#1a1a1a] text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-[#2a2a2a] transition-colors disabled:opacity-40"
+              >
+                Confirm & Place
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import {
   ChevronLeft, MapPin, Calendar, Package,
   Image as ImageIcon, Hash, AlertTriangle, Store,
-  Check, X,
+  Check, X, User,
 } from 'lucide-react'
 import ImageCarousel from '@/components/ui/ImageCarousel'
 
@@ -31,6 +31,8 @@ export interface OrderDetail {
   loaded_photo_url?: string | null
   shipped_photo_url?: string | null
   delivery_photo_url?: string | null
+  ordered_by_name?: string | null
+  ordered_by_id?: string | null
   branch?: {
     name: string
     city?: string
@@ -269,6 +271,22 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
               </div>
             </div>
           </div>
+
+          {/* Ordered By */}
+          {(order.ordered_by_name || order.ordered_by_id) && (
+            <div className="bg-white rounded-2xl border border-gray-200 px-5 py-4">
+              <div className="flex items-center gap-2 mb-3">
+                <User className="w-3.5 h-3.5 text-gray-400" />
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Ordered By</p>
+              </div>
+              {order.ordered_by_name && (
+                <p className="text-sm font-bold text-gray-900">{order.ordered_by_name}</p>
+              )}
+              {order.ordered_by_id && (
+                <p className="text-xs text-gray-400 mt-0.5">ID: {order.ordered_by_id}</p>
+              )}
+            </div>
+          )}
 
           {/* Delivery photos */}
           {(order.loaded_photo_url || order.shipped_photo_url || order.delivery_photo_url) && (
