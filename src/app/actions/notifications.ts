@@ -49,8 +49,10 @@ export async function sendOrderNotifications({
     type UserRow = { id: string; full_name: string; email: string | null; role: string }
     const recipients: UserRow[] = []
 
-    // only store_manager is branch-scoped; store_head and all other roles are company-scoped
-    const branchScopedRoles = ['store_manager']
+    // store_manager is branch-scoped
+    // store_head is branch-scoped (only notified for their own branch)
+    // all other roles are company-scoped
+    const branchScopedRoles = ['store_manager', 'store_head']
     const companyRoles = targetRoles.filter(r => !branchScopedRoles.includes(r))
     const branchRoles  = targetRoles.filter(r => branchScopedRoles.includes(r))
 
@@ -63,13 +65,25 @@ export async function sendOrderNotifications({
       ;(data || []).forEach(u => recipients.push(u as UserRow))
     }
 
-    if (branchRoles.length > 0 && branchId) {
-      const { data } = await adminClient
-        .from('users')
-        .select('id, full_name, email, role')
-        .eq('branch_id', branchId)
-        .in('role', branchRoles)
-      ;(data || []).forEach(u => recipients.push(u as UserRow))
+    // For branch-scoped roles, notify by branch_id if available,
+    // otherwise fall back to company-scoped so no notifications are silently dropped
+    if (branchRoles.length > 0) {
+      if (branchId) {
+        const { data } = await adminClient
+          .from('users')
+          .select('id, full_name, email, role')
+          .eq('branch_id', branchId)
+          .in('role', branchRoles)
+        ;(data || []).forEach(u => recipients.push(u as UserRow))
+      } else {
+        // branchId unknown — fall back to company scope so notifications are not lost
+        const { data } = await adminClient
+          .from('users')
+          .select('id, full_name, email, role')
+          .eq('company_id', companyId)
+          .in('role', branchRoles)
+        ;(data || []).forEach(u => recipients.push(u as UserRow))
+      }
     }
 
     if (recipients.length === 0) return
