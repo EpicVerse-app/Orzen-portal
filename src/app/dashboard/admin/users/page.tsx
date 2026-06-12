@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
   Users, Store, Shield, Truck, ShieldCheck, User, MapPin,
-  ChevronRight, ArrowLeft
+  ChevronRight, ArrowLeft, Upload,
 } from 'lucide-react'
 import UsersTable from '@/components/admin/UsersTable'
 
@@ -138,9 +138,19 @@ export default async function AdminUsersPage({
   // ── LEVEL 1: All Users with interactive search/filter ──
   return (
     <div className="px-4 sm:px-6 py-6 max-w-5xl mx-auto">
-      <div className="mb-6 animate-fade-in-up stagger-1" style={{ opacity: 0 }}>
-        <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-        <p className="text-sm text-gray-400 mt-0.5">{allUsers?.length || 0} total across {Object.keys(stateMap).length} states</p>
+      <div className="flex items-start justify-between gap-4 mb-6 animate-fade-in-up stagger-1" style={{ opacity: 0 }}>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+          <p className="text-sm text-gray-400 mt-0.5">{allUsers?.length || 0} total across {Object.keys(stateMap).length} states</p>
+        </div>
+        <Link
+          href="/dashboard/admin/users/bulk-import"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white shrink-0 transition-opacity hover:opacity-90"
+          style={{ backgroundColor: '#570439' }}
+        >
+          <Upload className="w-4 h-4" />
+          Bulk Import
+        </Link>
       </div>
       <UsersTable users={allUsers || []} />
     </div>
