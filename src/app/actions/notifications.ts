@@ -49,8 +49,8 @@ export async function sendOrderNotifications({
     type UserRow = { id: string; full_name: string; email: string | null; role: string }
     const recipients: UserRow[] = []
 
-    // store_head and store_manager are branch-scoped; all other roles are company-scoped
-    const branchScopedRoles = ['store_manager', 'store_head']
+    // only store_manager is branch-scoped; store_head and all other roles are company-scoped
+    const branchScopedRoles = ['store_manager']
     const companyRoles = targetRoles.filter(r => !branchScopedRoles.includes(r))
     const branchRoles  = targetRoles.filter(r => branchScopedRoles.includes(r))
 
