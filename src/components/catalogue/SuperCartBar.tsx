@@ -1,13 +1,20 @@
 'use client'
 
+import { useEffect } from 'react'
 import { ShoppingCart } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
 import { useRouter } from 'next/navigation'
 
-export default function SuperCartBar() {
-  const { items, totalItems } = useCartStore()
+interface Props {
+  userId: string
+}
+
+export default function SuperCartBar({ userId }: Props) {
+  const { items, totalItems, initForUser } = useCartStore()
   const router = useRouter()
   const total = totalItems()
+
+  useEffect(() => { initForUser(userId) }, [userId])
 
   if (total === 0) return null
 

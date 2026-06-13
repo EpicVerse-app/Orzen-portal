@@ -53,7 +53,7 @@ export default async function SuperCategoryPage({ params }: { params: Promise<{ 
 
       <ProductGrid products={productsWithCategory} />
 
-      <SuperCartBar />
+      <SuperCartBar userId={profile.id} />
     </div>
   )
 }

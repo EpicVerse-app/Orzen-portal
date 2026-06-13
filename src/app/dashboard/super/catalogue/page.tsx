@@ -39,6 +39,7 @@ export default async function SuperCataloguePage() {
       <SuperCatalogueClient
         branches={(branches || []) as any[]}
         categories={categories || []}
+        userId={profile.id}
       />
     </div>
   )

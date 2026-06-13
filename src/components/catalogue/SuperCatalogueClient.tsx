@@ -20,21 +20,27 @@ interface Category {
 interface Props {
   branches: Branch[]
   categories: Category[]
+  userId: string
 }
 
-export default function SuperCatalogueClient({ branches, categories }: Props) {
-  const { selectedBranchId, setSelectedBranchId } = useCartStore()
+export default function SuperCatalogueClient({ branches, categories, userId }: Props) {
+  const { selectedBranchId, setSelectedBranchId, initForUser } = useCartStore()
   const [localBranch, setLocalBranch]   = useState(selectedBranchId)
   const [query, setQuery]               = useState('')
   const [open, setOpen]                 = useState(false)
   const containerRef                    = useRef<HTMLDivElement>(null)
+
+  // Load this user's persisted cart on mount, then sync branch UI
+  useEffect(() => {
+    initForUser(userId)
+  }, [userId])
 
   // Sync from store on mount
   useEffect(() => {
     setLocalBranch(selectedBranchId)
     const b = branches.find(b => b.id === selectedBranchId)
     if (b) setQuery(`${b.name} — ${b.city}`)
-  }, [])
+  }, [selectedBranchId])
 
   // Close dropdown on outside click
   useEffect(() => {

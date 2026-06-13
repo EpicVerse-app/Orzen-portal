@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ShoppingCart, X, Trash2 } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
 import { createClient } from '@/lib/supabase/client'
@@ -14,9 +14,11 @@ interface Props {
 }
 
 export default function CartBar({ branchId, companyId, userId }: Props) {
-  const { items, removeItem, updateQty, clearCart, totalItems, isOpen, setOpen } = useCartStore()
+  const { items, removeItem, updateQty, clearCart, totalItems, isOpen, setOpen, initForUser } = useCartStore()
   const open = isOpen
   const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => { initForUser(userId) }, [userId])
   const [showModal, setShowModal] = useState(false)
   const [orderedByName, setOrderedByName] = useState('')
   const [orderedById, setOrderedById] = useState('')
