@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useCartStore } from '@/store/cartStore'
 import { createClient } from '@/lib/supabase/client'
+import { sendOrderNotifications } from '@/app/actions/notifications'
 import { useRouter } from 'next/navigation'
 import { Trash2, ShoppingCart, Building2, Package } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -79,6 +80,17 @@ export default function SuperViewOrderPage({ companyId, userId, userName, branch
       setSubmitting(false)
       return
     }
+
+    const sid = 'ORD-' + order.id.replace(/-/g, '').slice(0, 6).toUpperCase()
+    await sendOrderNotifications({
+      orderId:     order.id,
+      companyId,
+      title:       'New Order Submitted',
+      message:     `Order ${sid}${selectedBranch ? ` from ${selectedBranch.name}` : ''} is waiting for approval`,
+      type:        'order_submitted',
+      targetRoles: ['store_head'],
+      branchId:    selectedBranchId,
+    })
 
     clearCart()
     toast.success('Order placed successfully!')

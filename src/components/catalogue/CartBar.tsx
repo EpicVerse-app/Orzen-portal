@@ -4,16 +4,18 @@ import { useState, useEffect } from 'react'
 import { ShoppingCart, X, Trash2 } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
 import { createClient } from '@/lib/supabase/client'
+import { sendOrderNotifications } from '@/app/actions/notifications'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 
 interface Props {
-  branchId:  string
-  companyId: string
-  userId:    string
+  branchId:   string
+  companyId:  string
+  userId:     string
+  branchName?: string
 }
 
-export default function CartBar({ branchId, companyId, userId }: Props) {
+export default function CartBar({ branchId, companyId, userId, branchName }: Props) {
   const { items, removeItem, updateQty, clearCart, totalItems, isOpen, setOpen, initForUser } = useCartStore()
   const open = isOpen
   const [submitting, setSubmitting] = useState(false)
@@ -70,6 +72,17 @@ export default function CartBar({ branchId, companyId, userId }: Props) {
       setSubmitting(false)
       return
     }
+
+    const sid = 'ORD-' + order.id.replace(/-/g, '').slice(0, 6).toUpperCase()
+    await sendOrderNotifications({
+      orderId:     order.id,
+      companyId,
+      title:       'New Order Submitted',
+      message:     `Order ${sid}${branchName ? ` from ${branchName}` : ''} is waiting for approval`,
+      type:        'order_submitted',
+      targetRoles: ['store_head'],
+      branchId,
+    })
 
     clearCart()
     setOpen(false)

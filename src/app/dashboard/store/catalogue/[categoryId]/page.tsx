@@ -46,6 +46,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
         branchId={profile.branch_id!}
         companyId={profile.company_id}
         userId={profile.id}
+        branchName={(Array.isArray(profile.branch) ? profile.branch[0] : profile.branch as any)?.name}
       />
     </>
   )
