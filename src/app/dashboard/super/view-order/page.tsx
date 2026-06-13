@@ -10,7 +10,7 @@ export default async function SuperViewOrder() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('id, role, company_id')
+    .select('id, role, company_id, full_name')
     .eq('id', user.id)
     .single()
 
@@ -27,6 +27,7 @@ export default async function SuperViewOrder() {
     <SuperViewOrderPage
       companyId={profile.company_id}
       userId={profile.id}
+      userName={(profile as any).full_name ?? ''}
       branches={(branches || []) as any}
     />
   )

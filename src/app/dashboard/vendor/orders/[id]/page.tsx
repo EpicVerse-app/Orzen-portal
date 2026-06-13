@@ -52,6 +52,8 @@ export default async function VendorOrderDetailPage({
       createdAt={order.created_at}
       status={order.status}
       companyName={companyName}
+      orderedByName={(order as any).ordered_by_name}
+      orderedById={(order as any).ordered_by_id}
       branch={order.branch as any}
       items={(order.items as any[]).map(i => ({
         quantity: i.quantity,

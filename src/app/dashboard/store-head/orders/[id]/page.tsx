@@ -68,6 +68,8 @@ export default async function StoreHeadOrderDetailPage({
               createdAt={order.created_at}
               status={order.status}
               companyName={companyName}
+              orderedByName={(order as any).ordered_by_name}
+              orderedById={(order as any).ordered_by_id}
               branch={Array.isArray(order.branch) ? order.branch[0] : order.branch as any}
               items={order.items as any}
             />

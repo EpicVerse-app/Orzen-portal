@@ -19,10 +19,11 @@ interface Branch {
 interface Props {
   companyId: string
   userId: string
+  userName: string
   branches: Branch[]
 }
 
-export default function SuperViewOrderPage({ companyId, userId, branches }: Props) {
+export default function SuperViewOrderPage({ companyId, userId, userName, branches }: Props) {
   const { items, removeItem, updateQty, clearCart, totalItems, selectedBranchId, setSelectedBranchId } = useCartStore()
   const [submitting, setSubmitting] = useState(false)
 
@@ -53,6 +54,8 @@ export default function SuperViewOrderPage({ companyId, userId, branches }: Prop
         created_by: userId,
         status: 'submitted',
         escalation_deadline: deadline.toISOString(),
+        ordered_by_name: userName,
+        ordered_by_id: userId,
       })
       .select('id')
       .single()
@@ -79,8 +82,7 @@ export default function SuperViewOrderPage({ companyId, userId, branches }: Prop
 
     clearCart()
     toast.success('Order placed successfully!')
-    router.push('/dashboard/super')
-    router.refresh()
+    window.location.href = '/dashboard/super'
   }
 
   const selectedBranch = branches.find(b => b.id === selectedBranchId)

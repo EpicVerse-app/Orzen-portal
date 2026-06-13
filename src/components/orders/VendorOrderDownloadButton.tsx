@@ -14,10 +14,12 @@ interface Item {
 }
 
 interface Props {
-  orderId:     string
-  createdAt:   string
-  status:      string
-  companyName: string
+  orderId:          string
+  createdAt:        string
+  status:           string
+  companyName:      string
+  orderedByName?:   string | null
+  orderedById?:     string | null
   branch?: {
     name?:    string
     address?: string
@@ -51,7 +53,7 @@ async function loadImageAsBase64(url: string): Promise<string> {
 }
 
 export default function VendorOrderDownloadButton({
-  orderId, createdAt, status, companyName, branch, items,
+  orderId, createdAt, status, companyName, orderedByName, orderedById, branch, items,
 }: Props) {
   const [loading, setLoading] = useState(false)
 
@@ -134,8 +136,30 @@ export default function VendorOrderDownloadButton({
         doc.text(lines, colMid, y + 12)
       }
 
+      // ── Ordered By ───────────────────────────────────────────────────
+      let tableTop = y + 28
+      if (orderedByName || orderedById) {
+        doc.setDrawColor(220, 220, 220)
+        doc.setLineWidth(0.3)
+        doc.line(margin, y + 20, pageW - margin, y + 20)
+
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(8)
+        doc.setTextColor(62, 0, 30)
+        doc.text('ORDERED BY', margin, y + 26)
+
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(9)
+        doc.setTextColor(30, 30, 30)
+        const parts: string[] = []
+        if (orderedByName) parts.push(orderedByName)
+        if (orderedById)   parts.push(`ID: ${orderedById}`)
+        doc.text(parts.join('     '), margin, y + 32)
+
+        tableTop = y + 40
+      }
+
       // ── Items table ───────────────────────────────────────────────────
-      const tableTop = y + 30
 
       const tableHead = hasPrices
         ? [['#', 'Product Name', 'Category', 'Unit', 'Qty', 'Unit Price', 'Total']]
