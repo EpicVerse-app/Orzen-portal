@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getStoreProfile } from '@/lib/auth/getStoreProfile'
 import Link from 'next/link'
-import { ChevronRight } from 'lucide-react'
+import { Tag, ChevronRight } from 'lucide-react'
 
 export default async function CataloguePage() {
   const profile = await getStoreProfile()
