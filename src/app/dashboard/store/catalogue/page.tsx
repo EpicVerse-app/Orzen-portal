@@ -28,15 +28,20 @@ export default async function CataloguePage() {
           <p className="text-sm text-gray-400">No categories available yet</p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          {categories.map((cat, idx) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+          {categories.map((cat) => (
             <Link
               key={cat.id}
               href={`/dashboard/store/catalogue/${cat.id}`}
-              className={`flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors group ${idx !== 0 ? 'border-t border-gray-50' : ''}`}
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5 flex items-center justify-between hover:border-[#c9a84c] hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
             >
-              <span className="text-sm font-medium text-gray-800 group-hover:text-gray-900">{cat.name}</span>
-              <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors shrink-0" />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#f5f0e8] rounded-xl flex items-center justify-center group-hover:bg-[#c9a84c]/20 transition-colors">
+                  <Tag className="w-5 h-5 text-[#c9a84c]" />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">{cat.name}</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#c9a84c] transition-colors" />
             </Link>
           ))}
         </div>
