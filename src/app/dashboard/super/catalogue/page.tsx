@@ -32,7 +32,7 @@ export default async function SuperCataloguePage() {
     .from('categories')
     .select('id, name')
     .eq('company_id', profile.company_id)
-    .order('name')
+    .order('sort_order', { ascending: true })
 
   return (
     <div className="px-4 sm:px-6 py-5 max-w-4xl mx-auto">

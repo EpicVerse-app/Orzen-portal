@@ -13,7 +13,7 @@ export default async function CataloguePage() {
     .from('categories')
     .select('id, name')
     .eq('company_id', profile.company_id)
-    .order('name')
+    .order('sort_order', { ascending: true })
 
   return (
     <>
