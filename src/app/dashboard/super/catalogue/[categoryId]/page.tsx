@@ -38,7 +38,7 @@ export default async function SuperCategoryPage({ params }: { params: Promise<{ 
   }))
 
   return (
-    <div className="px-4 sm:px-6 py-5 max-w-5xl mx-auto">
+    <div className="px-4 sm:px-6 py-5">
       <div className="mb-6">
         <Link
           href="/dashboard/super/catalogue"

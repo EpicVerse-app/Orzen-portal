@@ -35,7 +35,7 @@ export default async function SuperCataloguePage() {
     .order('sort_order', { ascending: true })
 
   return (
-    <div className="px-4 sm:px-6 py-5 max-w-4xl mx-auto">
+    <div className="px-4 sm:px-6 py-5">
       <SuperCatalogueClient
         branches={(branches || []) as any[]}
         categories={categories || []}
