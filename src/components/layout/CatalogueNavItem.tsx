@@ -48,7 +48,7 @@ export default function CatalogueNavItem({
       .from('categories')
       .select('id, name')
       .eq('company_id', companyId)
-      .order('name')
+      .order('sort_order', { ascending: true })
     setCategories(data || [])
     setLoaded(true)
     setLoading(false)
