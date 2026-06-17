@@ -4,6 +4,17 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
+export async function getUsersForDropdown(): Promise<{ username: string; full_name: string; role: string }[]> {
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('users')
+    .select('username, full_name, role')
+    .not('username', 'is', null)
+    .order('role')
+    .order('full_name')
+  return (data || []).filter(u => u.username)
+}
+
 export async function loginAction(username: string, password: string): Promise<string | void> {
   // 1. Resolve username → email using admin client
   const admin = createAdminClient()

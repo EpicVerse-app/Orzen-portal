@@ -1,12 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { m as motion, AnimatePresence } from 'framer-motion'
-import { loginAction } from './actions'
+import { loginAction, getUsersForDropdown } from './actions'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, ChevronDown, Search } from 'lucide-react'
+
+const ROLE_LABEL: Record<string, string> = {
+  admin:         'Admin',
+  super_manager: 'Regional Manager',
+  store_head:    'Store Head',
+  store_manager: 'Store Manager',
+  vendor:        'Vendor',
+}
 
 export default function LoginPage() {
   const [username, setUsername]       = useState('')
@@ -15,6 +23,11 @@ export default function LoginPage() {
   const [shake, setShake]             = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [currentUser, setCurrentUser] = useState<{ name: string; role: string } | null>(null)
+
+  const [users, setUsers]             = useState<{ username: string; full_name: string; role: string }[]>([])
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [search, setSearch]           = useState('')
+  const dropdownRef                   = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     async function checkSession() {
@@ -29,7 +42,25 @@ export default function LoginPage() {
       if (profile) setCurrentUser({ name: profile.full_name, role: profile.role.replace('_', ' ') })
     }
     checkSession()
+    getUsersForDropdown().then(setUsers)
   }, [])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [])
+
+  const filtered = users.filter(u =>
+    u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+    u.username?.toLowerCase().includes(search.toLowerCase()) ||
+    ROLE_LABEL[u.role]?.toLowerCase().includes(search.toLowerCase())
+  )
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -103,6 +134,61 @@ export default function LoginPage() {
             onSubmit={handleLogin}
             className="space-y-4"
           >
+            {/* User selector dropdown */}
+            {users.length > 0 && (
+              <div ref={dropdownRef} className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select User</label>
+                <button
+                  type="button"
+                  onClick={() => setDropdownOpen(v => !v)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-left flex items-center justify-between bg-white hover:border-[#c9a84c] focus:outline-none focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent transition-shadow"
+                >
+                  <span className={username ? 'text-gray-900' : 'text-gray-400'}>
+                    {username
+                      ? (() => { const u = users.find(u => u.username === username); return u ? `${u.full_name} — ${ROLE_LABEL[u.role] ?? u.role}` : username })()
+                      : 'Select a user…'
+                    }
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {dropdownOpen && (
+                  <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden max-h-60 flex flex-col">
+                    <div className="p-2 border-b border-gray-100 shrink-0">
+                      <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                        <input
+                          type="text"
+                          placeholder="Search…"
+                          value={search}
+                          onChange={e => setSearch(e.target.value)}
+                          autoFocus
+                          className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/40"
+                        />
+                      </div>
+                    </div>
+                    <div className="overflow-y-auto">
+                      {filtered.length === 0 ? (
+                        <div className="px-4 py-3 text-sm text-gray-400 text-center">No users found</div>
+                      ) : (
+                        filtered.map(u => (
+                          <button
+                            key={u.username}
+                            type="button"
+                            onClick={() => { setUsername(u.username); setDropdownOpen(false); setSearch('') }}
+                            className={`w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-gray-50 transition-colors ${u.username === username ? 'bg-[#f5f0e8]' : ''}`}
+                          >
+                            <span className="text-sm font-medium text-gray-800">{u.full_name}</span>
+                            <span className="text-xs text-gray-400 ml-2 shrink-0">{ROLE_LABEL[u.role] ?? u.role}</span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
               <input
