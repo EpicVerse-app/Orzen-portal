@@ -9,10 +9,10 @@ import Link from 'next/link'
 import { Eye, EyeOff, ChevronDown, Search } from 'lucide-react'
 
 const ROLE_LABEL: Record<string, string> = {
-  admin:         'Admin',
-  super_manager: 'Regional Manager',
+  admin:         'Super Admin',
+  super_manager: 'RV Manager',
   store_head:    'Store Head',
-  store_manager: 'Store Manager',
+  store_manager: 'Store ID',
   vendor:        'Vendor',
 }
 
