@@ -145,7 +145,7 @@ export default function LoginPage() {
                 >
                   <span className={username ? 'text-gray-900' : 'text-gray-400'}>
                     {username
-                      ? (() => { const u = users.find(u => u.username === username); return u ? `${u.full_name} — ${ROLE_LABEL[u.role] ?? u.role}` : username })()
+                      ? (() => { const u = users.find(u => u.username === username); return u ? `${ROLE_LABEL[u.role] ?? u.role} — ${u.full_name}` : username })()
                       : 'Select a user…'
                     }
                   </span>
@@ -178,8 +178,8 @@ export default function LoginPage() {
                             onClick={() => { setUsername(u.username); setDropdownOpen(false); setSearch('') }}
                             className={`w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-gray-50 transition-colors ${u.username === username ? 'bg-[#f5f0e8]' : ''}`}
                           >
-                            <span className="text-sm font-medium text-gray-800">{u.full_name}</span>
-                            <span className="text-xs text-gray-400 ml-2 shrink-0">{ROLE_LABEL[u.role] ?? u.role}</span>
+                            <span className="text-xs text-gray-400">{u.full_name}</span>
+                            <span className="text-sm font-semibold text-gray-800 ml-2 shrink-0">{ROLE_LABEL[u.role] ?? u.role}</span>
                           </button>
                         ))
                       )}
