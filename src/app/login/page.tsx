@@ -138,11 +138,11 @@ export default function LoginPage() {
 
               <form onSubmit={handleLogin} className="space-y-4">
 
-                {/* Select User dropdown */}
+                {/* Select Role dropdown */}
                 {users.length > 0 && (
                   <div ref={dropdownRef} className="relative">
                     <label className="block text-sm font-medium mb-1.5" style={{ color: '#D4B276' }}>
-                      Select User
+                      Select Role
                     </label>
                     <button
                       type="button"
@@ -156,8 +156,8 @@ export default function LoginPage() {
                     >
                       <span>
                         {selectedUser
-                          ? `${selectedUser.full_name} - ${ROLE_LABEL[selectedUser.role] ?? selectedUser.role}`
-                          : 'Select a user...'}
+                          ? ROLE_LABEL[selectedUser.role] ?? selectedUser.role
+                          : 'Select a role...'}
                       </span>
                       <ChevronDown
                         className={`w-4 h-4 transition-transform shrink-0 ml-2`}
@@ -205,9 +205,9 @@ export default function LoginPage() {
                                 onMouseEnter={e => { if (u.username !== username) (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#D4B27640' }}
                                 onMouseLeave={e => { if (u.username !== username) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent' }}
                               >
-                                <span className="text-sm font-medium">{u.full_name}</span>
+                                <span className="text-sm font-semibold" style={{ color: '#121215' }}>{ROLE_LABEL[u.role] ?? u.role}</span>
                                 <span className="text-xs ml-2 shrink-0" style={{ color: '#8D6736' }}>
-                                  {ROLE_LABEL[u.role] ?? u.role}
+                                  {u.full_name}
                                 </span>
                               </button>
                             ))
