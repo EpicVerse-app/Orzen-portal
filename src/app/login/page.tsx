@@ -111,13 +111,12 @@ export default function LoginPage() {
           <div className="flex flex-col md:flex-row min-h-[480px]">
 
             {/* Left — Logo */}
-            <div className="flex-1 flex items-center justify-center p-10 md:p-14">
+            <div className="flex-1 relative min-h-[300px] md:min-h-0">
               <Image
                 src={LOGO_URL}
                 alt="Orzen Flow"
-                width={500}
-                height={500}
-                className="object-contain w-full max-w-[380px] md:max-w-[460px]"
+                fill
+                className="object-contain p-8"
                 unoptimized
               />
             </div>
