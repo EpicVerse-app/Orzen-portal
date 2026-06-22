@@ -1,12 +1,15 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { m as motion, AnimatePresence } from 'framer-motion'
 import { loginAction, getUsersForDropdown } from './actions'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Eye, EyeOff, ChevronDown, Search } from 'lucide-react'
+
+const LOGO_URL =
+  'https://muaqpangtwibnlmtjahn.supabase.co/storage/v1/object/sign/Orzen%20Flow/Flow_MO_Logo.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zNzBlM2JiYS01Nzg5LTRmNDQtOTMyNS00OTA1MGY3NWFlYjYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJPcnplbiBGbG93L0Zsb3dfTU9fTG9nby5wbmciLCJzY29wZSI6ImRvd25sb2FkIiwiaWF0IjoxNzgyMTA0NjE0LCJleHAiOjIwOTc0NjQ2MTR9.WfiVGt2DVztlw5tjOy3apaurcFwFY4l0LOK2diA9cvg'
 
 const ROLE_LABEL: Record<string, string> = {
   admin:         'Super Admin',
@@ -17,17 +20,16 @@ const ROLE_LABEL: Record<string, string> = {
 }
 
 export default function LoginPage() {
-  const [username, setUsername]       = useState('')
-  const [password, setPassword]       = useState('')
-  const [loading, setLoading]         = useState(false)
-  const [shake, setShake]             = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [currentUser, setCurrentUser] = useState<{ name: string; role: string } | null>(null)
+  const [username, setUsername]           = useState('')
+  const [password, setPassword]           = useState('')
+  const [loading, setLoading]             = useState(false)
+  const [showPassword, setShowPassword]   = useState(false)
+  const [currentUser, setCurrentUser]     = useState<{ name: string; role: string } | null>(null)
 
-  const [users, setUsers]             = useState<{ username: string; full_name: string; role: string }[]>([])
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [search, setSearch]           = useState('')
-  const dropdownRef                   = useRef<HTMLDivElement>(null)
+  const [users, setUsers]                 = useState<{ username: string; full_name: string; role: string }[]>([])
+  const [dropdownOpen, setDropdownOpen]   = useState(false)
+  const [search, setSearch]               = useState('')
+  const dropdownRef                       = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     async function checkSession() {
@@ -45,7 +47,6 @@ export default function LoginPage() {
     getUsersForDropdown().then(setUsers)
   }, [])
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handle(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -69,198 +70,228 @@ export default function LoginPage() {
     if (error) {
       toast.error(error)
       setLoading(false)
-      setShake(true)
-      setTimeout(() => setShake(false), 600)
     }
   }
 
+  const selectedUser = users.find(u => u.username === username)
+
   return (
-    <div className="min-h-screen bg-[#f5f0e8] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
+      style={{ background: 'linear-gradient(135deg, #8D6736 0%, #C9A84C 40%, #D4B276 70%, #B18850 100%)' }}
+    >
+      <div className="w-full max-w-4xl">
 
         {/* Already signed in banner */}
-        <AnimatePresence>
-          {currentUser && (
-            <motion.div
-              initial={{ opacity: 0, y: -12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              className="mb-4 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center justify-between gap-3"
-            >
-              <div>
-                <p className="text-xs font-semibold text-amber-800">Currently signed in as</p>
-                <p className="text-sm font-bold text-amber-900">{currentUser.name}</p>
-                <p className="text-xs text-amber-700 capitalize">{currentUser.role}</p>
-              </div>
-              <Link
-                href="/dashboard"
-                className="shrink-0 text-xs font-semibold bg-amber-100 hover:bg-amber-200 text-amber-800 px-3 py-2 rounded-xl transition-colors"
-              >
-                Go to Dashboard →
-              </Link>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Login card */}
-        <motion.div
-          initial={{ opacity: 0, y: 24, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.4, ease: 'easeOut' }}
-          animate-x={shake ? [0, -8, 8, -8, 8, 0] : 0}
-          className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8"
-          style={shake ? { animation: 'shake 0.5s ease' } : {}}
-        >
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.15, duration: 0.35, ease: 'backOut' }}
-            className="mb-8 text-center"
+        {currentUser && (
+          <div
+            className="mb-4 rounded-2xl px-4 py-3 flex items-center justify-between gap-3"
+            style={{ backgroundColor: 'rgba(18,18,21,0.7)', border: '1px solid #B18850' }}
           >
-            <div className="w-16 h-16 bg-[#1a1a1a] rounded-2xl mx-auto mb-4 flex items-center justify-center">
-              <span className="text-[#c9a84c] text-xl font-bold tracking-wide">OF</span>
-            </div>
-            <h1 className="text-xl font-semibold text-gray-900">Orzen Flow</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              {currentUser ? 'Sign in as a different account' : 'Sign in to your account'}
-            </p>
-          </motion.div>
-
-          <motion.form
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.25, duration: 0.3 }}
-            onSubmit={handleLogin}
-            className="space-y-4"
-          >
-            {/* User selector dropdown */}
-            {users.length > 0 && (
-              <div ref={dropdownRef} className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select User</label>
-                <button
-                  type="button"
-                  onClick={() => setDropdownOpen(v => !v)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-left flex items-center justify-between bg-white hover:border-[#c9a84c] focus:outline-none focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent transition-shadow"
-                >
-                  <span className={username ? 'text-gray-900' : 'text-gray-400'}>
-                    {username
-                      ? (() => { const u = users.find(u => u.username === username); return u ? `${ROLE_LABEL[u.role] ?? u.role} — ${u.full_name}` : username })()
-                      : 'Select a user…'
-                    }
-                  </span>
-                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {dropdownOpen && (
-                  <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden max-h-60 flex flex-col">
-                    <div className="p-2 border-b border-gray-100 shrink-0">
-                      <div className="relative">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-                        <input
-                          type="text"
-                          placeholder="Search…"
-                          value={search}
-                          onChange={e => setSearch(e.target.value)}
-                          autoFocus
-                          className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/40"
-                        />
-                      </div>
-                    </div>
-                    <div className="overflow-y-auto">
-                      {filtered.length === 0 ? (
-                        <div className="px-4 py-3 text-sm text-gray-400 text-center">No users found</div>
-                      ) : (
-                        filtered.map(u => (
-                          <button
-                            key={u.username}
-                            type="button"
-                            onClick={() => { setUsername(u.username); setDropdownOpen(false); setSearch('') }}
-                            className={`w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-gray-50 transition-colors ${u.username === username ? 'bg-[#f5f0e8]' : ''}`}
-                          >
-                            <span className="text-xs text-gray-400">{u.full_name}</span>
-                            <span className="text-sm font-semibold text-gray-800 ml-2 shrink-0">{ROLE_LABEL[u.role] ?? u.role}</span>
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                autoComplete="username"
-                placeholder="Enter your username"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent transition-shadow"
+              <p className="text-xs font-semibold" style={{ color: '#D4B276' }}>Currently signed in as</p>
+              <p className="text-sm font-bold" style={{ color: '#EFE1B5' }}>{currentUser.name}</p>
+              <p className="text-xs capitalize" style={{ color: '#B18850' }}>{currentUser.role}</p>
+            </div>
+            <Link
+              href="/dashboard"
+              className="shrink-0 text-xs font-semibold px-3 py-2 rounded-xl transition-colors"
+              style={{ backgroundColor: '#B18850', color: '#121215' }}
+            >
+              Go to Dashboard →
+            </Link>
+          </div>
+        )}
+
+        {/* Main card */}
+        <div
+          className="rounded-3xl overflow-hidden shadow-2xl"
+          style={{ backgroundColor: '#121215' }}
+        >
+          <div className="flex flex-col md:flex-row min-h-[480px]">
+
+            {/* Left — Logo */}
+            <div className="flex-1 flex items-center justify-center p-10 md:p-14">
+              <Image
+                src={LOGO_URL}
+                alt="Orzen Flow"
+                width={300}
+                height={300}
+                className="object-contain w-full max-w-[260px] md:max-w-[300px]"
+                unoptimized
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 pr-11 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent transition-shadow"
-                />
+            {/* Divider */}
+            <div className="hidden md:block w-px my-12" style={{ backgroundColor: '#2a2a2a' }} />
+
+            {/* Right — Form */}
+            <div className="flex-1 flex flex-col justify-center px-8 py-10 md:px-12">
+              <p className="text-center text-sm mb-7" style={{ color: '#D4B276' }}>
+                Sign in to your account
+              </p>
+
+              <form onSubmit={handleLogin} className="space-y-4">
+
+                {/* Select User dropdown */}
+                {users.length > 0 && (
+                  <div ref={dropdownRef} className="relative">
+                    <label className="block text-sm font-medium mb-1.5" style={{ color: '#D4B276' }}>
+                      Select User
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setDropdownOpen(v => !v)}
+                      className="w-full px-4 py-3 rounded-xl text-sm text-left flex items-center justify-between transition-all"
+                      style={{
+                        backgroundColor: '#EFE1B5',
+                        border: '1px solid #B18850',
+                        color: selectedUser ? '#121215' : '#8D6736',
+                      }}
+                    >
+                      <span>
+                        {selectedUser
+                          ? `${selectedUser.full_name} - ${ROLE_LABEL[selectedUser.role] ?? selectedUser.role}`
+                          : 'Select a user...'}
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform shrink-0 ml-2`}
+                        style={{ color: '#8D6736', transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                      />
+                    </button>
+
+                    {dropdownOpen && (
+                      <div
+                        className="absolute z-50 mt-1 w-full rounded-xl shadow-xl overflow-hidden max-h-60 flex flex-col"
+                        style={{ backgroundColor: '#EFE1B5', border: '1px solid #B18850' }}
+                      >
+                        <div className="p-2 shrink-0" style={{ borderBottom: '1px solid #D4B276' }}>
+                          <div className="relative">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: '#8D6736' }} />
+                            <input
+                              type="text"
+                              placeholder="Search..."
+                              value={search}
+                              onChange={e => setSearch(e.target.value)}
+                              autoFocus
+                              className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg focus:outline-none"
+                              style={{
+                                backgroundColor: '#fff',
+                                border: '1px solid #D4B276',
+                                color: '#121215',
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div className="overflow-y-auto">
+                          {filtered.length === 0 ? (
+                            <div className="px-4 py-3 text-sm text-center" style={{ color: '#8D6736' }}>No users found</div>
+                          ) : (
+                            filtered.map(u => (
+                              <button
+                                key={u.username}
+                                type="button"
+                                onClick={() => { setUsername(u.username); setDropdownOpen(false); setSearch('') }}
+                                className="w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors"
+                                style={{
+                                  backgroundColor: u.username === username ? '#D4B276' : 'transparent',
+                                  color: '#121215',
+                                }}
+                                onMouseEnter={e => { if (u.username !== username) (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#D4B27640' }}
+                                onMouseLeave={e => { if (u.username !== username) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent' }}
+                              >
+                                <span className="text-sm font-medium">{u.full_name}</span>
+                                <span className="text-xs ml-2 shrink-0" style={{ color: '#8D6736' }}>
+                                  {ROLE_LABEL[u.role] ?? u.role}
+                                </span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Username */}
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#D4B276' }}>
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    required
+                    autoComplete="username"
+                    placeholder="Enter your username"
+                    className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none transition-all"
+                    style={{
+                      backgroundColor: '#EFE1B5',
+                      border: '1px solid #B18850',
+                      color: '#121215',
+                    }}
+                    onFocus={e => (e.target.style.borderColor = '#D4B276')}
+                    onBlur={e => (e.target.style.borderColor = '#B18850')}
+                  />
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#D4B276' }}>
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      required
+                      autoComplete="current-password"
+                      placeholder="••••••••"
+                      className="w-full px-4 py-3 pr-11 rounded-xl text-sm focus:outline-none transition-all"
+                      style={{
+                        backgroundColor: '#EFE1B5',
+                        border: '1px solid #B18850',
+                        color: '#121215',
+                      }}
+                      onFocus={e => (e.target.style.borderColor = '#D4B276')}
+                      onBlur={e => (e.target.style.borderColor = '#B18850')}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 transition-colors"
+                      style={{ color: '#8D6736' }}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sign In button */}
                 <button
-                  type="button"
-                  onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1"
-                  tabIndex={-1}
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-60 mt-2"
+                  style={{
+                    background: 'linear-gradient(135deg, #B18850 0%, #D4B276 100%)',
+                    color: '#121215',
+                  }}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {loading ? 'Signing In...' : 'Sign In'}
                 </button>
-              </div>
+              </form>
             </div>
+          </div>
+        </div>
 
-            <motion.button
-              type="submit"
-              disabled={loading}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full bg-[#1a1a1a] text-white py-3 rounded-xl text-sm font-semibold hover:bg-[#2a2a2a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2 flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Signing in…
-                </>
-              ) : 'Sign in'}
-            </motion.button>
-          </motion.form>
-        </motion.div>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.45 }}
-          className="text-center text-xs text-gray-400 mt-6"
-        >
+        {/* Footer */}
+        <p className="text-center text-xs mt-5" style={{ color: '#EFE1B5' }}>
           Access is provided by your company administrator
-        </motion.p>
+        </p>
       </div>
-
-      <style jsx global>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          20%       { transform: translateX(-8px); }
-          40%       { transform: translateX(8px); }
-          60%       { transform: translateX(-6px); }
-          80%       { transform: translateX(6px); }
-        }
-      `}</style>
     </div>
   )
 }
