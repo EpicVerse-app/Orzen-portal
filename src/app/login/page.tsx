@@ -115,9 +115,9 @@ export default function LoginPage() {
               <Image
                 src={LOGO_URL}
                 alt="Orzen Flow"
-                width={300}
-                height={300}
-                className="object-contain w-full max-w-[260px] md:max-w-[300px]"
+                width={500}
+                height={500}
+                className="object-contain w-full max-w-[380px] md:max-w-[460px]"
                 unoptimized
               />
             </div>
