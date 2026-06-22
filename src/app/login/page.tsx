@@ -78,7 +78,11 @@ export default function LoginPage() {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
-      style={{ background: 'linear-gradient(135deg, #8D6736 0%, #C9A84C 40%, #D4B276 70%, #B18850 100%)' }}
+      style={{
+        backgroundImage: 'url(https://muaqpangtwibnlmtjahn.supabase.co/storage/v1/object/sign/Orzen%20Flow/Background.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zNzBlM2JiYS01Nzg5LTRmNDQtOTMyNS00OTA1MGY3NWFlYjYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJPcnplbiBGbG93L0JhY2tncm91bmQucG5nIiwic2NvcGUiOiJkb3dubG9hZCIsImlhdCI6MTc4MjEwNTg1NiwiZXhwIjoyMDk3NDY1ODU2fQ.VbSvu_EOzGf-b_U0PqrWl_v__VlofbA3YkVUsYcNQMo)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
     >
       <div className="w-full max-w-4xl">
 
