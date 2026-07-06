@@ -128,6 +128,7 @@ export default function ProductManager({ profile, categories, companyId }: Props
       const supabase = createClient()
       const ext  = file.name.split('.').pop()
       const path = `${folderPath}/${Date.now()}_${slot}.${ext}`
+      if (path.includes('..')) throw new Error('Invalid path')
       const { data: uploaded, error } = await supabase.storage
         .from('product-images')
         .upload(path, file, { upsert: true })
