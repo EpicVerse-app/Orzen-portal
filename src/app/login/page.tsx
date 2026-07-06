@@ -8,8 +8,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Eye, EyeOff, ChevronDown, Search } from 'lucide-react'
 
-const LOGO_URL =
-  'https://muaqpangtwibnlmtjahn.supabase.co/storage/v1/object/sign/Orzen%20Flow/Flow_MO_Logo.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zNzBlM2JiYS01Nzg5LTRmNDQtOTMyNS00OTA1MGY3NWFlYjYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJPcnplbiBGbG93L0Zsb3dfTU9fTG9nby5wbmciLCJzY29wZSI6ImRvd25sb2FkIiwiaWF0IjoxNzgyMTA0NjE0LCJleHAiOjIwOTc0NjQ2MTR9.WfiVGt2DVztlw5tjOy3apaurcFwFY4l0LOK2diA9cvg'
+const LOGO_URL = process.env.NEXT_PUBLIC_ORZEN_LOGO_URL ?? ''
 
 const ROLE_LABEL: Record<string, string> = {
   admin:         'Super Admin',
@@ -79,7 +78,7 @@ export default function LoginPage() {
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
       style={{
-        backgroundImage: 'url(https://muaqpangtwibnlmtjahn.supabase.co/storage/v1/object/sign/Orzen%20Flow/Background.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zNzBlM2JiYS01Nzg5LTRmNDQtOTMyNS00OTA1MGY3NWFlYjYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJPcnplbiBGbG93L0JhY2tncm91bmQucG5nIiwic2NvcGUiOiJkb3dubG9hZCIsImlhdCI6MTc4MjEwNTg1NiwiZXhwIjoyMDk3NDY1ODU2fQ.VbSvu_EOzGf-b_U0PqrWl_v__VlofbA3YkVUsYcNQMo)',
+        backgroundImage: `url(${process.env.NEXT_PUBLIC_ORZEN_BG_URL ?? ''})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}

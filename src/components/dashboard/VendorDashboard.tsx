@@ -86,43 +86,43 @@ function formatDate(d: string) {
 
 // ── Download order as Excel file ─────────────────────────
 async function downloadOrder(order: Order) {
-  const XLSX = await import('xlsx')
+  const { Workbook } = await import('exceljs')
+  const wb = new Workbook()
 
   // Order summary sheet
-  const summary = [
+  const wsSummary = wb.addWorksheet('Order Summary')
+  wsSummary.columns = [{ width: 16 }, { width: 40 }]
+  wsSummary.addRows([
     ['Order ID',    shortId(order.id)],
     ['Date',        formatDate(order.created_at)],
-    ['Branch',      order.branch?.name],
+    ['Branch',      order.branch?.name ?? ''],
     ['Address',     `${order.branch?.address}, ${order.branch?.city}, ${order.branch?.state}`],
     ['Status',      order.status],
-    ['Total Items', order.items?.reduce((s, i) => s + i.quantity, 0)],
-  ]
+    ['Total Items', order.items?.reduce((s, i) => s + i.quantity, 0) ?? 0],
+  ])
 
   // Products sheet
-  const productRows = [
-    ['#', 'Product Name', 'Category', 'Quantity', 'Unit'],
-    ...(order.items?.map((item, idx) => [
+  const wsProducts = wb.addWorksheet('Products')
+  wsProducts.columns = [{ width: 4 }, { width: 32 }, { width: 20 }, { width: 10 }, { width: 12 }]
+  wsProducts.addRow(['#', 'Product Name', 'Category', 'Quantity', 'Unit'])
+  order.items?.forEach((item, idx) => {
+    wsProducts.addRow([
       idx + 1,
       item.product?.name ?? '',
       item.product?.category?.name ?? '',
       item.quantity,
       item.product?.unit ?? '',
-    ]) || []),
-  ]
+    ])
+  })
 
-  const wb = XLSX.utils.book_new()
-
-  const wsSummary  = XLSX.utils.aoa_to_sheet(summary)
-  const wsProducts = XLSX.utils.aoa_to_sheet(productRows)
-
-  // Column widths
-  wsSummary['!cols']  = [{ wch: 16 }, { wch: 40 }]
-  wsProducts['!cols'] = [{ wch: 4 }, { wch: 32 }, { wch: 20 }, { wch: 10 }, { wch: 12 }]
-
-  XLSX.utils.book_append_sheet(wb, wsSummary,  'Order Summary')
-  XLSX.utils.book_append_sheet(wb, wsProducts, 'Products')
-
-  XLSX.writeFile(wb, `${shortId(order.id)}.xlsx`)
+  const buffer = await wb.xlsx.writeBuffer()
+  const blob   = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  const url    = URL.createObjectURL(blob)
+  const a      = document.createElement('a')
+  a.href     = url
+  a.download = `${shortId(order.id)}.xlsx`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 // ── Single collapsible order card ──────────────────────
