@@ -42,7 +42,9 @@ function formatDate(d: string) {
 }
 
 async function loadImageAsBase64(url: string): Promise<string> {
-  const res  = await fetch(url)
+  const parsed = new URL(url)
+  if (parsed.hostname !== 'muaqpangtwibnlmtjahn.supabase.co') throw new Error('Blocked: untrusted image host')
+  const res  = await fetch(parsed.href)
   const blob = await res.blob()
   return new Promise((resolve, reject) => {
     const reader = new FileReader()

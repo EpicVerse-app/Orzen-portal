@@ -39,7 +39,7 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/api/')) return
 
   event.respondWith(
-    fetch(event.request)
+    fetch(url.href)
       .then((response) => {
         if (response && response.status === 200) {
           const clone = response.clone()
