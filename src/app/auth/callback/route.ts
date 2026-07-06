@@ -17,6 +17,12 @@ export async function GET(request: Request) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      const safeNext =
+      next &&
+      next.startsWith("/") &&
+      !next.startsWith("//")
+        ? next
+        : "/dashboard"
       return NextResponse.redirect(new URL(next, request.url))
     }
   }
