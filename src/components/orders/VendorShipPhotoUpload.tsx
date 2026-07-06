@@ -23,7 +23,7 @@ export default function VendorShipPhotoUpload({ orderId, companyId, branchId, sh
     const supabase = createClient()
     const ext  = file.name.split('.').pop() || 'jpg'
     const path = `delivery/${orderId}/shipped_${Date.now()}.${ext}`
-    if (path.includes('..')) {
+        if (path.includes('..')) {
       throw new Error('Invalid path')
     }
 
