@@ -1,11 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import {
-  ChevronLeft, MapPin, Calendar, Package,
-  Image as ImageIcon, Hash, AlertTriangle, Store,
-  Check, X, User,
+  ChevronLeft, ChevronDown, MapPin, Calendar, Package,
+  Image as ImageIcon, Hash, Store, Check, X, User,
 } from 'lucide-react'
+import { m, AnimatePresence } from 'framer-motion'
 import ImageCarousel from '@/components/ui/ImageCarousel'
 
 interface OrderItem {
@@ -91,6 +92,143 @@ function fmtDate(d: string) {
 }
 function fmtTime(d: string) {
   return new Date(d).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+}
+
+// ── Category accordion for detail page ───────────────────────────────────────
+function ProductsByCategory({
+  items, totalQty, hasPrices, totalPrice,
+}: {
+  items: OrderItem[]
+  totalQty: number
+  hasPrices: boolean
+  totalPrice: number
+}) {
+  // Group items by category
+  const categoryMap = new Map<string, OrderItem[]>()
+  for (const item of items) {
+    const cat = item.product.category?.name ?? 'Uncategorized'
+    if (!categoryMap.has(cat)) categoryMap.set(cat, [])
+    categoryMap.get(cat)!.push(item)
+  }
+  const categories = Array.from(categoryMap.entries())
+
+  // All open by default
+  const [openCats, setOpenCats] = useState<Set<string>>(
+    () => new Set(categories.map(([cat]) => cat))
+  )
+
+  function toggle(cat: string) {
+    setOpenCats(prev => {
+      const n = new Set(prev)
+      n.has(cat) ? n.delete(cat) : n.add(cat)
+      return n
+    })
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      {/* Header */}
+      <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+        <Package className="w-4 h-4 text-gray-400" />
+        <h2 className="text-sm font-semibold text-gray-800">Products</h2>
+        <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2.5 py-0.5 rounded-full font-medium">
+          {items.length} product{items.length !== 1 ? 's' : ''} · {totalQty} items
+        </span>
+      </div>
+
+      {/* Category sections */}
+      <div className="divide-y divide-gray-100">
+        {categories.map(([cat, catItems]) => {
+          const isOpen   = openCats.has(cat)
+          const catQty   = catItems.reduce((s, i) => s + i.quantity, 0)
+          const catPrice = hasPrices ? catItems.reduce((s, i) => s + (i.product.price ?? 0) * i.quantity, 0) : 0
+
+          return (
+            <div key={cat}>
+              {/* Category header */}
+              <button
+                onClick={() => toggle(cat)}
+                className="w-full px-5 py-3 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">{cat}</span>
+                  <span className="text-[11px] text-gray-400">
+                    {catItems.length} product{catItems.length !== 1 ? 's' : ''} · {catQty} items
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  {hasPrices && catPrice > 0 && (
+                    <span className="text-xs font-semibold text-gray-700">₹{catPrice.toLocaleString('en-IN')}</span>
+                  )}
+                  <m.div
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-gray-400"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </m.div>
+                </div>
+              </button>
+
+              {/* Items */}
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <m.div
+                    key={`items-${cat}`}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    style={{ overflow: 'hidden' }}
+                  >
+                    <div className="bg-gray-50/50 divide-y divide-gray-100 border-t border-gray-100">
+                      {catItems.map((item, idx) => (
+                        <div key={item.id} className="px-5 py-3.5 flex items-center gap-4">
+                          <span className="text-xs font-semibold text-gray-200 w-5 shrink-0 text-center select-none">
+                            {idx + 1}
+                          </span>
+                          <ImageCarousel
+                            images={[item.product.image_url, item.product.image_url_2, item.product.image_url_3]}
+                            alt={item.product.name}
+                            className="w-12 h-12 rounded-xl shrink-0"
+                            size={48}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 leading-tight">{item.product.name}</p>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className="text-sm font-bold text-gray-900">×{item.quantity}</p>
+                            <p className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wide">{item.product.unit}</p>
+                            {(item.product.price ?? 0) > 0 && (
+                              <>
+                                <p className="text-xs text-gray-400 mt-1">₹{item.product.price!.toLocaleString('en-IN')} / {item.product.unit}</p>
+                                <p className="text-xs font-semibold text-gray-700 mt-0.5">₹{(item.product.price! * item.quantity).toLocaleString('en-IN')}</p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </m.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Footer */}
+      <div className="px-5 py-3.5 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+        <span className="text-xs text-gray-500 font-medium">Total quantity</span>
+        <div className="text-right">
+          <span className="text-sm font-bold text-gray-900">{totalQty} items</span>
+          {hasPrices && (
+            <p className="text-xs font-semibold text-gray-700 mt-0.5">₹{totalPrice.toLocaleString('en-IN')}</p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -326,73 +464,9 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
           )}
         </div>
 
-        {/* ── RIGHT PANEL — Products ──────────────────────────── */}
+        {/* ── RIGHT PANEL — Products by Category ─────────────── */}
         <div className="flex-1 min-w-0">
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            {/* Header */}
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-              <Package className="w-4 h-4 text-gray-400" />
-              <h2 className="text-sm font-semibold text-gray-800">Products</h2>
-              <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2.5 py-0.5 rounded-full font-medium">
-                {order.items.length} item{order.items.length !== 1 ? 's' : ''}
-              </span>
-            </div>
-
-            {/* Items */}
-            <div className="divide-y divide-gray-50">
-              {order.items.map((item, idx) => (
-                <div key={item.id} className="px-5 py-4 flex items-center gap-4">
-                  {/* Index */}
-                  <span className="text-xs font-semibold text-gray-200 w-5 shrink-0 text-center select-none">
-                    {idx + 1}
-                  </span>
-
-                  {/* Image */}
-                  <ImageCarousel
-                    images={[item.product.image_url, item.product.image_url_2, item.product.image_url_3]}
-                    alt={item.product.name}
-                    className="w-14 h-14 rounded-xl shrink-0"
-                    size={56}
-                  />
-
-                  {/* Name + category */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 leading-tight">
-                      {item.product.name}
-                    </p>
-                    {item.product.category?.name && (
-                      <span className="inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full border border-gray-200 text-gray-500">
-                        {item.product.category.name}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Qty + unit + price */}
-                  <div className="shrink-0 text-right">
-                    <p className="text-base font-bold text-gray-900">× {item.quantity}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wide">{item.product.unit}</p>
-                    {(item.product.price ?? 0) > 0 && (
-                      <>
-                        <p className="text-xs text-gray-400 mt-1">₹{item.product.price!.toLocaleString('en-IN')} / {item.product.unit}</p>
-                        <p className="text-xs font-semibold text-gray-700 mt-0.5">₹{(item.product.price! * item.quantity).toLocaleString('en-IN')}</p>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Footer */}
-            <div className="px-5 py-3.5 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
-              <span className="text-xs text-gray-500 font-medium">Total quantity</span>
-              <div className="text-right">
-                <span className="text-sm font-bold text-gray-900">{totalQty} items</span>
-                {hasPrices && (
-                  <p className="text-xs font-semibold text-gray-700 mt-0.5">₹{totalPrice.toLocaleString('en-IN')}</p>
-                )}
-              </div>
-            </div>
-          </div>
+          <ProductsByCategory items={order.items} totalQty={totalQty} hasPrices={hasPrices} totalPrice={totalPrice} />
         </div>
 
       </div>
