@@ -20,6 +20,7 @@ export default async function WarehouseDashboardPage() {
     .from('orders')
     .select(`
       id, status, created_at,
+      base_order_number, warehouse_status,
       delivery_photo_url,
       branch:branches(id, name, address, city, state),
       items:order_items(

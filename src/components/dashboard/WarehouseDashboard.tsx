@@ -62,10 +62,30 @@ interface Order {
   id: string
   status: string
   created_at: string
+  base_order_number?: string | null
+  warehouse_status?: string | null
   shipped_photo_url?: string | null
   delivery_photo_url?: string | null
   branch: { id: string; name: string; address: string; city: string; state: string }
   items: OrderItem[]
+}
+
+const WH_STATUS: Record<string, { label: string; cls: string }> = {
+  pending_assignment:      { label: 'Pending Assign', cls: 'bg-gray-100 text-gray-500' },
+  assigned:                { label: 'Assigned',       cls: 'bg-orange-100 text-orange-600' },
+  order_sheet_generated:   { label: 'Sheet Ready',    cls: 'bg-blue-100 text-blue-600' },
+  po_generated:            { label: 'PO Ready',       cls: 'bg-purple-100 text-purple-600' },
+  shipped:                 { label: 'Shipped',        cls: 'bg-green-100 text-green-600' },
+  delivered:               { label: 'Delivered',      cls: 'bg-emerald-100 text-emerald-600' },
+}
+
+function WarehouseStatusBadge({ status }: { status?: string | null }) {
+  const cfg = WH_STATUS[status ?? ''] ?? { label: 'Pending Assign', cls: 'bg-gray-100 text-gray-500' }
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${cfg.cls}`}>
+      {cfg.label}
+    </span>
+  )
 }
 
 interface Props {
@@ -125,88 +145,32 @@ async function downloadOrder(order: Order) {
   URL.revokeObjectURL(url)
 }
 
-// ── Single collapsible order card ──────────────────────
-function OrderCard({
-  order,
-  companyId,
-  showShipButton = false,
-  showPhotoUpload = false,
-}: {
-  order: Order
-  companyId: string
-  showShipButton?: boolean
-  showPhotoUpload?: boolean
-}) {
-  const [open, setOpen]         = useState(false)
-  const [shipping, setShipping] = useState(false)
-  const router     = useRouter()
-  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+// ── Single order card — click to open detail ───────────
+function OrderCard({ order }: { order: Order }) {
+  const router = useRouter()
 
-  function handleHeaderClick(e: React.MouseEvent) {
-    if (e.detail >= 2) {
-      // Double-click → navigate to order detail
-      if (clickTimer.current) clearTimeout(clickTimer.current)
-      router.push(`/dashboard/warehouse/orders/${order.id}`)
-      return
-    }
-    // Single click → toggle accordion after short delay
-    // (delay lets a follow-up double-click cancel it)
-    if (clickTimer.current) clearTimeout(clickTimer.current)
-    clickTimer.current = setTimeout(() => {
-      setOpen(o => !o)
-    }, 250)
-  }
-
-  async function markShipped() {
-    setShipping(true)
-    const supabase = createClient()
-    const { error } = await supabase
-      .from('orders')
-      .update({ status: 'shipped' })
-      .eq('id', order.id)
-
-    if (error) {
-      toast.error('Failed to update status.')
-      setShipping(false)
-      return
-    }
-
-    await sendOrderNotifications({
-      orderId:     order.id,
-      companyId,
-      title:       'Order Shipped',
-      message:     `Order ${shortId(order.id)} has been shipped`,
-      type:        'order_shipped',
-      targetRoles: ['store_head', 'store_manager'],
-      branchId:    order.branch?.id,
-    })
-
-    toast.success('Order marked as shipped!')
-    router.refresh()
-    setShipping(false)
-  }
+  const displayId   = order.base_order_number ?? shortId(order.id)
+  const totalQty    = order.items?.reduce((s, i) => s + i.quantity, 0) ?? 0
+  const productCount = order.items?.length ?? 0
 
   return (
     <motion.div
       layout
-      className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+      className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer"
       whileHover={{ boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}
       transition={{ duration: 0.2 }}
+      onClick={() => router.push(`/dashboard/warehouse/orders/${order.id}`)}
     >
-      {/* Header */}
-      <button
-        onClick={handleHeaderClick}
-        className="w-full px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors text-left"
-      >
+      <div className="px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-bold text-gray-900">{shortId(order.id)}</p>
-            <OrderStatusBadge status={order.status as any} />
+            <p className="text-sm font-bold text-gray-900 font-mono tracking-wide">{displayId}</p>
+            <WarehouseStatusBadge status={order.warehouse_status} />
           </div>
           <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
             <MapPin className="w-3 h-3 text-blue-400 shrink-0" />
             <span className="truncate">
-              {order.branch?.name} — {order.branch?.address}, {order.branch?.city}, {order.branch?.state}
+              {order.branch?.name} — {order.branch?.city}, {order.branch?.state}
             </span>
           </div>
           <div className="flex items-center gap-3 mt-1 flex-wrap">
@@ -215,114 +179,12 @@ function OrderCard({
               {formatDate(order.created_at)}
             </div>
             <span className="text-[11px] text-gray-400">
-              {order.items?.length} product{order.items?.length !== 1 ? 's' : ''}&nbsp;·&nbsp;
-              {order.items?.reduce((s, i) => s + i.quantity, 0)} items
+              {productCount} product{productCount !== 1 ? 's' : ''}&nbsp;·&nbsp;{totalQty} items
             </span>
-            <span className="text-[10px] text-gray-300 hidden sm:inline">double-click to open</span>
           </div>
         </div>
-        <motion.div
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
-          className="shrink-0 text-gray-400"
-        >
-          <ChevronDown className="w-4 h-4" />
-        </motion.div>
-      </button>
-
-      {/* Expanded content */}
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            key="content"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
-            style={{ overflow: 'hidden' }}
-          >
-            <div className="border-t border-gray-100">
-              {/* Products */}
-              <div className="divide-y divide-gray-50">
-                {order.items?.map((item) => (
-                  <div key={item.id} className="px-4 sm:px-5 py-3 flex items-center gap-3">
-                    <ImageCarousel
-                      images={[item.product?.image_url, item.product?.image_url_2, item.product?.image_url_3]}
-                      alt={item.product?.name || ''}
-                      className="w-12 h-12 rounded-xl shrink-0"
-                      size={48}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-800 truncate">{item.product?.name}</p>
-                      {item.product?.category?.name && (
-                        <p className="text-[11px] text-gray-400 mt-0.5">{item.product.category.name}</p>
-                      )}
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-sm font-bold text-gray-800">×{item.quantity}</p>
-                      <p className="text-xs text-gray-400">{item.product?.unit}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Delivery photo */}
-              {order.delivery_photo_url && (
-                <div className="px-4 sm:px-5 py-3 border-t border-gray-50">
-                  <p className="text-[10px] text-gray-400 flex items-center gap-1 mb-1.5">
-                    <ImageIcon className="w-3 h-3" /> Delivery Photo
-                  </p>
-                  <a href={order.delivery_photo_url} target="_blank" rel="noopener noreferrer">
-                    <img
-                      src={order.delivery_photo_url} alt="Delivery"
-                      className="w-24 h-24 rounded-xl object-cover border border-gray-200 hover:opacity-80 transition-opacity"
-                    />
-                  </a>
-                </div>
-              )}
-
-              {/* Shipment photo upload (vendor — Waiting for Delivery) */}
-              {showPhotoUpload && (
-                <div className="px-4 sm:px-5 py-3 border-t border-gray-50">
-                  <VendorShipPhotoUpload
-                    orderId={order.id}
-                    companyId={companyId}
-                    branchId={order.branch?.id}
-                    shortId={shortId(order.id)}
-                    existingPhotoUrl={order.shipped_photo_url}
-                  />
-                </div>
-              )}
-
-              {/* Action buttons */}
-              <div className="px-4 sm:px-5 py-3 border-t border-gray-50 flex gap-2">
-                {showShipButton && (
-                  <motion.button
-                    onClick={markShipped}
-                    disabled={shipping}
-                    whileTap={{ scale: 0.97 }}
-                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
-                  >
-                    {shipping ? (
-                      <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Updating…</>
-                    ) : (
-                      <><Truck className="w-4 h-4" />Mark as Shipped</>
-                    )}
-                  </motion.button>
-                )}
-                <motion.button
-                  onClick={() => downloadOrder(order)}
-                  whileTap={{ scale: 0.97 }}
-                  className={`flex items-center justify-center gap-2 border border-gray-200 text-gray-600 py-2.5 px-4 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors ${showShipButton ? '' : 'flex-1'}`}
-                >
-                  <Download className="w-4 h-4" />
-                  Download
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />
+      </div>
     </motion.div>
   )
 }
@@ -490,7 +352,7 @@ function NewOrdersSection({ orders, companyId }: { orders: Order[]; companyId: s
         >
           {filteredOrders.map(order => (
             <motion.div key={order.id} variants={itemAnim}>
-              <OrderCard order={order} companyId={companyId} showShipButton />
+              <OrderCard order={order} />
             </motion.div>
           ))}
         </motion.div>
@@ -500,8 +362,8 @@ function NewOrdersSection({ orders, companyId }: { orders: Order[]; companyId: s
 }
 
 // ── Generic section ─────────────────────────────────────
-function OrderSection({ title, icon: Icon, iconColor, bgColor, emptyMsg, orders, companyId, showPhotoUpload = false }: {
-  title: string; icon: any; iconColor: string; bgColor: string; emptyMsg: string; orders: Order[]; companyId: string; showPhotoUpload?: boolean
+function OrderSection({ title, icon: Icon, iconColor, bgColor, emptyMsg, orders }: {
+  title: string; icon: any; iconColor: string; bgColor: string; emptyMsg: string; orders: Order[]
 }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -512,15 +374,10 @@ function OrderSection({ title, icon: Icon, iconColor, bgColor, emptyMsg, orders,
       {orders.length === 0 ? (
         <div className="px-5 py-8 text-center text-sm text-gray-400">{emptyMsg}</div>
       ) : (
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          animate="show"
-          className="p-3 space-y-2"
-        >
+        <motion.div variants={stagger} initial="hidden" animate="show" className="p-3 space-y-2">
           {orders.map(order => (
             <motion.div key={order.id} variants={itemAnim}>
-              <OrderCard order={order} companyId={companyId} showPhotoUpload={showPhotoUpload} />
+              <OrderCard order={order} />
             </motion.div>
           ))}
         </motion.div>
@@ -583,7 +440,7 @@ export default function WarehouseDashboard({ profile, companyId, newOrders, ship
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <h1 className="text-2xl font-bold text-gray-900">{profile.full_name}</h1>
         <p className="text-sm text-gray-400 mt-0.5">
-          Vendor{profile.company ? ` · ${Array.isArray(profile.company) ? profile.company[0]?.name : (profile.company as any)?.name}` : ''} · {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          Warehouse{profile.company ? ` · ${Array.isArray(profile.company) ? profile.company[0]?.name : (profile.company as any)?.name}` : ''} · {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </p>
       </motion.div>
 
@@ -647,7 +504,7 @@ export default function WarehouseDashboard({ profile, companyId, newOrders, ship
             ) : (
               <div className="p-3 space-y-2">
                 {searchResults.map(order => (
-                  <OrderCard key={order.id} order={order as Order} companyId={companyId} showShipButton={order.status === 'approved'} showPhotoUpload={order.status === 'shipped'} />
+                  <OrderCard key={order.id} order={order as Order} />
                 ))}
               </div>
             )}
@@ -669,7 +526,7 @@ export default function WarehouseDashboard({ profile, companyId, newOrders, ship
               <OrderSection
                 title="Waiting for Delivery" icon={Truck} iconColor="text-purple-700"
                 bgColor="bg-purple-50 border-purple-100" emptyMsg="No orders waiting for delivery"
-                orders={liveShipped} companyId={companyId} showPhotoUpload
+                orders={liveShipped}
               />
             </motion.div>
 
@@ -678,7 +535,7 @@ export default function WarehouseDashboard({ profile, companyId, newOrders, ship
               <OrderSection
                 title="Delivered" icon={CheckCircle} iconColor="text-green-700"
                 bgColor="bg-green-50 border-green-100" emptyMsg="No delivered orders yet"
-                orders={liveDelivered} companyId={companyId}
+                orders={liveDelivered}
               />
             </motion.div>
           </div>
