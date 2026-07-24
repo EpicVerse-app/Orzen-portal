@@ -39,7 +39,7 @@ export default async function StoreHeadOrdersPage({
   let query = supabase
     .from('orders')
     .select(`
-      id, status, created_at,
+      id, status, created_at, base_order_number,
       items:order_items(
         id, quantity,
         product:products(id, name, unit, image_url, category:categories(name))
@@ -91,7 +91,7 @@ export default async function StoreHeadOrdersPage({
           {allOrders.map((order: any) => (
             <OrderAccordionCard
               key={order.id}
-              shortOrderId={shortId(order.id)}
+              shortOrderId={order.base_order_number ?? shortId(order.id)}
               date={order.created_at}
               status={order.status}
               itemCount={order.items?.length ?? 0}

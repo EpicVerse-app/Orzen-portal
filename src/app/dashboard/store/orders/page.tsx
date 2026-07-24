@@ -19,7 +19,7 @@ export default async function MyOrdersPage({
   const { data: orders } = await supabase
     .from('orders')
     .select(`
-      id, status, created_at,
+      id, status, created_at, base_order_number,
       loaded_photo_url, shipped_photo_url, delivery_photo_url,
       items:order_items(
         id, quantity,

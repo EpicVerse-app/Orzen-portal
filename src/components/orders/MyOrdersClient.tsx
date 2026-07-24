@@ -104,7 +104,7 @@ export default function MyOrdersClient({ orders, initialSearch = '' }: Props) {
           {filtered.map((order: any) => (
             <m.div key={order.id} variants={item}>
               <OrderAccordionCard
-                shortOrderId={shortId(order.id)}
+                shortOrderId={order.base_order_number ?? shortId(order.id)}
                 date={order.created_at}
                 status={order.status}
                 itemCount={order.items?.length || 0}

@@ -33,7 +33,7 @@ export default async function AdminOrdersPage({
   let query = supabase
     .from('orders')
     .select(`
-      id, status, created_at, branch_id,
+      id, status, created_at, branch_id, base_order_number,
       branch:branches(id, name, city, state, region),
       items:order_items(
         id, quantity,
@@ -241,7 +241,7 @@ function OrderList({
         return (
           <OrderAccordionCard
             key={o.id}
-            shortOrderId={shortId(o.id)}
+            shortOrderId={o.base_order_number ?? shortId(o.id)}
             branchName={branch?.name}
             branchCity={branch ? `${branch.city}${showRegion && branch.region ? ` · ${branch.region}` : ''}` : undefined}
             date={o.created_at}

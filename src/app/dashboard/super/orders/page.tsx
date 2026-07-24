@@ -52,7 +52,7 @@ export default async function SuperOrdersPage({
     : await supabase
         .from('orders')
         .select(`
-          id, status, created_at,
+          id, status, created_at, base_order_number,
           loaded_photo_url, shipped_photo_url, delivery_photo_url,
           branch:branches(id, name, city, state),
           items:order_items(
@@ -108,7 +108,7 @@ export default async function SuperOrdersPage({
             return (
               <OrderAccordionCard
                 key={order.id}
-                shortOrderId={shortId(order.id)}
+                shortOrderId={(order as any).base_order_number ?? shortId(order.id)}
                 branchName={branch?.name}
                 branchCity={branch?.city}
                 date={order.created_at}
