@@ -1,4 +1,4 @@
-export type UserRole = 'store_manager' | 'store_head' | 'super_manager' | 'mvm' | 'hvm' | 'vendor' | 'admin'
+export type UserRole = 'store_manager' | 'store_head' | 'super_manager' | 'mvm' | 'hvm' | 'warehouse' | 'admin'
 
 export interface Company {
   id: string

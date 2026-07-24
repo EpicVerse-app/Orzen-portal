@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -23,8 +23,19 @@ export function useLiveOrders<T extends { id: string; status: string }>(
 ): T[] {
   const [orders, setOrders] = useState<T[]>(initialOrders)
 
-  // Keep in sync when server re-renders (e.g. navigating back)
-  useEffect(() => { setOrders(initialOrders) }, [initialOrders])
+  // Keep in sync when server re-renders — use a stable key (first id + length)
+  // to avoid infinite loops from new array references on every render.
+  const syncKey = initialOrders.length > 0
+    ? `${initialOrders.length}-${initialOrders[0].id}`
+    : 'empty'
+  const syncKeyRef = useRef(syncKey)
+  useEffect(() => {
+    if (syncKey !== syncKeyRef.current) {
+      syncKeyRef.current = syncKey
+      setOrders(initialOrders)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [syncKey])
 
   const patch = useCallback(async (changedId: string) => {
     const updated = await fetchOne(changedId)

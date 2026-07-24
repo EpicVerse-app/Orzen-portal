@@ -45,7 +45,7 @@ function timeAgo(dateStr: string) {
   return `${Math.floor(hrs / 24)}d ago`
 }
 
-export default function VendorNotificationsPage() {
+export default function WarehouseNotificationsPage() {
   const [notifs, setNotifs]   = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -99,7 +99,7 @@ export default function VendorNotificationsPage() {
       </div>
     )
     if (n.order_id) {
-      return <Link href={`/dashboard/vendor/orders/${n.order_id}`}>{inner}</Link>
+      return <Link href={`/dashboard/warehouse/orders/${n.order_id}`}>{inner}</Link>
     }
     return inner
   }

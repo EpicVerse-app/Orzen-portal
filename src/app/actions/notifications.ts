@@ -27,7 +27,7 @@ function getRedirectPath(role: string, type: string): string {
       : '/dashboard/store-head/orders'
   }
   if (role === 'super_manager') return '/dashboard/super/orders'
-  if (role === 'vendor') return '/dashboard/vendor'
+  if (role === 'warehouse') return '/dashboard/warehouse'
   if (role === 'store_manager') return '/dashboard/store/orders'
   return '/dashboard'
 }

@@ -41,7 +41,7 @@ export default function VendorOrderActions({ orderId, companyId, branchId }: Pro
     })
 
     toast.success('Order marked as shipped!')
-    window.location.href = '/dashboard/vendor'
+    window.location.href = '/dashboard/warehouse'
   }
 
   return (

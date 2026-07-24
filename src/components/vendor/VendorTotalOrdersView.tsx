@@ -87,7 +87,7 @@ export default function VendorTotalOrdersView({ orders }: Props) {
 
       {/* Back */}
       <Link
-        href="/dashboard/vendor"
+        href="/dashboard/warehouse"
         className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
       >
         <ChevronLeft className="w-4 h-4" />
@@ -223,7 +223,7 @@ export default function VendorTotalOrdersView({ orders }: Props) {
                                       {storeOrders.map(order => (
                                         <Link
                                           key={order.id}
-                                          href={`/dashboard/vendor/orders/${order.id}`}
+                                          href={`/dashboard/warehouse/orders/${order.id}`}
                                           className="flex items-center justify-between bg-white rounded-xl border border-gray-100 px-4 py-3 hover:border-[#570439]/30 hover:shadow-sm transition-all"
                                         >
                                           <div>

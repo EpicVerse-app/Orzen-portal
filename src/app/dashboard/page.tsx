@@ -8,7 +8,7 @@ const ROLE_REDIRECTS: Record<UserRole, string> = {
   super_manager: '/dashboard/super',
   mvm:           '/dashboard/mvm',
   hvm:           '/dashboard/hvm',
-  vendor:        '/dashboard/vendor',
+  warehouse:     '/dashboard/warehouse',
   admin:         '/dashboard/admin/products',
 }
 

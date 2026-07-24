@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import VendorTotalOrdersView from '@/components/vendor/VendorTotalOrdersView'
 
-export default async function VendorTotalOrdersPage() {
+export default async function WarehouseTotalOrdersPage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -14,9 +14,8 @@ export default async function VendorTotalOrdersPage() {
     .eq('id', user.id)
     .single()
 
-  if (!profile || profile.role !== 'vendor') redirect('/dashboard')
+  if (!profile || profile.role !== 'warehouse') redirect('/dashboard')
 
-  // Fetch ALL orders (no limit) for breakdown view
   const { data: orders } = await supabase
     .from('orders')
     .select(`

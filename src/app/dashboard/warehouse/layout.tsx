@@ -2,9 +2,9 @@ export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import VendorShell from '@/components/layout/VendorShell'
+import WarehouseShell from '@/components/layout/WarehouseShell'
 
-export default async function VendorLayout({ children }: { children: React.ReactNode }) {
+export default async function WarehouseLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -15,7 +15,7 @@ export default async function VendorLayout({ children }: { children: React.React
     .eq('id', user.id)
     .single()
 
-  if (!profile || profile.role !== 'vendor') redirect('/dashboard')
+  if (!profile || profile.role !== 'warehouse') redirect('/dashboard')
 
   const company      = Array.isArray(profile.company) ? profile.company[0] : profile.company
   const primaryColor = (company as any)?.primary_color || '#5B2D8E'
@@ -23,13 +23,13 @@ export default async function VendorLayout({ children }: { children: React.React
   const logoUrl      = (company as any)?.logo_url      || null
 
   return (
-    <VendorShell
+    <WarehouseShell
       user={profile as any}
       primaryColor={primaryColor}
       sidebarColor={sidebarColor}
       logoUrl={logoUrl}
     >
       {children}
-    </VendorShell>
+    </WarehouseShell>
   )
 }

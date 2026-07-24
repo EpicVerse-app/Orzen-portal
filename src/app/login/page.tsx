@@ -19,7 +19,7 @@ const ROLE_LABEL: Record<string, string> = {
   super_manager: 'RV Manager',
   store_head:    'Store Head',
   store_manager: 'Store ID',
-  vendor:        'Vendor',
+  warehouse:     'Warehouse',
 }
 
 export default function LoginPage() {

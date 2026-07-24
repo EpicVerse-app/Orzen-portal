@@ -46,7 +46,7 @@ export default function AppShell({ user, children, primaryColor, sidebarColor, b
       ? ['/dashboard/store', '/dashboard/store/catalogue', '/dashboard/store/orders', '/dashboard/store/view-order', '/dashboard/store/deliveries', '/dashboard/store/delivery-history', '/dashboard/store/notifications']
       : user.role === 'super_manager'
       ? ['/dashboard/super', '/dashboard/super/requests', '/dashboard/super/catalogue', '/dashboard/super/view-order', '/dashboard/super/branches', '/dashboard/super/overview', '/dashboard/super/reports', '/dashboard/super/notifications']
-      : ['/dashboard/vendor', '/dashboard/vendor/notifications']
+      : ['/dashboard/warehouse', '/dashboard/warehouse/notifications']
     routes.forEach(r => router.prefetch(r))
   }, [user.role])
 
@@ -149,7 +149,7 @@ export default function AppShell({ user, children, primaryColor, sidebarColor, b
                   <NavItem href="/dashboard/super/reports"        icon={BarChart2}       label="Reports"         exact={false} />
                 </>
               ) : (
-                <NavItem href="/dashboard/vendor"                  icon={LayoutDashboard} label="Dashboard"  exact={true} />
+                <NavItem href="/dashboard/warehouse"                icon={LayoutDashboard} label="Dashboard"  exact={true} />
               )}
             </div>
           </nav>

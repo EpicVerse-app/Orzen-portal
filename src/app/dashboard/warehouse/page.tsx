@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import VendorDashboard from '@/components/dashboard/VendorDashboard'
+import WarehouseDashboard from '@/components/dashboard/WarehouseDashboard'
 
-export default async function VendorDashboardPage() {
+export default async function WarehouseDashboardPage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -14,9 +14,8 @@ export default async function VendorDashboardPage() {
     .eq('id', user.id)
     .single()
 
-  if (!profile || profile.role !== 'vendor') redirect('/dashboard')
+  if (!profile || profile.role !== 'warehouse') redirect('/dashboard')
 
-  // Fetch only what's needed — no delivered older than 30 days
   const { data: orders } = await supabase
     .from('orders')
     .select(`
@@ -46,7 +45,7 @@ export default async function VendorDashboardPage() {
   }
 
   return (
-    <VendorDashboard
+    <WarehouseDashboard
       profile={profile as any}
       companyId={profile.company_id}
       newOrders={newOrders}
