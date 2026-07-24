@@ -17,6 +17,8 @@ interface Props {
   defaultOpen?: boolean
   /** Full-page order detail URL — double-click navigates here */
   detailHref?: string
+  /** Extra badge/element rendered to the left of the status badge */
+  headerExtra?: React.ReactNode
   children: React.ReactNode
 }
 
@@ -29,7 +31,7 @@ function fmtDate(d: string) {
 
 export default function OrderAccordionCard({
   shortOrderId, branchName, branchCity, date, status,
-  itemCount, totalQty, defaultOpen = false, detailHref, children,
+  itemCount, totalQty, defaultOpen = false, detailHref, headerExtra, children,
 }: Props) {
   const [open, setOpen] = useState(defaultOpen)
   const router     = useRouter()
@@ -89,6 +91,7 @@ export default function OrderAccordionCard({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          {headerExtra}
           <OrderStatusBadge status={status as any} />
           {/* Open full page icon — visible only when there's a detailHref */}
           {detailHref && (

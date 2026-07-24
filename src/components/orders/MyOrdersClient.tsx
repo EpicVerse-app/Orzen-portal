@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
 import type { Variants } from 'framer-motion'
 import OrderAccordionCard from '@/components/orders/OrderAccordionCard'
+import CategoryGroupedItems from '@/components/orders/CategoryGroupedItems'
 import { Package, Image as ImageIcon, Search, X } from 'lucide-react'
 
 function shortId(id: string) {
@@ -110,25 +111,7 @@ export default function MyOrdersClient({ orders, initialSearch = '' }: Props) {
                 totalQty={order.items?.reduce((s: number, i: any) => s + i.quantity, 0) || 0}
                 detailHref={`/dashboard/store/orders/${order.id}`}
               >
-                <div className="divide-y divide-gray-50">
-                  {order.items?.map((itm: any) => (
-                    <div key={itm.id} className="px-4 sm:px-6 py-3 flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
-                        {itm.product?.image_url
-                          ? <img src={itm.product.image_url} alt={itm.product.name} className="w-full h-full object-cover" />
-                          : <Package className="w-4 h-4 text-gray-300" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-800 truncate">{itm.product?.name}</p>
-                        <p className="text-xs text-gray-400 truncate">{itm.product?.category?.name}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-bold text-gray-800">× {itm.quantity}</p>
-                        <p className="text-xs text-gray-400">{itm.product?.unit}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <CategoryGroupedItems items={order.items} />
                 {(order.loaded_photo_url || order.shipped_photo_url || order.delivery_photo_url) && (
                   <div className="px-4 sm:px-6 py-3 border-t border-gray-50">
                     <p className="text-xs text-gray-400 flex items-center gap-1 mb-2">

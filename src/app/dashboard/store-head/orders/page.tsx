@@ -1,14 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Package, ChevronRight, Calendar } from 'lucide-react'
-import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
+import { Package } from 'lucide-react'
+import OrderAccordionCard from '@/components/orders/OrderAccordionCard'
+import CategoryGroupedItems from '@/components/orders/CategoryGroupedItems'
 
 function shortId(id: string) {
   return 'ORD-' + id.replace(/-/g, '').slice(0, 6).toUpperCase()
-}
-function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 const STATUS_TABS = [
@@ -40,7 +38,13 @@ export default async function StoreHeadOrdersPage({
 
   let query = supabase
     .from('orders')
-    .select('id, status, created_at, items:order_items(id, quantity)')
+    .select(`
+      id, status, created_at,
+      items:order_items(
+        id, quantity,
+        product:products(id, name, unit, image_url, category:categories(name))
+      )
+    `)
     .eq('branch_id', profile.branch_id)
     .order('created_at', { ascending: false })
 
@@ -83,24 +87,20 @@ export default async function StoreHeadOrdersPage({
           <p className="text-sm text-gray-400">No orders found</p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
-          {allOrders.map((order: any) => {
-            const qty = order.items?.reduce((s: number, i: any) => s + i.quantity, 0) || 0
-            return (
-              <Link key={order.id} href={`/dashboard/store-head/orders/${order.id}`}
-                className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 transition-colors group">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-gray-800 group-hover:text-blue-700 transition-colors">{shortId(order.id)}</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1">
-                    <Calendar className="w-3 h-3 shrink-0" />
-                    {fmtDate(order.created_at)} · {order.items?.length || 0} products · {qty} items
-                  </p>
-                </div>
-                <OrderStatusBadge status={order.status as any} />
-                <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 group-hover:translate-x-0.5 transition-all shrink-0" />
-              </Link>
-            )
-          })}
+        <div className="space-y-3">
+          {allOrders.map((order: any) => (
+            <OrderAccordionCard
+              key={order.id}
+              shortOrderId={shortId(order.id)}
+              date={order.created_at}
+              status={order.status}
+              itemCount={order.items?.length ?? 0}
+              totalQty={order.items?.reduce((s: number, i: any) => s + i.quantity, 0) ?? 0}
+              detailHref={`/dashboard/store-head/orders/${order.id}`}
+            >
+              <CategoryGroupedItems items={order.items ?? []} />
+            </OrderAccordionCard>
+          ))}
         </div>
       )}
     </div>

@@ -1,11 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ShoppingBag, Calendar, ChevronRight, MapPin, ArrowLeft } from 'lucide-react'
-import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
+import { ShoppingBag, ChevronRight, MapPin, ArrowLeft } from 'lucide-react'
+import OrderAccordionCard from '@/components/orders/OrderAccordionCard'
+import CategoryGroupedItems from '@/components/orders/CategoryGroupedItems'
 
 function shortId(id: string) { return 'ORD-' + id.replace(/-/g, '').slice(0, 6).toUpperCase() }
-function fmtDate(d: string) { return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) }
 
 const STATUS_TABS = [
   { key: 'all',       label: 'All'       },
@@ -32,7 +32,14 @@ export default async function AdminOrdersPage({
   // Fetch all orders (with branch info for filtering)
   let query = supabase
     .from('orders')
-    .select('id,status,created_at,branch_id,branch:branches(id,name,city,state,region),items:order_items(id)')
+    .select(`
+      id, status, created_at, branch_id,
+      branch:branches(id, name, city, state, region),
+      items:order_items(
+        id, quantity,
+        product:products(id, name, unit, image_url, category:categories(name))
+      )
+    `)
     .order('created_at', { ascending: false })
     .limit(200)
 
@@ -228,35 +235,25 @@ function OrderList({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="divide-y divide-gray-50">
-        {orders.map((o: any) => {
-          const branch = Array.isArray(o.branch) ? o.branch[0] : o.branch
-          return (
-            <Link key={o.id} href={`/dashboard/admin/orders/${o.id}`}
-              className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 transition-colors">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-800">{shortId(o.id)}</p>
-                <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1 flex-wrap">
-                  <Calendar className="w-3 h-3 shrink-0" />
-                  {fmtDate(o.created_at)}
-                  {branch && (
-                    <>
-                      <span>·</span>
-                      <span className="text-gray-500">{branch.name}</span>
-                      {showRegion && branch.region && (
-                        <span className="capitalize text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full">{branch.region}</span>
-                      )}
-                    </>
-                  )}
-                  {o.items?.length ? <><span>·</span><span>{o.items.length} items</span></> : null}
-                </p>
-              </div>
-              <OrderStatusBadge status={o.status as any} />
-            </Link>
-          )
-        })}
-      </div>
+    <div className="space-y-3">
+      {orders.map((o: any) => {
+        const branch = Array.isArray(o.branch) ? o.branch[0] : o.branch
+        return (
+          <OrderAccordionCard
+            key={o.id}
+            shortOrderId={shortId(o.id)}
+            branchName={branch?.name}
+            branchCity={branch ? `${branch.city}${showRegion && branch.region ? ` · ${branch.region}` : ''}` : undefined}
+            date={o.created_at}
+            status={o.status}
+            itemCount={o.items?.length ?? 0}
+            totalQty={o.items?.reduce((s: number, i: any) => s + (i.quantity ?? 0), 0) ?? 0}
+            detailHref={`/dashboard/admin/orders/${o.id}`}
+          >
+            <CategoryGroupedItems items={o.items ?? []} />
+          </OrderAccordionCard>
+        )
+      })}
     </div>
   )
 }

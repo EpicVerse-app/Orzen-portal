@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, Package, Image as ImageIcon } from 'lucide-react'
 import OrderAccordionCard from '@/components/orders/OrderAccordionCard'
+import CategoryGroupedItems from '@/components/orders/CategoryGroupedItems'
 
 const FILTERS: Record<string, { label: string; statuses: string[] }> = {
   all:      { label: 'All Orders', statuses: ['submitted','approved','rejected','packing','loaded','shipped','delivered','closed'] },
@@ -116,26 +117,7 @@ export default async function SuperOrdersPage({
                 totalQty={(order.items as any)?.reduce((s: number, i: any) => s + i.quantity, 0) || 0}
                 detailHref={`/dashboard/super/orders/${order.id}`}
               >
-                {/* Product list */}
-                <div className="divide-y divide-gray-50">
-                  {(order.items as any)?.map((item: any) => (
-                    <div key={item.id} className="px-4 sm:px-6 py-3 flex items-center gap-3">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
-                        {item.product?.image_url
-                          ? <img src={item.product.image_url} alt={item.product.name} className="w-full h-full object-cover" />
-                          : <Package className="w-4 h-4 text-gray-300" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-800 truncate">{item.product?.name}</p>
-                        <p className="text-xs text-gray-400 truncate">{item.product?.category?.name}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-bold text-gray-800">× {item.quantity}</p>
-                        <p className="text-xs text-gray-400">{item.product?.unit}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <CategoryGroupedItems items={(order.items as any) ?? []} />
 
                 {/* Photos */}
                 {((order as any).loaded_photo_url || (order as any).shipped_photo_url || (order as any).delivery_photo_url) && (

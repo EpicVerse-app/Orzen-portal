@@ -3,27 +3,22 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { m as motion, AnimatePresence } from 'framer-motion'
 import {
-  Package, CheckCircle, TrendingUp, Truck, Clock,
-  Image as ImageIcon, ChevronDown, ChevronUp, Calendar,
-  SlidersHorizontal, X, ChevronRight, MapPin, Download, Search,
+  Package, CheckCircle, TrendingUp, Truck,
+  ChevronDown, SlidersHorizontal, X, ChevronRight, Search,
 } from 'lucide-react'
-import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
-import ImageCarousel from '@/components/ui/ImageCarousel'
 import AnimatedStatCard from '@/components/ui/AnimatedStatCard'
 import { createClient } from '@/lib/supabase/client'
-import { sendOrderNotifications } from '@/app/actions/notifications'
 import { useLiveOrders } from '@/hooks/useRealtimeOrders'
 import { fadeUp, stagger, itemAnim } from '@/lib/motion'
-import VendorShipPhotoUpload from '@/components/orders/VendorShipPhotoUpload'
-import toast from 'react-hot-toast'
-import { useRouter } from 'next/navigation'
+import OrderAccordionCard from '@/components/orders/OrderAccordionCard'
+import CategoryGroupedItems from '@/components/orders/CategoryGroupedItems'
 
 const ORDER_SELECT = `
-  id, status, created_at, shipped_photo_url, delivery_photo_url,
+  id, status, created_at, base_order_number, warehouse_status,
   branch:branches(id, name, address, city, state),
   items:order_items(
     id, quantity,
-    product:products(id, name, image_url, image_url_2, image_url_3, unit, category:categories(id, name))
+    product:products(id, name, image_url, unit, category:categories(id, name))
   )
 ` as const
 
@@ -145,47 +140,22 @@ async function downloadOrder(order: Order) {
   URL.revokeObjectURL(url)
 }
 
-// ── Single order card — click to open detail ───────────
-function OrderCard({ order }: { order: Order }) {
-  const router = useRouter()
-
-  const displayId   = order.base_order_number ?? shortId(order.id)
-  const totalQty    = order.items?.reduce((s, i) => s + i.quantity, 0) ?? 0
-  const productCount = order.items?.length ?? 0
-
+// ── Warehouse accordion card ────────────────────────────
+function WarehouseOrderCard({ order }: { order: Order }) {
   return (
-    <motion.div
-      layout
-      className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer"
-      whileHover={{ boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}
-      transition={{ duration: 0.2 }}
-      onClick={() => router.push(`/dashboard/warehouse/orders/${order.id}`)}
+    <OrderAccordionCard
+      shortOrderId={order.base_order_number ?? shortId(order.id)}
+      branchName={order.branch?.name}
+      branchCity={`${order.branch?.city}, ${order.branch?.state}`}
+      date={order.created_at}
+      status={order.status}
+      itemCount={order.items?.length ?? 0}
+      totalQty={order.items?.reduce((s, i) => s + i.quantity, 0) ?? 0}
+      detailHref={`/dashboard/warehouse/orders/${order.id}`}
+      headerExtra={<WarehouseStatusBadge status={order.warehouse_status} />}
     >
-      <div className="px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-bold text-gray-900 font-mono tracking-wide">{displayId}</p>
-            <WarehouseStatusBadge status={order.warehouse_status} />
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
-            <MapPin className="w-3 h-3 text-blue-400 shrink-0" />
-            <span className="truncate">
-              {order.branch?.name} — {order.branch?.city}, {order.branch?.state}
-            </span>
-          </div>
-          <div className="flex items-center gap-3 mt-1 flex-wrap">
-            <div className="flex items-center gap-1 text-[11px] text-gray-400">
-              <Calendar className="w-3 h-3 shrink-0" />
-              {formatDate(order.created_at)}
-            </div>
-            <span className="text-[11px] text-gray-400">
-              {productCount} product{productCount !== 1 ? 's' : ''}&nbsp;·&nbsp;{totalQty} items
-            </span>
-          </div>
-        </div>
-        <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />
-      </div>
-    </motion.div>
+      <CategoryGroupedItems items={order.items as any} baseOrderNumber={order.base_order_number} />
+    </OrderAccordionCard>
   )
 }
 
@@ -352,7 +322,7 @@ function NewOrdersSection({ orders, companyId }: { orders: Order[]; companyId: s
         >
           {filteredOrders.map(order => (
             <motion.div key={order.id} variants={itemAnim}>
-              <OrderCard order={order} />
+              <WarehouseOrderCard order={order} />
             </motion.div>
           ))}
         </motion.div>
@@ -377,7 +347,7 @@ function OrderSection({ title, icon: Icon, iconColor, bgColor, emptyMsg, orders 
         <motion.div variants={stagger} initial="hidden" animate="show" className="p-3 space-y-2">
           {orders.map(order => (
             <motion.div key={order.id} variants={itemAnim}>
-              <OrderCard order={order} />
+              <WarehouseOrderCard order={order} />
             </motion.div>
           ))}
         </motion.div>
@@ -504,7 +474,7 @@ export default function WarehouseDashboard({ profile, companyId, newOrders, ship
             ) : (
               <div className="p-3 space-y-2">
                 {searchResults.map(order => (
-                  <OrderCard key={order.id} order={order as Order} />
+                  <WarehouseOrderCard key={order.id} order={order as Order} />
                 ))}
               </div>
             )}
