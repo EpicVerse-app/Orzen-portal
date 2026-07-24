@@ -26,7 +26,7 @@ export default async function StoreHeadOrderDetailPage({
   const { data: order } = await supabase
     .from('orders')
     .select(`
-      id, status, created_at, rejection_reason,
+      id, status, created_at, base_order_number, rejection_reason,
       loaded_photo_url, shipped_photo_url, delivery_photo_url,
       ordered_by_name, ordered_by_id,
       branch:branches(id, name, city, state, address),

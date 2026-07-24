@@ -27,6 +27,7 @@ export interface OrderDetail {
   id: string
   status: string
   created_at: string
+  base_order_number?: string | null
   rejection_reason?: string | null
   loaded_photo_url?: string | null
   shipped_photo_url?: string | null
@@ -122,7 +123,9 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
             <div className="flex items-center justify-between gap-3 mb-2">
               <div className="flex items-center gap-2">
                 <Hash className="w-4 h-4 text-gray-300" />
-                <h1 className="text-lg font-bold text-gray-900 tracking-tight">{shortId(order.id)}</h1>
+                <h1 className="text-lg font-bold text-gray-900 tracking-tight font-mono">
+                  {order.base_order_number ?? shortId(order.id)}
+                </h1>
               </div>
               {/* B&W status badge */}
               <span className={`text-xs font-bold px-3 py-1 rounded-full border ${
