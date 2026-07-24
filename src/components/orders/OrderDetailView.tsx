@@ -101,19 +101,60 @@ function catCode(name: string) {
   return name.toUpperCase().replace(/\s+/g, '_')
 }
 
+function CategoryPODownloads({ items, companyName, orderNumber, orderDate, branchName, branchAddress }: {
+  items: OrderItem[]
+  companyName: string
+  orderNumber?: string | null
+  orderDate: string
+  branchName: string
+  branchAddress: string
+}) {
+  const categoryMap = new Map<string, OrderItem[]>()
+  for (const item of items) {
+    const cat = item.product.category?.name ?? 'Uncategorized'
+    if (!categoryMap.has(cat)) categoryMap.set(cat, [])
+    categoryMap.get(cat)!.push(item)
+  }
+  const categories = Array.from(categoryMap.entries())
+
+  if (categories.length === 0) return null
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mt-4">
+      <div className="px-5 py-4 border-b border-gray-100">
+        <h2 className="text-sm font-semibold text-gray-800">Download PO by Category</h2>
+      </div>
+      <div className="p-3 space-y-2">
+        {categories.map(([cat, catItems]) => (
+          <GeneratePOButton
+            key={cat}
+            orderNumber={orderNumber ? `${orderNumber}_${catCode(cat)}` : catCode(cat)}
+            orderDate={orderDate}
+            companyName={companyName}
+            branchName={branchName}
+            branchAddress={branchAddress}
+            categoryLabel={cat}
+            items={catItems.map(i => ({
+              id: i.id,
+              name: i.product.name,
+              quantity: i.quantity,
+              unit: i.product.unit,
+              category: cat,
+            }))}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function ProductsByCategory({
   items, totalQty, hasPrices, totalPrice,
-  companyName, orderNumber, orderDate, branchName, branchAddress,
 }: {
   items: OrderItem[]
   totalQty: number
   hasPrices: boolean
   totalPrice: number
-  companyName?: string
-  orderNumber?: string | null
-  orderDate: string
-  branchName: string
-  branchAddress: string
 }) {
   // Group items by category
   const categoryMap = new Map<string, OrderItem[]>()
@@ -158,51 +199,29 @@ function ProductsByCategory({
           return (
             <div key={cat}>
               {/* Category header */}
-              <div className="flex items-center gap-2 pr-3">
-                <button
-                  onClick={() => toggle(cat)}
-                  className="flex-1 px-5 py-3 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">{cat}</span>
-                    <span className="text-[11px] text-gray-400">
-                      {catItems.length} product{catItems.length !== 1 ? 's' : ''} · {catQty} items
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    {hasPrices && catPrice > 0 && (
-                      <span className="text-xs font-semibold text-gray-700">₹{catPrice.toLocaleString('en-IN')}</span>
-                    )}
-                    <m.div
-                      animate={{ rotate: isOpen ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="text-gray-400"
-                    >
-                      <ChevronDown className="w-4 h-4" />
-                    </m.div>
-                  </div>
-                </button>
-
-                {/* Per-category PO download */}
-                {companyName && (
-                  <GeneratePOButton
-                    orderNumber={orderNumber ? `${orderNumber}_${catCode(cat)}` : catCode(cat)}
-                    orderDate={orderDate}
-                    companyName={companyName}
-                    branchName={branchName}
-                    branchAddress={branchAddress}
-                    categoryLabel={cat}
-                    items={catItems.map(i => ({
-                      id: i.id,
-                      name: i.product.name,
-                      quantity: i.quantity,
-                      unit: i.product.unit,
-                      category: cat,
-                    }))}
-                    compact
-                  />
-                )}
-              </div>
+              <button
+                onClick={() => toggle(cat)}
+                className="w-full px-5 py-3 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">{cat}</span>
+                  <span className="text-[11px] text-gray-400">
+                    {catItems.length} product{catItems.length !== 1 ? 's' : ''} · {catQty} items
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  {hasPrices && catPrice > 0 && (
+                    <span className="text-xs font-semibold text-gray-700">₹{catPrice.toLocaleString('en-IN')}</span>
+                  )}
+                  <m.div
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-gray-400"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </m.div>
+                </div>
+              </button>
 
               {/* Items */}
               <AnimatePresence initial={false}>
@@ -508,12 +527,17 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
             totalQty={totalQty}
             hasPrices={hasPrices}
             totalPrice={totalPrice}
-            companyName={companyName}
-            orderNumber={order.base_order_number}
-            orderDate={order.created_at}
-            branchName={branchName}
-            branchAddress={branchAddress}
           />
+          {companyName && (
+            <CategoryPODownloads
+              items={order.items}
+              companyName={companyName}
+              orderNumber={order.base_order_number}
+              orderDate={order.created_at}
+              branchName={branchName}
+              branchAddress={branchAddress}
+            />
+          )}
         </div>
 
       </div>
