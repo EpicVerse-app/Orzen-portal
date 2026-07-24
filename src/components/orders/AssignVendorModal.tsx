@@ -52,18 +52,17 @@ export default function AssignVendorModal({
         : categories.map(c => ({ vendorId: catVendors[c.name], category: c.name }))
 
     startT(async () => {
-      try {
-        const result = await assignVendor({
-          orderId, companyId, assignedBy,
-          assignmentType: mode,
-          assignments,
-        })
+      const result = await assignVendor({
+        orderId, companyId, assignedBy,
+        assignmentType: mode,
+        assignments,
+      })
+      if ('error' in result) {
+        console.error('[assignVendor]', result.error)
+        toast.error(`Failed: ${result.error}`)
+      } else {
         toast.success('Vendor assigned!')
         onDone(result.baseOrderNumber)
-      } catch (err: any) {
-        const msg = err?.message ?? 'Unknown error'
-        console.error('[assignVendor]', msg)
-        toast.error(`Failed: ${msg}`)
       }
     })
   }

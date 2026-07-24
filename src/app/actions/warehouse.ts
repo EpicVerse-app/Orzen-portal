@@ -32,48 +32,65 @@ export interface AssignVendorInput {
   assignments: { vendorId: string; category?: string }[]
 }
 
-export async function assignVendor(input: AssignVendorInput) {
+export async function assignVendor(input: AssignVendorInput): Promise<{ baseOrderNumber: string } | { error: string }> {
   const supabase = await createClient()
 
-  // Generate order ID if not already assigned
-  const { data: order } = await supabase
-    .from('orders')
-    .select('base_order_number')
-    .eq('id', input.orderId)
-    .single()
+  try {
+    // Generate order ID if not already assigned
+    const { data: order, error: orderErr } = await supabase
+      .from('orders')
+      .select('base_order_number')
+      .eq('id', input.orderId)
+      .single()
 
-  let baseOrderNumber = order?.base_order_number
-  if (!baseOrderNumber) {
-    baseOrderNumber = await generateWarehouseOrderId(input.companyId)
-    await supabase
-      .from('orders')
-      .update({ base_order_number: baseOrderNumber, warehouse_status: 'assigned' })
-      .eq('id', input.orderId)
-  } else {
-    await supabase
-      .from('orders')
-      .update({ warehouse_status: 'assigned' })
-      .eq('id', input.orderId)
+    if (orderErr) return { error: `order fetch: ${orderErr.message}` }
+
+    let baseOrderNumber = order?.base_order_number
+    if (!baseOrderNumber) {
+      const { data: newId, error: rpcErr } = await supabase.rpc('next_warehouse_order_id', {
+        p_company_id: input.companyId,
+      })
+      if (rpcErr) return { error: `rpc next_warehouse_order_id: ${rpcErr.message}` }
+      baseOrderNumber = newId as string
+
+      const { error: upErr } = await supabase
+        .from('orders')
+        .update({ base_order_number: baseOrderNumber, warehouse_status: 'assigned' })
+        .eq('id', input.orderId)
+      if (upErr) return { error: `order update (new id): ${upErr.message}` }
+    } else {
+      const { error: upErr } = await supabase
+        .from('orders')
+        .update({ warehouse_status: 'assigned' })
+        .eq('id', input.orderId)
+      if (upErr) return { error: `order update (status): ${upErr.message}` }
+    }
+
+    // Remove existing assignments for this order (re-assign flow)
+    const { error: delErr } = await supabase
+      .from('vendor_assignments')
+      .delete()
+      .eq('order_id', input.orderId)
+    if (delErr) return { error: `delete assignments: ${delErr.message}` }
+
+    // Insert new assignments
+    const rows = input.assignments.map(a => ({
+      order_id:        input.orderId,
+      vendor_id:       a.vendorId,
+      assignment_type: input.assignmentType,
+      category:        a.category ?? null,
+      assigned_by:     input.assignedBy,
+      status:          'assigned',
+    }))
+
+    const { error: insErr } = await supabase.from('vendor_assignments').insert(rows)
+    if (insErr) return { error: `insert assignments: ${insErr.message}` }
+
+    revalidatePath(`/dashboard/warehouse/orders/${input.orderId}`)
+    return { baseOrderNumber }
+  } catch (e: any) {
+    return { error: e?.message ?? 'unknown' }
   }
-
-  // Remove existing assignments for this order (re-assign flow)
-  await supabase.from('vendor_assignments').delete().eq('order_id', input.orderId)
-
-  // Insert new assignments
-  const rows = input.assignments.map(a => ({
-    order_id:        input.orderId,
-    vendor_id:       a.vendorId,
-    assignment_type: input.assignmentType,
-    category:        a.category ?? null,
-    assigned_by:     input.assignedBy,
-    status:          'assigned',
-  }))
-
-  const { error } = await supabase.from('vendor_assignments').insert(rows)
-  if (error) throw new Error(error.message)
-
-  revalidatePath(`/dashboard/warehouse/orders/${input.orderId}`)
-  return { baseOrderNumber }
 }
 
 export async function getOrderAssignments(orderId: string) {
