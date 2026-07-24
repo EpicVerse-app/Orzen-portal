@@ -60,8 +60,10 @@ export default function AssignVendorModal({
         })
         toast.success('Vendor assigned!')
         onDone(result.baseOrderNumber)
-      } catch {
-        toast.error('Failed to assign vendor.')
+      } catch (err: any) {
+        const msg = err?.message ?? 'Unknown error'
+        console.error('[assignVendor]', msg)
+        toast.error(`Failed: ${msg}`)
       }
     })
   }
