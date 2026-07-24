@@ -52,6 +52,7 @@ export default async function SuperOrderDetailPage({
         order={order as any}
         backHref="/dashboard/super/orders"
         backLabel="Orders"
+        companyName={companyName}
         actions={
           <VendorOrderDownloadButton
             orderId={order.id}

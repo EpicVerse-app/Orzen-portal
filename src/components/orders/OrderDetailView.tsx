@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { m, AnimatePresence } from 'framer-motion'
 import ImageCarousel from '@/components/ui/ImageCarousel'
+import GeneratePOButton from '@/components/orders/GeneratePOButton'
 
 interface OrderItem {
   id: string
@@ -49,6 +50,7 @@ interface Props {
   backHref: string
   backLabel?: string
   actions?: React.ReactNode
+  companyName?: string
 }
 
 // ── Status timeline config ───────────────────────────────────────────────────
@@ -95,13 +97,23 @@ function fmtTime(d: string) {
 }
 
 // ── Category accordion for detail page ───────────────────────────────────────
+function catCode(name: string) {
+  return name.toUpperCase().replace(/\s+/g, '_')
+}
+
 function ProductsByCategory({
   items, totalQty, hasPrices, totalPrice,
+  companyName, orderNumber, orderDate, branchName, branchAddress,
 }: {
   items: OrderItem[]
   totalQty: number
   hasPrices: boolean
   totalPrice: number
+  companyName?: string
+  orderNumber?: string | null
+  orderDate: string
+  branchName: string
+  branchAddress: string
 }) {
   // Group items by category
   const categoryMap = new Map<string, OrderItem[]>()
@@ -146,29 +158,51 @@ function ProductsByCategory({
           return (
             <div key={cat}>
               {/* Category header */}
-              <button
-                onClick={() => toggle(cat)}
-                className="w-full px-5 py-3 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors text-left"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">{cat}</span>
-                  <span className="text-[11px] text-gray-400">
-                    {catItems.length} product{catItems.length !== 1 ? 's' : ''} · {catQty} items
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  {hasPrices && catPrice > 0 && (
-                    <span className="text-xs font-semibold text-gray-700">₹{catPrice.toLocaleString('en-IN')}</span>
-                  )}
-                  <m.div
-                    animate={{ rotate: isOpen ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="text-gray-400"
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </m.div>
-                </div>
-              </button>
+              <div className="flex items-center gap-2 pr-3">
+                <button
+                  onClick={() => toggle(cat)}
+                  className="flex-1 px-5 py-3 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">{cat}</span>
+                    <span className="text-[11px] text-gray-400">
+                      {catItems.length} product{catItems.length !== 1 ? 's' : ''} · {catQty} items
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    {hasPrices && catPrice > 0 && (
+                      <span className="text-xs font-semibold text-gray-700">₹{catPrice.toLocaleString('en-IN')}</span>
+                    )}
+                    <m.div
+                      animate={{ rotate: isOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-gray-400"
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </m.div>
+                  </div>
+                </button>
+
+                {/* Per-category PO download */}
+                {companyName && (
+                  <GeneratePOButton
+                    orderNumber={orderNumber ? `${orderNumber}_${catCode(cat)}` : catCode(cat)}
+                    orderDate={orderDate}
+                    companyName={companyName}
+                    branchName={branchName}
+                    branchAddress={branchAddress}
+                    categoryLabel={cat}
+                    items={catItems.map(i => ({
+                      id: i.id,
+                      name: i.product.name,
+                      quantity: i.quantity,
+                      unit: i.product.unit,
+                      category: cat,
+                    }))}
+                    compact
+                  />
+                )}
+              </div>
 
               {/* Items */}
               <AnimatePresence initial={false}>
@@ -232,11 +266,14 @@ function ProductsByCategory({
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
-export default function OrderDetailView({ order, backHref, backLabel = 'Back', actions }: Props) {
+export default function OrderDetailView({ order, backHref, backLabel = 'Back', actions, companyName }: Props) {
   const totalQty    = order.items.reduce((s, i) => s + i.quantity, 0)
   const hasPrices   = order.items.some(i => (i.product.price ?? 0) > 0)
   const totalPrice  = order.items.reduce((s, i) => s + (i.product.price ?? 0) * i.quantity, 0)
   const isRejected  = order.status === 'rejected'
+  const branch      = order.branch
+  const branchName  = branch?.name ?? ''
+  const branchAddress = [branch?.address, branch?.city, branch?.state].filter(Boolean).join(', ')
 
   return (
     <div className="space-y-4">
@@ -466,7 +503,17 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
 
         {/* ── RIGHT PANEL — Products by Category ─────────────── */}
         <div className="flex-1 min-w-0">
-          <ProductsByCategory items={order.items} totalQty={totalQty} hasPrices={hasPrices} totalPrice={totalPrice} />
+          <ProductsByCategory
+            items={order.items}
+            totalQty={totalQty}
+            hasPrices={hasPrices}
+            totalPrice={totalPrice}
+            companyName={companyName}
+            orderNumber={order.base_order_number}
+            orderDate={order.created_at}
+            branchName={branchName}
+            branchAddress={branchAddress}
+          />
         </div>
 
       </div>

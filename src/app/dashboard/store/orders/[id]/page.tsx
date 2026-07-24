@@ -44,6 +44,7 @@ export default async function StoreOrderDetailPage({
       order={order as any}
       backHref="/dashboard/store/orders"
       backLabel="My Orders"
+      companyName={companyName}
       actions={
         <VendorOrderDownloadButton
           orderId={order.id}

@@ -53,6 +53,7 @@ export default async function StoreHeadOrderDetailPage({
         order={order as any}
         backHref="/dashboard/store-head/orders"
         backLabel="Orders"
+        companyName={companyName}
         actions={
           <div className="space-y-3">
             {order.status === 'submitted' && (

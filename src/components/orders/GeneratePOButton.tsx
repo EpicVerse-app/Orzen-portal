@@ -20,11 +20,12 @@ interface Props {
   companyName: string
   branchName: string
   branchAddress?: string
-  vendorName: string
+  vendorName?: string          // optional — omit for internal (non-vendor) PO
   vendorGst?: string | null
   vendorAddress?: string | null
   items: Item[]
   categoryLabel?: string
+  compact?: boolean            // icon-only button
 }
 
 function formatDate(d: string) {
@@ -101,27 +102,29 @@ async function generatePO(props: Props) {
   doc.setTextColor(30)
   doc.text(companyName, margin, y + 6)
 
-  // Right — VENDOR TO WHOM PO IS ISSUED
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(8)
-  doc.setTextColor(62, 0, 30)
-  doc.text('VENDOR', col2, y)
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(10)
-  doc.setTextColor(30)
-  doc.text(vendorName, col2, y + 6)
-  if (vendorGst) {
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(8.5)
-    doc.setTextColor(80)
-    doc.text(`GST: ${vendorGst}`, col2, y + 12)
-  }
-  if (vendorAddress) {
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(8.5)
-    doc.setTextColor(80)
-    const addrLines = doc.splitTextToSize(vendorAddress, contentW / 2 - 5) as string[]
-    doc.text(addrLines, col2, vendorGst ? y + 18 : y + 12)
+  // Right — VENDOR (only when a vendor is assigned)
+  if (vendorName) {
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(8)
+    doc.setTextColor(62, 0, 30)
+    doc.text('VENDOR', col2, y)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(10)
+    doc.setTextColor(30)
+    doc.text(vendorName, col2, y + 6)
+    if (vendorGst) {
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8.5)
+      doc.setTextColor(80)
+      doc.text(`GST: ${vendorGst}`, col2, y + 12)
+    }
+    if (vendorAddress) {
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8.5)
+      doc.setTextColor(80)
+      const addrLines = doc.splitTextToSize(vendorAddress, contentW / 2 - 5) as string[]
+      doc.text(addrLines, col2, vendorGst ? y + 18 : y + 12)
+    }
   }
 
   // ── Deliver To ───────────────────────────────────────────────────────────
@@ -233,6 +236,22 @@ export default function GeneratePOButton(props: Props) {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (props.compact) {
+    return (
+      <button
+        onClick={handleClick}
+        disabled={loading}
+        title={`Download PO — ${props.categoryLabel ?? 'All'}`}
+        className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 text-gray-400 hover:text-[#570439] hover:border-[#570439]/40 hover:bg-[#570439]/5 transition-colors disabled:opacity-40"
+      >
+        {loading
+          ? <div className="w-3.5 h-3.5 border-2 border-gray-300 border-t-[#570439] rounded-full animate-spin" />
+          : <FileDown className="w-3.5 h-3.5" />
+        }
+      </button>
+    )
   }
 
   return (
