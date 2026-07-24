@@ -243,13 +243,13 @@ export default function GeneratePOButton(props: Props) {
       <button
         onClick={handleClick}
         disabled={loading}
-        title={`Download PO — ${props.categoryLabel ?? 'All'}`}
-        className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 text-gray-400 hover:text-[#570439] hover:border-[#570439]/40 hover:bg-[#570439]/5 transition-colors disabled:opacity-40"
+        className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-500 hover:text-[#570439] hover:border-[#570439]/40 hover:bg-[#570439]/5 transition-colors disabled:opacity-40 whitespace-nowrap"
       >
         {loading
-          ? <div className="w-3.5 h-3.5 border-2 border-gray-300 border-t-[#570439] rounded-full animate-spin" />
-          : <FileDown className="w-3.5 h-3.5" />
+          ? <div className="w-3 h-3 border-2 border-gray-300 border-t-[#570439] rounded-full animate-spin" />
+          : <FileDown className="w-3 h-3" />
         }
+        {loading ? 'Generating…' : 'PO'}
       </button>
     )
   }
