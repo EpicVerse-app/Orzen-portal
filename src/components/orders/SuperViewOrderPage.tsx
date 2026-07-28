@@ -81,7 +81,13 @@ export default function SuperViewOrderPage({ companyId, userId, userName, branch
       return
     }
 
-    const sid = 'ORD-' + order.id.replace(/-/g, '').slice(0, 6).toUpperCase()
+    // Generate and save order number at creation time
+    const { data: orderNum } = await supabase.rpc('next_warehouse_order_id', { p_company_id: companyId })
+    if (orderNum) {
+      await supabase.from('orders').update({ base_order_number: orderNum }).eq('id', order.id)
+    }
+    const sid = orderNum ?? 'ORD-' + order.id.replace(/-/g, '').slice(0, 6).toUpperCase()
+
     await sendOrderNotifications({
       orderId:     order.id,
       companyId,
