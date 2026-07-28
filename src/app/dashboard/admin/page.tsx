@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Package, BarChart2, ChevronRight, Store, Users } from 'lucide-react'
 import AdminDashboardStats from '@/components/admin/AdminDashboardStats'
+import AdminApprovalModal from '@/components/admin/AdminApprovalModal'
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge'
 
 function shortId(id: string) { return 'ORD-' + id.replace(/-/g, '').slice(0, 6).toUpperCase() }
@@ -27,6 +28,7 @@ export default async function AdminDashboardPage() {
     { count: orderDelivered},
     { data: recentOrders   },
     { data: users          },
+    { data: pendingApprovals },
   ] = await Promise.all([
     supabase.from('branches').select('*', { count: 'exact', head: true }).eq('company_id', cid),
     supabase.from('users').select('*', { count: 'exact', head: true }).eq('company_id', cid),
@@ -36,6 +38,12 @@ export default async function AdminDashboardPage() {
     supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'delivered'),
     supabase.from('orders').select('id,status,created_at,branch:branches(name,city)').order('created_at', { ascending: false }).limit(8),
     supabase.from('users').select('id,full_name,role,email').eq('company_id', cid).order('created_at', { ascending: false }).limit(5),
+    supabase.from('orders').select(`
+      id, base_order_number, created_at,
+      branch:branches(name, city),
+      items:order_items(quantity, product:products(name, unit, category:categories(name))),
+      vendor_assignments(vendor:vendors(name))
+    `).eq('vendor_approved', false).not('base_order_number', 'is', null).order('created_at', { ascending: false }),
   ])
 
 
@@ -56,6 +64,41 @@ export default async function AdminDashboardPage() {
         <h1 className="text-2xl font-bold text-gray-900">{profile.full_name}</h1>
         <p className="text-sm text-gray-400 mt-0.5">Administrator · {today}</p>
       </div>
+
+      {/* Pending approvals */}
+      {(pendingApprovals ?? []).length > 0 && (
+        <div className="animate-fade-in-up stagger-2" style={{ opacity: 0 }}>
+          <AdminApprovalModal
+            pendingOrders={(pendingApprovals ?? []).map((o: any) => {
+              const branch = Array.isArray(o.branch) ? o.branch[0] : o.branch
+              const vendorNames = (o.vendor_assignments ?? [])
+                .map((va: any) => (Array.isArray(va.vendor) ? va.vendor[0]?.name : va.vendor?.name))
+                .filter(Boolean)
+                .filter((v: string, i: number, a: string[]) => a.indexOf(v) === i)
+                .join(', ')
+              return {
+                id: o.id,
+                base_order_number: o.base_order_number,
+                created_at: o.created_at,
+                branch: branch ?? null,
+                items: (o.items ?? []).map((item: any) => ({
+                  quantity: item.quantity,
+                  product: item.product
+                    ? {
+                        name: item.product.name,
+                        unit: item.product.unit,
+                        category: item.product.category
+                          ? { name: Array.isArray(item.product.category) ? item.product.category[0]?.name : item.product.category?.name }
+                          : null,
+                      }
+                    : null,
+                })),
+                vendorNames,
+              }
+            })}
+          />
+        </div>
+      )}
 
       {/* Animated Stats grid */}
       <AdminDashboardStats
