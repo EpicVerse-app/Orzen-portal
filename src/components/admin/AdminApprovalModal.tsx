@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { X, CheckCircle2, Clock, ChevronDown, ChevronUp, Building2, Tag } from 'lucide-react'
 import { approveVendorAssignment } from '@/app/actions/approveVendor'
 import toast from 'react-hot-toast'
@@ -83,8 +84,8 @@ export default function AdminApprovalModal({ pendingOrders: initial }: Props) {
       </button>
 
       {/* Modal */}
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50">
+      {open && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50">
           <div className="w-full sm:max-w-lg bg-white sm:rounded-2xl shadow-xl max-h-[90vh] flex flex-col rounded-t-2xl">
 
             {/* Header */}
@@ -194,7 +195,8 @@ export default function AdminApprovalModal({ pendingOrders: initial }: Props) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
