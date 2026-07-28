@@ -262,228 +262,187 @@ async function generatePadmakalaEstimate(
   doc.save(`${ref}_OrderSheet.pdf`)
 }
 
-// ── THAS-style Quotation Excel ────────────────────────────────────────────────
-async function generateThasExcel(
+// ── THAS-style Quotation PDF ──────────────────────────────────────────────────
+async function generateThasQuotation(
   vendor: Vendor, items: OrderItem[],
   orderNumber: string, orderDate: string,
   branchName: string, companyName: string, categoryLabel: string,
 ) {
-  const exceljs = await import('exceljs')
-  const ExcelJS = (exceljs as any).default ?? exceljs
-  const wb      = new ExcelJS.Workbook() as import('exceljs').Workbook
-  const ws      = wb.addWorksheet('Sheet1')
-  const COLS    = 7
+  const { default: jsPDF }     = await import('jspdf')
+  const { default: autoTable } = await import('jspdf-autotable')
 
-  const ref = refNo(orderNumber, categoryLabel)
-  const thinBorder = (color = 'FFCCCCCC') => ({
-    top:    { style: 'thin' as const, color: { argb: color } },
-    left:   { style: 'thin' as const, color: { argb: color } },
-    bottom: { style: 'thin' as const, color: { argb: color } },
-    right:  { style: 'thin' as const, color: { argb: color } },
-  })
+  const doc      = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const pageW    = doc.internal.pageSize.getWidth()
+  const pageH    = doc.internal.pageSize.getHeight()
+  const margin   = 14
+  const contentW = pageW - margin * 2
+  const ref      = refNo(orderNumber, categoryLabel)
 
-  // Column widths
-  ws.columns = [
-    { width: 10 },  // A SL NO
-    { width: 14 },  // B IMAGES
-    { width: 38 },  // C ITEM DESCRIPTION
-    { width: 16 },  // D SIZE (CM)
-    { width: 9  },  // E QTY
-    { width: 15 },  // F RATE/PCS
-    { width: 15 },  // G TOTAL
-  ]
+  // ── Vendor header — centered ──────────────────────────────────────────────
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(14)
+  doc.setTextColor(20, 20, 20)
+  doc.text(vendor.name.toUpperCase(), pageW / 2, 13, { align: 'center' })
 
-  function mergedCell(row: number, col: number, endCol: number, value: string | number | null) {
-    ws.mergeCells(row, col, row, endCol)
-    const cell = ws.getCell(row, col)
-    cell.value = value
-    return cell
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(70, 70, 70)
+  let hy = 19
+  if (vendor.address) {
+    const al = doc.splitTextToSize(vendor.address, contentW) as string[]
+    doc.text(al, pageW / 2, hy, { align: 'center' })
+    hy += al.length * 4
+  }
+  if (vendor.gst_number) {
+    doc.text(`GSTIN : ${vendor.gst_number}`, pageW / 2, hy, { align: 'center' })
+    hy += 5
   }
 
-  // ── Row 1: Vendor name ────────────────────────────────────────────────────
-  ws.getRow(1).height = 22
-  const r1 = mergedCell(1, 1, COLS, vendor.name.toUpperCase())
-  r1.font      = { bold: true, size: 14, name: 'Arial' }
-  r1.alignment = { horizontal: 'center', vertical: 'middle' }
-  r1.border    = { bottom: { style: 'thin', color: { argb: 'FFDDDDDD' } } }
+  // ── QUOTATION bar ─────────────────────────────────────────────────────────
+  const barY = hy + 2
+  doc.setFillColor(30, 30, 30)
+  doc.rect(margin, barY, contentW, 8, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.setTextColor(255, 255, 255)
+  doc.text('QUOTATION', pageW / 2, barY + 5.5, { align: 'center' })
 
-  // ── Row 2: Address ────────────────────────────────────────────────────────
-  ws.getRow(2).height = 14
-  const r2 = mergedCell(2, 1, COLS, vendor.address ?? '')
-  r2.font      = { size: 9, name: 'Arial' }
-  r2.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }
+  // ── Meta ──────────────────────────────────────────────────────────────────
+  let y = barY + 14
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8.5)
+  doc.setTextColor(40, 40, 40)
 
-  // ── Row 3: GSTIN ─────────────────────────────────────────────────────────
-  ws.getRow(3).height = 13
-  const r3 = mergedCell(3, 1, COLS, vendor.gst_number ? `GSTIN : ${vendor.gst_number}` : '')
-  r3.font      = { size: 9, name: 'Arial' }
-  r3.alignment = { horizontal: 'center', vertical: 'middle' }
+  doc.setFont('helvetica', 'bold')
+  doc.text('ISSUED TO :', margin, y)
+  doc.setFont('helvetica', 'normal')
+  doc.text(`${companyName} — ${branchName}`, margin + 26, y)
 
-  // ── Row 4: spacer ────────────────────────────────────────────────────────
-  ws.getRow(4).height = 5
+  doc.setFont('helvetica', 'bold')
+  doc.text('QUOTATION DATE:', pageW - margin - 50, y)
+  doc.setFont('helvetica', 'normal')
+  doc.text(fmtDate(orderDate), pageW - margin, y, { align: 'right' })
 
-  // ── Row 5: QUOTATION bar ─────────────────────────────────────────────────
-  ws.getRow(5).height = 18
-  const r5 = mergedCell(5, 1, COLS, 'QUOTATION')
-  r5.font      = { bold: true, size: 12, name: 'Arial', color: { argb: 'FFFFFFFF' } }
-  r5.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E1E1E' } }
-  r5.alignment = { horizontal: 'center', vertical: 'middle' }
+  y += 6
+  doc.setFont('helvetica', 'bold')
+  doc.text('QUOTATION NO:', pageW - margin - 50, y)
+  doc.setFont('helvetica', 'normal')
+  doc.text(ref, pageW - margin, y, { align: 'right' })
 
-  // ── Rows 6–7: meta (issued to / quotation ref) ───────────────────────────
-  ws.getRow(6).height = 14
-  ws.getRow(7).height = 14
+  y += 6
+  doc.setFont('helvetica', 'bold')
+  doc.text('Order date :', pageW - margin - 50, y)
+  doc.setFont('helvetica', 'normal')
+  doc.text(fmtDate(orderDate), pageW - margin, y, { align: 'right' })
 
-  const labelFont = { size: 9, name: 'Arial' } as const
-  const valFont   = { size: 9, name: 'Arial', bold: true } as const
+  y += 6
+  doc.setFont('helvetica', 'bold')
+  doc.text('Order through :', pageW - margin - 50, y)
+  doc.setFont('helvetica', 'normal')
+  doc.text('MAIL', pageW - margin, y, { align: 'right' })
 
-  // Row 6
-  const r6l = mergedCell(6, 1, 3, 'ISSUED TO :')
-  r6l.font = labelFont
+  // ── Items table ───────────────────────────────────────────────────────────
+  const tableBody = items.map((item, idx) => [
+    idx + 1,
+    item.name + (item.category ? `\n(${item.category})` : ''),
+    item.unit ?? '',
+    item.quantity,
+    '',   // RATE/PCS — vendor fills
+    '',   // TOTAL — vendor fills
+  ])
 
-  const r6m = mergedCell(6, 4, 5, 'QUOTATION DATE:')
-  r6m.font = labelFont
-
-  const r6v = mergedCell(6, 6, COLS, fmtDate(orderDate))
-  r6v.font = valFont
-
-  // Row 7
-  const r7l = mergedCell(7, 1, 3, `${companyName} — ${branchName}`)
-  r7l.font      = valFont
-  r7l.alignment = { wrapText: true, vertical: 'middle' }
-
-  const r7m = mergedCell(7, 4, 5, 'QUOTATION NO:')
-  r7m.font = labelFont
-
-  const r7v = mergedCell(7, 6, COLS, ref)
-  r7v.font = valFont
-
-  // ── Row 8: spacer ────────────────────────────────────────────────────────
-  ws.getRow(8).height = 6
-
-  // ── Rows 9–10: order date / order through ────────────────────────────────
-  ws.getRow(9).height  = 14
-  ws.getRow(10).height = 14
-
-  const r9m = mergedCell(9, 4, 5, 'Order date :')
-  r9m.font = labelFont
-  const r9v = mergedCell(9, 6, COLS, fmtDate(orderDate))
-  r9v.font = valFont
-
-  const r10m = mergedCell(10, 4, 5, 'Order through :')
-  r10m.font = labelFont
-  const r10v = mergedCell(10, 6, COLS, 'MAIL')
-  r10v.font = valFont
-
-  // ── Row 11: spacer ───────────────────────────────────────────────────────
-  ws.getRow(11).height = 6
-
-  // ── Row 12: table header ─────────────────────────────────────────────────
-  ws.getRow(12).height = 18
-  const heads = ['SL NO', 'IMAGES', 'ITEM DESCRIPTION', 'SIZE (CM)', 'QTY', 'RATE/PCS', 'TOTAL']
-  heads.forEach((h, i) => {
-    const cell = ws.getCell(12, i + 1)
-    cell.value     = h
-    cell.font      = { bold: true, size: 9, name: 'Arial', color: { argb: 'FFFFFFFF' } }
-    cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E1E1E' } }
-    cell.alignment = { horizontal: 'center', vertical: 'middle' }
-    cell.border    = thinBorder('FF444444')
+  autoTable(doc, {
+    startY: y + 6,
+    head: [['SL NO', 'ITEM DESCRIPTION', 'SIZE (CM)', 'QTY', 'RATE/PCS', 'TOTAL']],
+    body: tableBody,
+    headStyles: {
+      fillColor:   [30, 30, 30],
+      textColor:   [255, 255, 255],
+      fontStyle:   'bold',
+      fontSize:    8.5,
+      halign:      'center',
+      cellPadding: 2.5,
+    },
+    bodyStyles: { fontSize: 9, textColor: [40, 40, 40], minCellHeight: 10 },
+    alternateRowStyles: { fillColor: [245, 245, 245] },
+    columnStyles: {
+      '0': { cellWidth: 14, halign: 'center' },
+      '2': { cellWidth: 22, halign: 'center' },
+      '3': { cellWidth: 12, halign: 'center' },
+      '4': { cellWidth: 26, halign: 'right'  },
+      '5': { cellWidth: 26, halign: 'right'  },
+    },
+    margin: { left: margin, right: margin },
+    theme: 'grid',
   })
-
-  // ── Item rows ─────────────────────────────────────────────────────────────
-  let rowIdx = 13
-  items.forEach((item, idx) => {
-    ws.getRow(rowIdx).height = 22
-    const values = [idx + 1, '', item.name, item.unit ?? '', item.quantity, '', '']
-    values.forEach((v, i) => {
-      const cell = ws.getCell(rowIdx, i + 1)
-      cell.value     = v
-      cell.font      = { size: 9, name: 'Arial' }
-      cell.alignment = {
-        horizontal: (i === 0 || i === 4) ? 'center' : 'left',
-        vertical: 'middle',
-        wrapText: true,
-      }
-      cell.border = thinBorder()
-    })
-    rowIdx++
-  })
-
-  // ── Spacer row ────────────────────────────────────────────────────────────
-  ws.getRow(rowIdx).height = 8
-  rowIdx++
 
   // ── Bank details + totals ─────────────────────────────────────────────────
-  const bankLines: [string, string][] = []
-  if (vendor.bank_name)    bankLines.push([`Bank Details : ${vendor.bank_name}`, 'TOTAL :'])
-  if (vendor.bank_account) bankLines.push([`A/C No : ${vendor.bank_account}`,    'GST % :'])
-  if (vendor.bank_ifsc)    bankLines.push([`IFSC : ${vendor.bank_ifsc}`,         'GRAND TOTAL :'])
+  const afterY  = (doc as any).lastAutoTable.finalY + 6
+  const totX    = pageW - margin - 68
+  const halfCol = margin + contentW / 2
 
-  if (bankLines.length === 0) {
-    bankLines.push(['', 'TOTAL :'], ['', 'GST % :'], ['', 'GRAND TOTAL :'])
-  } else {
-    while (bankLines.length < 3) bankLines.push(['', ''])
-  }
-
-  bankLines.forEach(([bankText, totLabel], i) => {
-    ws.getRow(rowIdx).height = 16
-    const isGrand = totLabel === 'GRAND TOTAL :'
-
-    if (bankText) {
-      const bc = mergedCell(rowIdx, 1, 3, bankText)
-      bc.font = { size: 9, name: 'Arial', bold: i === 0 }
-    }
-    if (totLabel) {
-      const tc = mergedCell(rowIdx, 4, 5, totLabel)
-      tc.font = { size: 9, name: 'Arial', bold: true }
-      const vc = mergedCell(rowIdx, 6, COLS, '')
-      vc.font   = { size: 9, name: 'Arial', bold: isGrand }
-      vc.border = thinBorder()
-    }
-    rowIdx++
+  const totRows: [string, boolean][] = [
+    ['Total :',       false],
+    ['GST % :',       false],
+    ['Grand Total :', true ],
+  ]
+  let ty = afterY
+  totRows.forEach(([label, isBold]) => {
+    doc.setFont('helvetica', isBold ? 'bold' : 'normal')
+    doc.setFontSize(8.5)
+    doc.setTextColor(isBold ? 20 : 60, isBold ? 20 : 60, isBold ? 20 : 60)
+    doc.text(label, totX + 2, ty + 4)
+    doc.setDrawColor(210)
+    doc.line(totX, ty + 7, pageW - margin, ty + 7)
+    ty += 8
   })
 
-  // ── Spacer ────────────────────────────────────────────────────────────────
-  ws.getRow(rowIdx).height = 8
-  rowIdx++
+  if (vendor.bank_name || vendor.bank_account || vendor.bank_ifsc) {
+    let by = afterY
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(8.5)
+    doc.setTextColor(30, 30, 30)
+    if (vendor.bank_name)    { doc.text(`Bank Details : ${vendor.bank_name}`, margin, by + 4);   by += 8 }
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(60, 60, 60)
+    if (vendor.bank_account) { doc.text(`A/C No : ${vendor.bank_account}`, margin, by + 4); by += 8 }
+    if (vendor.bank_ifsc)    { doc.text(`IFSC : ${vendor.bank_ifsc}`,      margin, by + 4) }
+  }
 
   // ── Terms & Conditions ────────────────────────────────────────────────────
   if (vendor.terms) {
-    ws.getRow(rowIdx).height = 14
-    const tc = mergedCell(rowIdx, 1, COLS, 'TERMS & CONDITIONS :')
-    tc.font = { bold: true, size: 9, name: 'Arial' }
-    rowIdx++
-
-    vendor.terms.split('\n').filter(Boolean).forEach((line, i) => {
-      ws.getRow(rowIdx).height = 14
-      ws.getCell(rowIdx, 1).value = i + 1
-      ws.getCell(rowIdx, 1).font  = { size: 9, name: 'Arial' }
-      const lc = mergedCell(rowIdx, 2, COLS, line.trim())
-      lc.font      = { size: 9, name: 'Arial' }
-      lc.alignment = { wrapText: true, vertical: 'middle' }
-      rowIdx++
-    })
-
-    ws.getRow(rowIdx).height = 8
-    rowIdx++
+    const termsY = ty + 6
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(8.5)
+    doc.setTextColor(30)
+    doc.text('TERMS & CONDITIONS :', margin, termsY)
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8)
+    doc.setTextColor(70)
+    const lines = doc.splitTextToSize(vendor.terms, contentW) as string[]
+    doc.text(lines, margin, termsY + 6)
+    ty = termsY + 6 + lines.length * 4
   }
 
   // ── Prepared By ───────────────────────────────────────────────────────────
-  ws.getRow(rowIdx).height = 14
-  ws.getCell(rowIdx, 2).value = 'Prepared By :'
-  ws.getCell(rowIdx, 2).font  = { bold: true, size: 9, name: 'Arial' }
-  ws.getCell(rowIdx, 3).value = ''
+  const prepY = ty + 10
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8.5)
+  doc.setTextColor(30)
+  doc.text('Prepared By :', margin, prepY)
+  doc.setDrawColor(150)
+  doc.line(margin + 28, prepY + 1, margin + 70, prepY + 1)
 
-  // ── Download ──────────────────────────────────────────────────────────────
-  const buffer = await (wb.xlsx as any).writeBuffer() as ArrayBuffer
-  const blob   = new Blob([buffer], {
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  })
-  const url = URL.createObjectURL(blob)
-  const a   = document.createElement('a')
-  a.href     = url
-  a.download = `${ref}_OrderSheet.xlsx`
-  a.click()
-  URL.revokeObjectURL(url)
+  // ── Footer ────────────────────────────────────────────────────────────────
+  doc.setDrawColor(200)
+  doc.setLineWidth(0.3)
+  doc.line(margin, pageH - 12, pageW - margin, pageH - 12)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(7)
+  doc.setTextColor(160)
+  doc.text('This is a computer-generated quotation request.', pageW / 2, pageH - 7, { align: 'center' })
+
+  doc.save(`${ref}_OrderSheet.pdf`)
 }
 
 // ── Button ────────────────────────────────────────────────────────────────────
@@ -496,7 +455,7 @@ export default function GenerateOrderSheetButton({
     setLoading(true)
     try {
       if (vendor.template_type === 'thas_quotation') {
-        await generateThasExcel(vendor, items, orderNumber, orderDate, branchName, companyName, categoryLabel)
+        await generateThasQuotation(vendor, items, orderNumber, orderDate, branchName, companyName, categoryLabel)
       } else {
         await generatePadmakalaEstimate(vendor, items, orderNumber, orderDate, branchName, companyName, categoryLabel)
       }
