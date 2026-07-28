@@ -140,7 +140,7 @@ export default function WarehouseShipSection({
             <div className="px-5 py-4 space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">
-                  Shipping details <span className="font-normal text-gray-400">(optional)</span>
+                  Shipping details <span className="text-red-400">*</span>
                 </label>
                 <textarea
                   value={details}
@@ -193,8 +193,8 @@ export default function WarehouseShipSection({
               </button>
               <button
                 onClick={confirmShipped}
-                disabled={pending}
-                className="flex-1 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50"
+                disabled={pending || !details.trim()}
+                className="flex-1 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {pending ? 'Updating…' : 'Mark as Shipped'}
               </button>
