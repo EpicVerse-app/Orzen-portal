@@ -4,6 +4,135 @@ interface OrderItem {
   unit: string
 }
 
+// ── Vendor Assigned → Admin ────────────────────────────────────────────────────
+interface VendorAssignedParams {
+  recipientName: string
+  orderRef: string
+  branchName: string
+  branchCity: string
+  vendorNames: string
+  items: OrderItem[]
+  magicLink: string
+  companyName: string
+}
+
+export function buildVendorAssignedEmail({
+  recipientName, orderRef, branchName, branchCity,
+  vendorNames, items, magicLink, companyName,
+}: VendorAssignedParams): string {
+  const itemRows = items.map(item => `
+    <tr>
+      <td style="padding:10px 16px;border-bottom:1px solid #f3f4f6;font-size:14px;color:#374151;">${item.name}</td>
+      <td style="padding:10px 16px;border-bottom:1px solid #f3f4f6;font-size:14px;color:#374151;text-align:right;white-space:nowrap;"><strong>${item.quantity}</strong> ${item.unit}</td>
+    </tr>
+  `).join('')
+
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><title>Vendor Assigned — ${orderRef}</title></head>
+<body style="margin:0;padding:0;background-color:#f5f0e8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f0e8;padding:32px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;">
+      <tr><td style="background-color:#5B2D8E;padding:24px 32px;border-radius:16px 16px 0 0;text-align:center;">
+        <p style="margin:0;color:#c9a84c;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;">${companyName}</p>
+        <p style="margin:6px 0 0;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:2px;text-transform:uppercase;">Orzen Flow · Order Management</p>
+      </td></tr>
+      <tr><td style="background-color:#ffffff;padding:32px;">
+        <p style="margin:0 0 4px;font-size:13px;color:#9ca3af;">Hello, ${recipientName}</p>
+        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;">Vendor Assigned — Approval Required</h1>
+        <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
+          A vendor has been assigned to order <strong>${orderRef}</strong> and is awaiting your approval before the Purchase Order can be generated.
+        </p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:24px;">
+          <tr><td style="padding:16px 16px 12px;border-bottom:1px solid #e5e7eb;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;">Order</p>
+            <p style="margin:2px 0 0;font-size:16px;font-weight:700;color:#111827;font-family:monospace;">${orderRef}</p>
+          </td></tr>
+          <tr><td style="padding:12px 16px;border-bottom:1px solid #e5e7eb;">
+            <p style="margin:0;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;">Branch</p>
+            <p style="margin:2px 0 0;font-size:14px;font-weight:600;color:#374151;">${branchName}${branchCity ? ` — ${branchCity}` : ''}</p>
+          </td></tr>
+          <tr><td style="padding:12px 16px;border-bottom:1px solid #e5e7eb;">
+            <p style="margin:0;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;">Vendor(s) Assigned</p>
+            <p style="margin:2px 0 0;font-size:14px;font-weight:600;color:#374151;">${vendorNames}</p>
+          </td></tr>
+          <tr><td style="padding:12px 16px 4px;">
+            <p style="margin:0;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;">Order Items (${items.length})</p>
+          </td></tr>
+          <tr><td><table width="100%" cellpadding="0" cellspacing="0">${itemRows}</table></td></tr>
+        </table>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr><td align="center">
+            <a href="${magicLink}" style="display:inline-block;background-color:#16a34a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;padding:14px 36px;border-radius:12px;letter-spacing:0.5px;">
+              Review &amp; Approve PO →
+            </a>
+          </td></tr>
+        </table>
+        <p style="margin:20px 0 0;font-size:11px;color:#d1d5db;text-align:center;line-height:1.6;">
+          This link logs you in automatically and is valid for 1 hour.<br/>Click the button in the dashboard to unlock PO generation.
+        </p>
+      </td></tr>
+      <tr><td style="background-color:#f3f4f6;padding:16px 32px;border-radius:0 0 16px 16px;text-align:center;border-top:1px solid #e5e7eb;">
+        <p style="margin:0;font-size:11px;color:#9ca3af;">Powered by <strong style="color:#c9a84c;">Orzen Flow</strong> · ${companyName}</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>`.trim()
+}
+
+// ── Vendor Approved → Warehouse ───────────────────────────────────────────────
+interface VendorApprovedParams {
+  recipientName: string
+  orderRef: string
+  branchName: string
+  magicLink: string
+  companyName: string
+}
+
+export function buildVendorApprovedEmail({
+  recipientName, orderRef, branchName, magicLink, companyName,
+}: VendorApprovedParams): string {
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><title>PO Approved — ${orderRef}</title></head>
+<body style="margin:0;padding:0;background-color:#f5f0e8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f0e8;padding:32px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;">
+      <tr><td style="background-color:#5B2D8E;padding:24px 32px;border-radius:16px 16px 0 0;text-align:center;">
+        <p style="margin:0;color:#c9a84c;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;">${companyName}</p>
+        <p style="margin:6px 0 0;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:2px;text-transform:uppercase;">Orzen Flow · Order Management</p>
+      </td></tr>
+      <tr><td style="background-color:#ffffff;padding:32px;">
+        <p style="margin:0 0 4px;font-size:13px;color:#9ca3af;">Hello, ${recipientName}</p>
+        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;">PO Approved ✓</h1>
+        <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
+          Admin has approved the vendor assignment for order <strong>${orderRef}</strong>${branchName ? ` (${branchName})` : ''}. You can now generate the Purchase Order.
+        </p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;overflow:hidden;margin-bottom:24px;">
+          <tr><td style="padding:16px;">
+            <p style="margin:0;font-size:12px;color:#15803d;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Approved Order</p>
+            <p style="margin:4px 0 0;font-size:18px;font-weight:700;color:#111827;font-family:monospace;">${orderRef}</p>
+          </td></tr>
+        </table>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr><td align="center">
+            <a href="${magicLink}" style="display:inline-block;background-color:#5B2D8E;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;padding:14px 36px;border-radius:12px;letter-spacing:0.5px;">
+              Generate PO →
+            </a>
+          </td></tr>
+        </table>
+        <p style="margin:20px 0 0;font-size:11px;color:#d1d5db;text-align:center;line-height:1.6;">
+          This link logs you in automatically and is valid for 1 hour.
+        </p>
+      </td></tr>
+      <tr><td style="background-color:#f3f4f6;padding:16px 32px;border-radius:0 0 16px 16px;text-align:center;border-top:1px solid #e5e7eb;">
+        <p style="margin:0;font-size:11px;color:#9ca3af;">Powered by <strong style="color:#c9a84c;">Orzen Flow</strong> · ${companyName}</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>`.trim()
+}
+
 interface EmailParams {
   recipientName: string
   title: string

@@ -47,12 +47,13 @@ interface Props {
   categories: Category[]
   initialAssignments: Assignment[]
   initialBaseOrderNumber: string | null
+  vendorApproved: boolean
 }
 
 export default function WarehouseOrderActions({
   orderId, companyId, companyName, assignedBy, orderDate, branchName, branchAddress,
   branchId, orderStatus, shippedPhotoUrl,
-  vendors, categories, initialAssignments, initialBaseOrderNumber,
+  vendors, categories, initialAssignments, initialBaseOrderNumber, vendorApproved,
 }: Props) {
   const [assignments, setAssignments]      = useState<Assignment[]>(initialAssignments)
   const [baseOrderNumber, setBaseOrderNum] = useState(initialBaseOrderNumber)
@@ -124,7 +125,7 @@ export default function WarehouseOrderActions({
           <ChevronRight className="w-4 h-4 opacity-60" />
         </button>
 
-        {/* Order sheet buttons — one per assignment */}
+        {/* Order sheet buttons — always available after assignment */}
         {isAssigned && baseOrderNumber && assignments.map(a => (
           <GenerateOrderSheetButton
             key={a.id}
@@ -138,8 +139,15 @@ export default function WarehouseOrderActions({
           />
         ))}
 
-        {/* PO buttons — one per assignment */}
-        {isAssigned && baseOrderNumber && assignments.map(a => (
+        {/* PO buttons — only after admin approval */}
+        {isAssigned && baseOrderNumber && !vendorApproved && (
+          <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl">
+            <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+            <p className="text-xs font-semibold text-amber-700">Awaiting Admin Approval</p>
+          </div>
+        )}
+
+        {isAssigned && baseOrderNumber && vendorApproved && assignments.map(a => (
           <GeneratePOButton
             key={`po-${a.id}`}
             orderNumber={a.category ? `${baseOrderNumber}_${a.category}` : baseOrderNumber}

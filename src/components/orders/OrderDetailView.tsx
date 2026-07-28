@@ -51,6 +51,7 @@ interface Props {
   backLabel?: string
   actions?: React.ReactNode
   companyName?: string
+  vendorApproved?: boolean
 }
 
 // ── Status timeline config ───────────────────────────────────────────────────
@@ -285,7 +286,7 @@ function ProductsByCategory({
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
-export default function OrderDetailView({ order, backHref, backLabel = 'Back', actions, companyName }: Props) {
+export default function OrderDetailView({ order, backHref, backLabel = 'Back', actions, companyName, vendorApproved }: Props) {
   const totalQty    = order.items.reduce((s, i) => s + i.quantity, 0)
   const hasPrices   = order.items.some(i => (i.product.price ?? 0) > 0)
   const totalPrice  = order.items.reduce((s, i) => s + (i.product.price ?? 0) * i.quantity, 0)
@@ -528,7 +529,7 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
             hasPrices={hasPrices}
             totalPrice={totalPrice}
           />
-          {companyName && (
+          {companyName && order.base_order_number && vendorApproved && (
             <CategoryPODownloads
               items={order.items}
               companyName={companyName}

@@ -18,7 +18,7 @@ export default async function StoreOrderDetailPage({
   const { data: order } = await supabase
     .from('orders')
     .select(`
-      id, status, created_at, base_order_number, rejection_reason,
+      id, status, created_at, base_order_number, rejection_reason, vendor_approved,
       loaded_photo_url, shipped_photo_url, delivery_photo_url,
       ordered_by_name, ordered_by_id,
       branch:branches(name, city, state, address),
@@ -45,6 +45,7 @@ export default async function StoreOrderDetailPage({
       backHref="/dashboard/store/orders"
       backLabel="My Orders"
       companyName={companyName}
+      vendorApproved={(order as any).vendor_approved ?? false}
       actions={
         <VendorOrderDownloadButton
           orderId={order.id}

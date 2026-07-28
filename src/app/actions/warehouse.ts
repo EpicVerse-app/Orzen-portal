@@ -1,7 +1,14 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { Resend } from 'resend'
+import { buildVendorAssignedEmail } from '@/lib/email/templates'
 import { revalidatePath } from 'next/cache'
+
+const resend     = new Resend(process.env.RESEND_API_KEY)
+const APP_URL    = process.env.NEXT_PUBLIC_APP_URL  || 'http://localhost:3000'
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL    || 'Orzen Flow <onboarding@resend.dev>'
 
 export async function getVendors(companyId: string) {
   const supabase = await createClient()
@@ -87,10 +94,89 @@ export async function assignVendor(input: AssignVendorInput): Promise<{ baseOrde
     if (insErr) return { error: `insert assignments: ${insErr.message}` }
 
     revalidatePath(`/dashboard/warehouse/orders/${input.orderId}`)
+
+    // Notify admins (non-blocking — failure does not break assignment)
+    notifyAdminsVendorAssigned({
+      orderId:         input.orderId,
+      companyId:       input.companyId,
+      baseOrderNumber,
+      vendorIds:       input.assignments.map(a => a.vendorId),
+    }).catch(e => console.error('Admin vendor notification failed:', e))
+
     return { baseOrderNumber }
   } catch (e: any) {
     return { error: e?.message ?? 'unknown' }
   }
+}
+
+async function notifyAdminsVendorAssigned({
+  orderId, companyId, baseOrderNumber, vendorIds,
+}: {
+  orderId: string
+  companyId: string
+  baseOrderNumber: string
+  vendorIds: string[]
+}) {
+  const adminClient = createAdminClient()
+
+  const [vendorRes, orderRes, companyRes, adminRes] = await Promise.all([
+    adminClient.from('vendors').select('id, name').in('id', vendorIds),
+    adminClient
+      .from('orders')
+      .select('branch:branches(name,city), items:order_items(quantity, product:products(name,unit))')
+      .eq('id', orderId)
+      .single(),
+    adminClient.from('companies').select('name').eq('id', companyId).single(),
+    adminClient.from('users').select('id, full_name, email').eq('company_id', companyId).eq('role', 'admin'),
+  ])
+
+  const vendorNames = (vendorRes.data || []).map((v: any) => v.name).join(', ')
+  const branch      = Array.isArray(orderRes.data?.branch)
+    ? (orderRes.data?.branch as any[])[0]
+    : orderRes.data?.branch
+  const emailItems  = ((orderRes.data as any)?.items || []).map((i: any) => ({
+    name:     i.product?.name     || 'Product',
+    unit:     i.product?.unit     || 'pcs',
+    quantity: i.quantity,
+  }))
+  const companyName = (companyRes.data as any)?.name || 'Orzen Flow'
+
+  await Promise.all(
+    (adminRes.data || [])
+      .filter((u: any) => u.email)
+      .map(async (u: any) => {
+        try {
+          const { data: linkData } = await adminClient.auth.admin.generateLink({
+            type: 'magiclink',
+            email: u.email,
+            options: {
+              redirectTo: `${APP_URL}/auth/callback?next=/dashboard/admin/orders/${orderId}`,
+            },
+          })
+          if (!linkData?.properties?.action_link) return
+
+          const html = buildVendorAssignedEmail({
+            recipientName: u.full_name || 'Admin',
+            orderRef:      baseOrderNumber,
+            branchName:    (branch as any)?.name || '',
+            branchCity:    (branch as any)?.city || '',
+            vendorNames,
+            items:         emailItems,
+            magicLink:     linkData.properties.action_link,
+            companyName,
+          })
+
+          await resend.emails.send({
+            from:    FROM_EMAIL,
+            to:      u.email,
+            subject: `Vendor Assigned — ${baseOrderNumber} · Approval Required`,
+            html,
+          })
+        } catch (e) {
+          console.error(`Admin email failed for ${u.email}:`, e)
+        }
+      })
+  )
 }
 
 export async function getOrderAssignments(orderId: string) {

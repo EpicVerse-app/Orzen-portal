@@ -32,7 +32,7 @@ export default async function WarehouseOrderDetailPage({
   const { data: order } = await supabase
     .from('orders')
     .select(`
-      id, status, created_at, base_order_number, warehouse_status,
+      id, status, created_at, base_order_number, warehouse_status, vendor_approved,
       ordered_by_name, ordered_by_id, shipped_photo_url,
       branch:branches(id, name, city, state, address),
       items:order_items(
@@ -92,6 +92,7 @@ export default async function WarehouseOrderDetailPage({
             categories={categories}
             initialAssignments={assignments as any}
             initialBaseOrderNumber={(order as any).base_order_number ?? null}
+            vendorApproved={(order as any).vendor_approved ?? false}
           />
         }
       />

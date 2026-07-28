@@ -26,7 +26,7 @@ export default async function StoreHeadOrderDetailPage({
   const { data: order } = await supabase
     .from('orders')
     .select(`
-      id, status, created_at, base_order_number, rejection_reason,
+      id, status, created_at, base_order_number, rejection_reason, vendor_approved,
       loaded_photo_url, shipped_photo_url, delivery_photo_url,
       ordered_by_name, ordered_by_id,
       branch:branches(id, name, city, state, address),
@@ -54,6 +54,7 @@ export default async function StoreHeadOrderDetailPage({
         backHref="/dashboard/store-head/orders"
         backLabel="Orders"
         companyName={companyName}
+        vendorApproved={(order as any).vendor_approved ?? false}
         actions={
           <div className="space-y-3">
             {order.status === 'submitted' && (
