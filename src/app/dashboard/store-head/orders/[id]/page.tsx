@@ -35,7 +35,8 @@ export default async function StoreHeadOrderDetailPage({
         product:products(id, name, unit, price, image_url, image_url_2, image_url_3,
           category:categories(name)
         )
-      )
+      ),
+      vendor_assignments(id, assignment_type, category, status, vendor:vendors(id, name, gst_number, address))
     `)
     .eq('id', id)
     .eq('branch_id', profile.branch_id)
@@ -55,6 +56,7 @@ export default async function StoreHeadOrderDetailPage({
         backLabel="Orders"
         companyName={companyName}
         vendorApproved={(order as any).vendor_approved ?? false}
+        vendorAssignments={(order as any).vendor_assignments ?? []}
         actions={
           <div className="space-y-3">
             {order.status === 'submitted' && (

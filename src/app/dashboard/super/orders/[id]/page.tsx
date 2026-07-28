@@ -34,7 +34,8 @@ export default async function SuperOrderDetailPage({
         product:products(id, name, unit, price, image_url, image_url_2, image_url_3,
           category:categories(name)
         )
-      )
+      ),
+      vendor_assignments(id, assignment_type, category, status, vendor:vendors(id, name, gst_number, address))
     `)
     .eq('id', id)
     .eq('company_id', profile.company_id)
@@ -54,6 +55,7 @@ export default async function SuperOrderDetailPage({
         backLabel="Orders"
         companyName={companyName}
         vendorApproved={(order as any).vendor_approved ?? false}
+        vendorAssignments={(order as any).vendor_assignments ?? []}
         actions={
           <VendorOrderDownloadButton
             orderId={order.id}

@@ -27,7 +27,8 @@ export default async function StoreOrderDetailPage({
         product:products(id, name, unit, price, image_url, image_url_2, image_url_3,
           category:categories(name)
         )
-      )
+      ),
+      vendor_assignments(id, assignment_type, category, status, vendor:vendors(id, name, gst_number, address))
     `)
     .eq('id', id)
     .eq('branch_id', profile.branch_id)
@@ -46,6 +47,7 @@ export default async function StoreOrderDetailPage({
       backLabel="My Orders"
       companyName={companyName}
       vendorApproved={(order as any).vendor_approved ?? false}
+      vendorAssignments={(order as any).vendor_assignments ?? []}
       actions={
         <VendorOrderDownloadButton
           orderId={order.id}

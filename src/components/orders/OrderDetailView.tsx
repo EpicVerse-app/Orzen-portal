@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import {
   ChevronLeft, ChevronDown, MapPin, Calendar, Package,
-  Image as ImageIcon, Hash, Store, Check, X, User,
+  Image as ImageIcon, Hash, Store, Check, X, User, Truck,
 } from 'lucide-react'
 import { m, AnimatePresence } from 'framer-motion'
 import ImageCarousel from '@/components/ui/ImageCarousel'
@@ -22,6 +22,19 @@ interface OrderItem {
     image_url_2?: string | null
     image_url_3?: string | null
     category?: { name: string } | null
+  }
+}
+
+export interface VendorAssignment {
+  id: string
+  assignment_type: string
+  category: string | null
+  status: string
+  vendor: {
+    id: string
+    name: string
+    gst_number: string | null
+    address: string | null
   }
 }
 
@@ -52,6 +65,7 @@ interface Props {
   actions?: React.ReactNode
   companyName?: string
   vendorApproved?: boolean
+  vendorAssignments?: VendorAssignment[]
 }
 
 // ── Status timeline config ───────────────────────────────────────────────────
@@ -102,13 +116,14 @@ function catCode(name: string) {
   return name.toUpperCase().replace(/\s+/g, '_')
 }
 
-function CategoryPODownloads({ items, companyName, orderNumber, orderDate, branchName, branchAddress }: {
+function CategoryPODownloads({ items, companyName, orderNumber, orderDate, branchName, branchAddress, vendorAssignments }: {
   items: OrderItem[]
   companyName: string
   orderNumber?: string | null
   orderDate: string
   branchName: string
   branchAddress: string
+  vendorAssignments?: VendorAssignment[]
 }) {
   const categoryMap = new Map<string, OrderItem[]>()
   for (const item of items) {
@@ -120,30 +135,44 @@ function CategoryPODownloads({ items, companyName, orderNumber, orderDate, branc
 
   if (categories.length === 0) return null
 
+  // Find vendor for a given category from assignments
+  function vendorForCategory(cat: string) {
+    if (!vendorAssignments || vendorAssignments.length === 0) return undefined
+    const totalAssignment = vendorAssignments.find(a => a.assignment_type === 'total')
+    if (totalAssignment) return totalAssignment.vendor
+    return vendorAssignments.find(a => a.category === cat)?.vendor
+  }
+
   return (
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mt-4">
       <div className="px-5 py-4 border-b border-gray-100">
         <h2 className="text-sm font-semibold text-gray-800">Download PO by Category</h2>
       </div>
       <div className="p-3 space-y-2">
-        {categories.map(([cat, catItems]) => (
-          <GeneratePOButton
-            key={cat}
-            orderNumber={orderNumber ? `${orderNumber}_${catCode(cat)}` : catCode(cat)}
-            orderDate={orderDate}
-            companyName={companyName}
-            branchName={branchName}
-            branchAddress={branchAddress}
-            categoryLabel={cat}
-            items={catItems.map(i => ({
-              id: i.id,
-              name: i.product.name,
-              quantity: i.quantity,
-              unit: i.product.unit,
-              category: cat,
-            }))}
-          />
-        ))}
+        {categories.map(([cat, catItems]) => {
+          const vendor = vendorForCategory(cat)
+          return (
+            <GeneratePOButton
+              key={cat}
+              orderNumber={orderNumber ? `${orderNumber}_${catCode(cat)}` : catCode(cat)}
+              orderDate={orderDate}
+              companyName={companyName}
+              branchName={branchName}
+              branchAddress={branchAddress}
+              vendorName={vendor?.name}
+              vendorGst={vendor?.gst_number}
+              vendorAddress={vendor?.address}
+              categoryLabel={cat}
+              items={catItems.map(i => ({
+                id: i.id,
+                name: i.product.name,
+                quantity: i.quantity,
+                unit: i.product.unit,
+                category: cat,
+              }))}
+            />
+          )
+        })}
       </div>
     </div>
   )
@@ -286,7 +315,7 @@ function ProductsByCategory({
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
-export default function OrderDetailView({ order, backHref, backLabel = 'Back', actions, companyName, vendorApproved }: Props) {
+export default function OrderDetailView({ order, backHref, backLabel = 'Back', actions, companyName, vendorApproved, vendorAssignments }: Props) {
   const totalQty    = order.items.reduce((s, i) => s + i.quantity, 0)
   const hasPrices   = order.items.some(i => (i.product.price ?? 0) > 0)
   const totalPrice  = order.items.reduce((s, i) => s + (i.product.price ?? 0) * i.quantity, 0)
@@ -486,6 +515,42 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
             </div>
           )}
 
+          {/* Assigned Vendor */}
+          {vendorAssignments && vendorAssignments.length > 0 && (
+            <div className="bg-white rounded-2xl border border-gray-200 px-5 py-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Truck className="w-3.5 h-3.5 text-gray-400" />
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Assigned Vendor</p>
+              </div>
+              <div className="space-y-2">
+                {vendorAssignments[0].assignment_type === 'total' ? (
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">{vendorAssignments[0].vendor.name}</p>
+                    {vendorAssignments[0].vendor.gst_number && (
+                      <p className="text-xs text-gray-400 mt-0.5">GST: {vendorAssignments[0].vendor.gst_number}</p>
+                    )}
+                    {vendorAssignments[0].vendor.address && (
+                      <div className="flex items-start gap-1.5 mt-2">
+                        <MapPin className="w-3 h-3 text-gray-300 mt-0.5 shrink-0" />
+                        <p className="text-xs text-gray-400 leading-relaxed">{vendorAssignments[0].vendor.address}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  vendorAssignments.map(a => (
+                    <div key={a.id} className="border-t border-gray-50 pt-2 first:border-0 first:pt-0">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">{a.category}</p>
+                      <p className="text-sm font-bold text-gray-900">{a.vendor.name}</p>
+                      {a.vendor.gst_number && (
+                        <p className="text-xs text-gray-400 mt-0.5">GST: {a.vendor.gst_number}</p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Delivery photos */}
           {(order.loaded_photo_url || order.shipped_photo_url || order.delivery_photo_url) && (
             <div className="bg-white rounded-2xl border border-gray-200 px-5 py-4">
@@ -537,6 +602,7 @@ export default function OrderDetailView({ order, backHref, backLabel = 'Back', a
               orderDate={order.created_at}
               branchName={branchName}
               branchAddress={branchAddress}
+              vendorAssignments={vendorAssignments}
             />
           )}
         </div>
