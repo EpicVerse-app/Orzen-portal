@@ -59,14 +59,23 @@ export async function approveVendorAssignment(
   const orderRef    = (order as any)?.base_order_number || orderId.slice(0, 8).toUpperCase()
 
   // Notify warehouse users
-  const { data: warehouseUsers } = await adminClient
+  const { data: warehouseRaw } = await adminClient
     .from('users')
     .select('id, full_name, email')
     .eq('company_id', profile.company_id)
     .eq('role', 'warehouse')
 
+  // Resolve email from auth.users when not stored in public.users
+  const warehouseUsers = await Promise.all(
+    (warehouseRaw || []).map(async (u: any) => {
+      if (u.email) return u
+      const { data: authUser } = await adminClient.auth.admin.getUserById(u.id)
+      return { ...u, email: authUser?.user?.email ?? null }
+    })
+  )
+
   await Promise.all(
-    (warehouseUsers || [])
+    warehouseUsers
       .filter((u: any) => u.email)
       .map(async (u: any) => {
         try {

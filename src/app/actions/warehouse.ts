@@ -141,8 +141,17 @@ async function notifyAdminsVendorAssigned({
   }))
   const companyName = (companyRes.data as any)?.name || 'Orzen Flow'
 
+  // Resolve email from auth.users when not stored in public.users
+  const usersWithEmail = await Promise.all(
+    (adminRes.data || []).map(async (u: any) => {
+      if (u.email) return u
+      const { data: authUser } = await adminClient.auth.admin.getUserById(u.id)
+      return { ...u, email: authUser?.user?.email ?? null }
+    })
+  )
+
   await Promise.all(
-    (adminRes.data || [])
+    usersWithEmail
       .filter((u: any) => u.email)
       .map(async (u: any) => {
         try {
