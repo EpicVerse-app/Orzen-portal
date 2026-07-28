@@ -17,13 +17,14 @@ interface Props {
 export default function VendorShipPhotoUpload({ orderId, companyId, branchId, shortId, existingPhotoUrl }: Props) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview]     = useState<string | null>(existingPhotoUrl || null)
+  const [details, setDetails]     = useState('')
 
   async function handleUpload(file: File) {
     setUploading(true)
     const supabase = createClient()
     const ext  = file.name.split('.').pop() || 'jpg'
     const path = `delivery/${orderId}/shipped_${Date.now()}.${ext}`
-        if (path.includes('..')) {
+    if (path.includes('..')) {
       throw new Error('Invalid path')
     }
 
@@ -39,10 +40,12 @@ export default function VendorShipPhotoUpload({ orderId, companyId, branchId, sh
 
     const { data: { publicUrl } } = supabase.storage.from('order-photos').getPublicUrl(path)
 
-    // Save photo URL + mark order as delivered in one update
+    const updateData: Record<string, unknown> = { shipped_photo_url: publicUrl, status: 'delivered' }
+    if (details.trim()) updateData.delivery_details = details.trim()
+
     const { error } = await supabase
       .from('orders')
-      .update({ shipped_photo_url: publicUrl, status: 'delivered' })
+      .update(updateData)
       .eq('id', orderId)
 
     if (error) {
@@ -68,16 +71,27 @@ export default function VendorShipPhotoUpload({ orderId, companyId, branchId, sh
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <p className="text-xs font-semibold text-gray-500 flex items-center gap-1.5">
         <ImageIcon className="w-3.5 h-3.5" />
-        Upload Delivery Photo
+        Confirm Delivery
         {preview && <CheckCircle2 className="w-3.5 h-3.5 text-green-500 ml-1" />}
       </p>
+
+      <div>
+        <textarea
+          value={details}
+          onChange={(e) => setDetails(e.target.value.slice(0, 200))}
+          placeholder="Enter delivery details, recipient name, or notes…"
+          rows={2}
+          className="w-full text-sm text-gray-800 placeholder:text-gray-400 border border-gray-200 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
+        />
+        <p className="text-right text-[11px] text-gray-400 mt-0.5">{details.length}/200</p>
+      </div>
+
       <p className="text-[11px] text-gray-400">Uploading the photo will automatically mark this order as delivered.</p>
 
       <div className="flex items-center gap-3">
-        {/* Preview */}
         {preview && (
           <a href={preview} target="_blank" rel="noopener noreferrer" className="shrink-0">
             <img
@@ -88,7 +102,6 @@ export default function VendorShipPhotoUpload({ orderId, companyId, branchId, sh
           </a>
         )}
 
-        {/* Upload button */}
         <label className="cursor-pointer">
           <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors border ${
             uploading
