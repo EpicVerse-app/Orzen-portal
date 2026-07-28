@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { loginAction, getUsersForDropdown } from './actions'
 import { createClient } from '@/lib/supabase/client'
@@ -23,7 +23,7 @@ const ROLE_LABEL: Record<string, string> = {
   warehouse:     'Warehouse',
 }
 
-export default function LoginPage() {
+function LoginContent() {
   const searchParams                      = useSearchParams()
   const [username, setUsername]           = useState('')
   const [password, setPassword]           = useState('')
@@ -321,5 +321,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   )
 }
