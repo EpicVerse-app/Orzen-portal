@@ -79,6 +79,9 @@ export default function VendorShipPhotoUpload({ orderId, companyId, branchId, sh
       </p>
 
       <div>
+        <label className="block text-xs font-semibold text-gray-500 mb-1.5">
+          Delivery details <span className="text-red-400">*</span>
+        </label>
         <textarea
           value={details}
           onChange={(e) => setDetails(e.target.value.slice(0, 200))}
@@ -106,9 +109,11 @@ export default function VendorShipPhotoUpload({ orderId, companyId, branchId, sh
           <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors border ${
             uploading
               ? 'bg-blue-400 text-white border-transparent cursor-not-allowed'
-              : preview
-                ? 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                : 'bg-blue-600 text-white hover:bg-blue-700 border-transparent'
+              : !details.trim()
+                ? 'bg-gray-100 text-gray-400 border-transparent cursor-not-allowed'
+                : preview
+                  ? 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                  : 'bg-blue-600 text-white hover:bg-blue-700 border-transparent'
           }`}>
             {uploading ? (
               <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Uploading…</>
@@ -121,7 +126,7 @@ export default function VendorShipPhotoUpload({ orderId, companyId, branchId, sh
             accept="image/*"
             capture="environment"
             className="hidden"
-            disabled={uploading}
+            disabled={uploading || !details.trim()}
             onChange={(e) => {
               const file = e.target.files?.[0]
               if (file) handleUpload(file)
