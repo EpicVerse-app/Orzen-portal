@@ -112,17 +112,13 @@ export default function AdminApprovalModal({ pendingOrders: initial }: Props) {
 
                 return (
                   <div key={order.id} className="px-5 py-4">
-                    {/* Order summary row — single click expands, double click opens full view */}
-                    <div
-                      className="flex items-start justify-between gap-3 cursor-pointer select-none"
-                      onClick={() => toggle(order.id)}
-                      onDoubleClick={() => {
-                        setOpen(false)
-                        router.push(`/dashboard/admin/orders/${order.id}`)
-                      }}
-                      title="Double-click to open full view"
-                    >
-                      <div className="flex-1 min-w-0">
+                    {/* Order summary row */}
+                    <div className="flex items-start justify-between gap-3">
+                      {/* Clickable area — expands detail */}
+                      <div
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={() => toggle(order.id)}
+                      >
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-sm font-bold text-gray-900 font-mono">{order.base_order_number}</span>
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold">Awaiting Approval</span>
@@ -143,11 +139,19 @@ export default function AdminApprovalModal({ pendingOrders: initial }: Props) {
                           </div>
                         )}
                       </div>
-                      <div className="flex flex-col items-end gap-1 shrink-0">
-                        {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-300" /> : <ChevronDown className="w-4 h-4 text-gray-300" />}
-                        <span className="text-[9px] text-gray-300 whitespace-nowrap flex items-center gap-0.5">
-                          <ExternalLink className="w-2.5 h-2.5" /> double-click
-                        </span>
+
+                      {/* Right controls */}
+                      <div className="flex items-center gap-2 shrink-0 mt-0.5">
+                        <button
+                          onClick={() => { setOpen(false); router.push(`/dashboard/admin/orders/${order.id}`) }}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#570439] hover:bg-[#570439]/10 transition-colors"
+                          title="Open full view"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                        <div className="cursor-pointer text-gray-300" onClick={() => toggle(order.id)}>
+                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </div>
                       </div>
                     </div>
 
