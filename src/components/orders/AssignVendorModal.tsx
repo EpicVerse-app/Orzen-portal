@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { X, User2, Tag } from 'lucide-react'
 import { assignVendor } from '@/app/actions/warehouse'
 import toast from 'react-hot-toast'
@@ -67,8 +68,8 @@ export default function AssignVendorModal({
     })
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       <div className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] flex flex-col">
@@ -181,6 +182,7 @@ export default function AssignVendorModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
