@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { loginAction, getUsersForDropdown } from './actions'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
@@ -23,6 +24,7 @@ const ROLE_LABEL: Record<string, string> = {
 }
 
 export default function LoginPage() {
+  const searchParams                      = useSearchParams()
   const [username, setUsername]           = useState('')
   const [password, setPassword]           = useState('')
   const [loading, setLoading]             = useState(false)
@@ -33,6 +35,12 @@ export default function LoginPage() {
   const [dropdownOpen, setDropdownOpen]   = useState(false)
   const [search, setSearch]               = useState('')
   const dropdownRef                       = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (searchParams.get('error') === 'link_expired') {
+      toast.error('Email link has expired. Please log in with your username and password.', { duration: 6000 })
+    }
+  }, [searchParams])
 
   useEffect(() => {
     async function checkSession() {
