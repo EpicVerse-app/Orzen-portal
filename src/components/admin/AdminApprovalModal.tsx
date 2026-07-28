@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { createPortal } from 'react-dom'
-import { X, CheckCircle2, Clock, ChevronDown, ChevronUp, Building2, Tag } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { X, CheckCircle2, Clock, ChevronDown, ChevronUp, Building2, Tag, ExternalLink } from 'lucide-react'
 import { approveVendorAssignment } from '@/app/actions/approveVendor'
 import toast from 'react-hot-toast'
 
@@ -34,6 +35,7 @@ export default function AdminApprovalModal({ pendingOrders: initial }: Props) {
   const [expanded, setExpanded] = useState<string | null>(null)
   const [approvingId, setApprovingId] = useState<string | null>(null)
   const [, startApprove]        = useTransition()
+  const router                  = useRouter()
 
   if (orders.length === 0) return null
 
@@ -110,10 +112,15 @@ export default function AdminApprovalModal({ pendingOrders: initial }: Props) {
 
                 return (
                   <div key={order.id} className="px-5 py-4">
-                    {/* Order summary row */}
+                    {/* Order summary row — single click expands, double click opens full view */}
                     <div
-                      className="flex items-start justify-between gap-3 cursor-pointer"
+                      className="flex items-start justify-between gap-3 cursor-pointer select-none"
                       onClick={() => toggle(order.id)}
+                      onDoubleClick={() => {
+                        setOpen(false)
+                        router.push(`/dashboard/admin/orders/${order.id}`)
+                      }}
+                      title="Double-click to open full view"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -136,8 +143,11 @@ export default function AdminApprovalModal({ pendingOrders: initial }: Props) {
                           </div>
                         )}
                       </div>
-                      <div className="shrink-0 text-gray-300 mt-0.5">
-                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-300" /> : <ChevronDown className="w-4 h-4 text-gray-300" />}
+                        <span className="text-[9px] text-gray-300 whitespace-nowrap flex items-center gap-0.5">
+                          <ExternalLink className="w-2.5 h-2.5" /> double-click
+                        </span>
                       </div>
                     </div>
 
