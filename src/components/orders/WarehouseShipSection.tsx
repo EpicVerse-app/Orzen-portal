@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { Truck, CheckCircle2, X, Camera } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { sendOrderNotifications } from '@/app/actions/notifications'
@@ -124,8 +125,8 @@ export default function WarehouseShipSection({
       </button>
 
       {/* Shipping details modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+      {showModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50">
           <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl">
             <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
@@ -200,7 +201,8 @@ export default function WarehouseShipSection({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
